@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Kundenübersicht & Filter</h1>
+
+<div class="card">
+    <form method="get" action="{{ url_for('uebersicht') }}">
+        <div class="filter-grid">
+            <div>
+                <label for="mitarbeiter_id">Mitarbeiter</label>
+                <select name="mitarbeiter_id" onchange="this.form.submit()">
+                    <option value="">Alle Mitarbeiter</option>
+                    {% for m in mitarbeiter_liste %}
+                    <option value="{{ m.id }}" {% if aktiver_mitarbeiter==m.id|string %}selected="selected" {% endif %}>
+                        {{ m.vorname }} {{ m.nachname }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="post_art">Postart (für {{ aktives_jahr }})</label>
+                <select name="post_art" onchange="this.form.submit()">
+                    <option value="">Alle Arten</option>
+                    <option value="postkarte" {% if aktive_post_art=='postkarte' %}selected="selected" {% endif %}>
+                        Physisch: Postkarte</option>
+                    <option value="kalender" {% if aktive_post_art=='kalender' %}selected="selected" {% endif %}>
+                        Physisch: Kalender</option>
+                    <option value="email_versand" {% if aktive_post_art=='email_versand' %}selected="selected" {% endif
+                        %}>Digital: E-Mail</option>
+                    <option value="speziell" {% if aktive_post_art=='speziell' %}selected="selected" {% endif %}>
+                        Spezielle Post</option>
+                </select>
+            </div>
+            <div>
+                <label for="status">Status</label>
+                <select name="status" onchange="this.form.submit()">
+                    <option value="">Alle Status</option>
+                    {% for s in status_optionen %}
+                    <option value="{{ s }}" {% if aktiver_status==s %}selected="selected" {% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Spalten ein-/ausblenden</h2>
+    <div id="column-toggler" class="column-toggler">
+    </div>
+</div>
+
+<div class="card">
+    <h2>Gefilterte Kunden ({{ kunden|length }})</h2>
+    <div class="table-container">
+        <table id="overview-table">
+            <thead>
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-mitarbeiter">Mitarbeiter</th>
+                    <th class="col-anrede">Anrede</th>
+                    <th class="col-titel">Titel</th>
+                    <th class="col-vorname">Vorname</th>
+                    <th class="col-nachname">Nachname</th>
+                    <th class="col-firma1">Firma 1</th>
+                    <th class="col-firma2">Firma 2</th>
+                    <th class="col-funktion">Funktion</th>
+                    <th class="col-abteilung">Abteilung</th>
+                    <th class="col-strasse">Straße</th>
+                    <th class="col-plz">PLZ</th>
+                    <th class="col-ort">Ort</th>
+                    <th class="col-land">Land</th>
+                    <th class="col-anschriftswahl">Anschriftswahl</th>
+                    <th class="col-email">E-Mail</th>
+                    <th class="col-tel-beruflich">Telefon (berufl.)</th>
+                    <th class="col-durchwahl">Durchwahl</th>
+                    <th class="col-mobil">Mobil</th>
+                    <th class="col-fax">Fax</th>
+                    <th class="col-tel-privat">Telefon (privat)</th>
+                    <th class="col-anmerkungen">Anmerkungen</th>
+                    <th class="col-aktionen">Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in kunden %}
+                <tr>
+                    <td class="col-id">{{ k.id }}</td>
+                    <td class="col-status">{{ status_emojis.get(k.status, '') }} {{ k.status }}</td>
+                    <td class="col-mitarbeiter"
+                        style="background-color: {% if k.mitarbeiter %}{{ k.mitarbeiter.farbe }}{% else %}transparent{% endif %};">
+                        {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
+                    </td>
+                    <td class="col-anrede">{{ k.anrede }}</td>
+                    <td class="col-titel">{{ k.titel }}</td>
+                    <td class="col-vorname">{{ k.vorname }}</td>
+                    <td class="col-nachname">{{ k.nachname }}</td>
+                    <td class="col-firma1">{{ k.firma1 }}</td>
+                    <td class="col-firma2">{{ k.firma2 }}</td>
+                    <td class="col-funktion">{{ k.funktion }}</td>
+                    <td class="col-abteilung">{{ k.abteilung }}</td>
+                    <td class="col-strasse">{{ k.strasse }}</td>
+                    <td class="col-plz">{{ k.postleitzahl }}</td>
+                    <td class="col-ort">{{ k.ort }}</td>
+                    <td class="col-land">{{ k.land }}</td>
+                    <td class="col-anschriftswahl">{{ k.anschriftswahl }}</td>
+                    <td class="col-email">{{ k.email }}</td>
+                    <td class="col-tel-beruflich">{{ k.telefon_beruflich }}</td>
+                    <td class="col-durchwahl">{{ k.durchwahl_buero }}</td>
+                    <td class="col-mobil">{{ k.mobil_telefon }}</td>
+                    <td class="col-fax">{{ k.faxnummer }}</td>
+                    <td class="col-tel-privat">{{ k.telefon_privat }}</td>
+                    <td class="col-anmerkungen" title="{{ k.anmerkungen }}">{{ k.anmerkungen[:30] if k.anmerkungen else
+                        '' }}{% if k.anmerkungen and k.anmerkungen|length > 30 %}...{% endif %}</td>
+                    <td class="actions col-aktionen">
+                        <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button-secondary">Bearbeiten</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="24">Keine Kunden für die aktuellen Filter gefunden.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const table = document.getElementById('overview-table');
+        const toggler = document.getElementById('column-toggler');
+        const headers = table.querySelectorAll('thead th');
+        const STORAGE_KEY = 'weihnachtspost_column_visibility';
+        let visibility = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+        headers.forEach((header) => {
+            const columnClass = header.classList[0];
+            if (columnClass && columnClass.startsWith('col-')) {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = columnClass;
+                const isVisibleByDefault = ['col-id', 'col-nachname', 'col-mitarbeiter', 'col-aktionen', 'col-status'].includes(columnClass);
+                checkbox.checked = (visibility[columnClass] === undefined) ? isVisibleByDefault : visibility[columnClass];
+
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(header.textContent));
+                toggler.appendChild(label);
+
+                checkbox.addEventListener('change', () => {
+                    toggleColumn(columnClass, checkbox.checked);
+                    visibility[columnClass] = checkbox.checked;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(visibility));
+                });
+
+                toggleColumn(columnClass, checkbox.checked);
+            }
+        });
+
+        function toggleColumn(columnClass, isVisible) {
+            const cells = table.querySelectorAll(`.${columnClass}`);
+            cells.forEach(cell => {
+                cell.style.display = isVisible ? '' : 'none';
+            });
+        }
+    });
+</script>
+{% endblock %}

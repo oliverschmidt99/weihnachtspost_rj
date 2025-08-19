@@ -11,14 +11,18 @@
         <input type="text" name="abteilung" placeholder="Abteilung">
         <input type="text" name="position" placeholder="Position">
         <input type="text" name="telefon" placeholder="Telefon">
-        <button type="submit">Hinzufügen</button>
+        <label for="farbe" style="display: inline-block; margin-right: 1rem;">Farbe:</label>
+        <input type="color" id="farbe" name="farbe" value="#e66465">
+        <button type="submit" style="margin-left: 2rem;">Hinzufügen</button>
     </form>
 </div>
+
 <div class="card">
     <h2>Bestehende Mitarbeiter</h2>
     <table>
         <thead>
             <tr>
+                <th>Farbe</th>
                 <th>Anrede</th>
                 <th>Vorname</th>
                 <th>Nachname</th>
@@ -29,6 +33,11 @@
         <tbody>
             {% for m in mitarbeiter %}
             <tr>
+                <td>
+                    <div
+                        style="width: 20px; height: 20px; background-color: {{ m.farbe }}; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                </td>
                 <td>{{ m.anrede }}</td>
                 <td>{{ m.vorname }}</td>
                 <td>{{ m.nachname }}</td>
@@ -36,14 +45,14 @@
                 <td class="actions">
                     <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}" class="button-secondary">Bearbeiten</a>
                     <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
-                        onsubmit="return confirm('Mitarbeiter und alle zugehörigen Kunden wirklich löschen?');">
+                        onsubmit="return confirm('Mitarbeiter wirklich löschen? Zugehörige Kunden werden keinem Mitarbeiter mehr zugeordnet.');">
                         <button type="submit" class="danger">Löschen</button>
                     </form>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="5">Noch keine Mitarbeiter angelegt.</td>
+                <td colspan="6">Noch keine Mitarbeiter angelegt.</td>
             </tr>
             {% endfor %}
         </tbody>

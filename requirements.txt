@@ -1,3 +1,6 @@
+---
+### `requirements.txt`
+```text
 # requirements.txt
 Flask
 Flask-SQLAlchemy

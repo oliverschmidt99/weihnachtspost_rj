@@ -1,101 +1,114 @@
 import os
 import csv
-from extract_msg import Message
+import re
+import subprocess
+import tempfile
+import shutil
+
+# Ordner mit MSG-Dateien
+msg_folder = os.path.join(os.path.dirname(__file__), "msgDatein")
+output_csv = "kontakte.csv"
+
+columns = [
+    "Anrede",
+    "Titel",
+    "Vorname",
+    "Nachname",
+    "Strasse",
+    "Postleitzahl",
+    "Ort",
+    "Land",
+    "Anschriftswahl Privat/Firma",
+    "Firma1",
+    "Firma2",
+    "Abteilung",
+    "Funktion",
+    "Telefon/beruflich",
+    "Durchwahl Büro",
+    "Mobiles Telefon",
+    "Faxnummer",
+    "Telefon/privat",
+    "Email-Name",
+    "Anmerkungen",
+]
 
 
-def extract_msg_to_csv(root_folder, output_csv):
-    """
-    Durchsucht einen Ordner und dessen Unterordner nach .msg-Dateien,
-    liest die E-Mail-Daten aus und speichert sie in einer CSV-Datei im vorgegebenen Format.
-    """
+def parse_message_txt(text):
+    """Liest message.txt-Text und extrahiert Felder"""
+    data = {col: "" for col in columns}
 
-    # Header für die CSV-Datei mit eindeutigen Spaltennamen
-    # Die doppelten Namen wurden mit '_1', '_2' etc. umbenannt,
-    # um eine korrekte CSV-Struktur zu gewährleisten.
-    csv_headers = [
-        "folder",
-        "subject",
-        "date",
-        "time",
-        "to",
-        "from",
-        "cc",
-        "importance",
-        "status",
-        "received_from",
-        "received_on",
-        "subject_1",
-        "from_1",
-        "to_1",
-        "cc_1",
-        "importance_1",
-        "body",
-        "date_1",
-        "time_1",
-        "received_from_1",
-        "received_on_1",
-        "subject_2",
-        "from_2",
-        "to_2",
-        "cc_2",
-    ]
+    if match := re.search(r"First Name:\s*(.*)", text):
+        data["Vorname"] = match.group(1).strip()
+    if match := re.search(r"Last Name:\s*(.*)", text):
+        data["Nachname"] = match.group(1).strip()
+    if match := re.search(r"Full Name:\s*(Herr|Frau)", text):
+        data["Anrede"] = match.group(1).strip()
+    if match := re.search(r"Job Title:\s*(.*)", text):
+        data["Funktion"] = match.group(1).strip()
+    if match := re.search(r"Company:\s*(.*)", text):
+        data["Firma1"] = match.group(1).strip()
+    if match := re.search(r"Business Address:\s*(.*)", text):
+        addr = match.group(1).strip()
+        if addr_match := re.match(r"(.+),\s*(\d{4,5})\s+(.+)", addr):
+            data["Strasse"] = addr_match.group(1).strip()
+            data["Postleitzahl"] = addr_match.group(2).strip()
+            data["Ort"] = addr_match.group(3).strip()
+        else:
+            data["Strasse"] = addr
+    if match := re.search(r"Business:\s*([+\d\s()/.-]+)", text):
+        data["Telefon/beruflich"] = match.group(1).strip()
+    if match := re.search(r"Home:\s*([+\d\s()/.-]+)", text):
+        data["Telefon/privat"] = match.group(1).strip()
+    if match := re.search(r"Mobile:\s*([+\d\s()/.-]+)", text):
+        data["Mobiles Telefon"] = match.group(1).strip()
+    if match := re.search(r"Fax:\s*([+\d\s()/.-]+)", text):
+        data["Faxnummer"] = match.group(1).strip()
+    if match := re.search(r"Email:\s*([\w\.-]+@[\w\.-]+)", text):
+        data["Email-Name"] = match.group(1).strip()
 
-    with open(output_csv, "w", newline="", encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
+    return data
+
+
+def main():
+    # 1. Temporären Arbeitsordner anlegen
+    temp_dir = tempfile.mkdtemp(prefix="msg_extract_")
+    print(f"📂 Temporärer Ordner: {temp_dir}")
+
+    # 2. Alle MSG-Dateien extrahieren
+    for filename in os.listdir(msg_folder):
+        if filename.lower().endswith(".msg"):
+            filepath = os.path.join(msg_folder, filename)
+            print(f"🔍 Extrahiere {filename}...")
+            subprocess.run(
+                ["python", "-m", "extract_msg", "--out", temp_dir, filepath],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    # 3. CSV-Datei schreiben
+    with open(output_csv, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=columns)
         writer.writeheader()
 
-        for folder_path, _, filenames in os.walk(root_folder):
-            for filename in filenames:
-                if filename.endswith(".msg"):
-                    file_path = os.path.join(folder_path, filename)
+        # Alle message.txt im Temp-Ordner finden
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                if file.lower() == "message.txt":
+                    file_path = os.path.join(root, file)
+                    with open(
+                        file_path, "r", encoding="utf-8", errors="ignore"
+                    ) as txtfile:
+                        text = txtfile.read()
+                    row = parse_message_txt(text)
+                    writer.writerow(row)
+                    print(f"✅ {file_path} verarbeitet")
 
-                    try:
-                        msg = Message(file_path)
+    # 4. Temp-Ordner löschen
+    shutil.rmtree(temp_dir)
+    print(f"🗑️ Temporärer Ordner gelöscht.")
 
-                        # Datums- und Uhrzeitinformationen
-                        date_str = ""
-                        time_str = ""
-                        if msg.date:
-                            try:
-                                # msg-extractor gibt das Datum im Format 'YYYY-MM-DD HH:MM:SS+ZZZZ' zurück
-                                # Wir trennen es in Datum und Zeit auf
-                                date_time_parts = msg.date.split(" ")
-                                date_str = date_time_parts[0]
-                                time_str = date_time_parts[1].split("+")[0]
-                            except IndexError:
-                                date_str = msg.date
-
-                        # Relative Pfadangabe
-                        relative_folder = os.path.relpath(folder_path, root_folder)
-
-                        data = {
-                            "folder": relative_folder,
-                            "subject": msg.subject if msg.subject else "",
-                            "date": date_str,
-                            "time": time_str,
-                            "to": msg.to if msg.to else "",
-                            "from": msg.sender if msg.sender else "",
-                            "cc": msg.cc if msg.cc else "",
-                            # Der Body wird dem Feld 'body' zugeordnet
-                            "body": msg.body.strip() if msg.body else "",
-                            # Andere Felder, die in den meisten E-Mails nicht direkt vorkommen, bleiben leer
-                            # Dies entspricht dem von dir gewünschten Verhalten
-                        }
-
-                        # Daten in die CSV-Datei schreiben
-                        writer.writerow(data)
-                        print(f"Verarbeitet: {file_path}")
-
-                    except Exception as e:
-                        print(f"Fehler beim Verarbeiten der Datei {file_path}: {e}")
+    print(f"\n📄 Fertig! CSV gespeichert als: {os.path.abspath(output_csv)}")
 
 
 if __name__ == "__main__":
-    msg_folder = "C:/Users/o.schmidt/Desktop/post"  # HIER ANPASSEN
-    output_file = "emails.csv"
-
-    if os.path.exists(msg_folder):
-        extract_msg_to_csv(msg_folder, output_file)
-        print(f"Fertig! Die E-Mail-Daten wurden in '{output_file}' gespeichert.")
-    else:
-        print(f"Fehler: Der angegebene Pfad '{msg_folder}' existiert nicht.")
+    main()

@@ -107,7 +107,7 @@ def mitarbeiter_loeschen(id):
     return redirect(url_for("mitarbeiter_liste"))
 
 
-# -- Kunden-Routen (AKTUALISIERT) --
+# -- Kunden-Routen (unverändert) --
 @app.route("/kunden")
 def kunden_liste():
     return render_template(
@@ -117,7 +117,6 @@ def kunden_liste():
 
 @app.route("/kunden/neu", methods=["GET"])
 def kunde_neu_form():
-    """Zeigt das Formular zum Erstellen eines neuen Kunden."""
     return render_template(
         "kunde_neu.html", mitarbeiter=Mitarbeiter.query.all(), jahr=datetime.now().year
     )
@@ -125,30 +124,21 @@ def kunde_neu_form():
 
 @app.route("/kunden/erstellen", methods=["POST"])
 def kunde_erstellen():
-    """Erstellt einen neuen Kunden und den zugehörigen Weihnachtspost-Eintrag."""
-    # 1. Neuen Kunden erstellen
     neuer_kunde = Kunde()
     for key, value in request.form.items():
-        # Ignoriere die Post-Checkboxen, die gehören nicht zum Kunden-Modell
         if key not in ["postkarte", "kalender", "email_versand", "speziell"]:
             setattr(neuer_kunde, key, value)
-
     db.session.add(neuer_kunde)
-    db.session.flush()  # Weist dem neuen Kunden eine ID zu, ohne zu committen
-
-    # 2. Weihnachtspost-Eintrag erstellen
-    jahr = datetime.now().year
+    db.session.flush()
     post_eintrag = Weihnachtspost(
         kunde_id=neuer_kunde.id,
-        jahr=jahr,
+        jahr=datetime.now().year,
         postkarte="postkarte" in request.form,
         kalender="kalender" in request.form,
         email_versand="email_versand" in request.form,
         speziell="speziell" in request.form,
     )
     db.session.add(post_eintrag)
-
-    # 3. Alles zusammen in die Datenbank schreiben
     db.session.commit()
     flash("Kunde und Weihnachtspost-Auswahl erfolgreich erstellt!", "success")
     return redirect(url_for("kunden_liste"))
@@ -208,7 +198,7 @@ def weihnachtspost_speichern(kunde_id):
     return redirect(url_for("weihnachtspost_verwalten", kunde_id=kunde_id, jahr=jahr))
 
 
-# -- MSG-Import Route (AKTUALISIERT mit DEBUG-Ausgabe) --
+# -- MSG-Import Route (AKTUALISIERT mit HTML-Verarbeitung) --
 @app.route("/import/msg", methods=["POST"])
 def upload_msg():
     files = request.files.getlist("msg_files")
@@ -225,15 +215,24 @@ def upload_msg():
             file.save(filepath)
             try:
                 with Message(filepath) as msg:
-                    # --- DEBUG-AUSGABE START ---
+                    # NEU: HTML-Body bevorzugen und bereinigen
+                    body_content = ""
+                    if msg.htmlBody:
+                        # Entferne HTML-Tags, um reinen Text zu erhalten
+                        cleaner = re.compile("<.*?>")
+                        body_content = re.sub(cleaner, "", msg.htmlBody.decode())
+                    else:
+                        body_content = msg.body
+
+                    # --- DEBUG-AUSGABE ---
                     print("=" * 50)
                     print(f"VERARBEITE DATEI: {filename}")
                     print("-" * 50)
-                    print("ROHDATEN (BODY):")
-                    print(msg.body)
+                    print("BEREINIGTER INHALT ZUR ANALYSE:")
+                    print(body_content)
                     print("-" * 50)
 
-                    data = parse_email_body(msg.body)
+                    data = parse_email_body(body_content)
 
                     print("EXTRRAHIERTE FELDER:")
                     print(data)
@@ -251,7 +250,7 @@ def upload_msg():
                             if not getattr(kunde, key, None):
                                 setattr(kunde, key, val)
                         kunde.anmerkungen += (
-                            f"\n\n--- UPDATE aus '{filename}' ---\n{msg.body}"
+                            f"\n\n--- UPDATE aus '{filename}' ---\n{body_content}"
                         )
                         aktualisiert += 1
                     else:
@@ -267,7 +266,7 @@ def upload_msg():
                             postleitzahl=data.get("postleitzahl"),
                             ort=data.get("ort"),
                             telefon_beruflich=data.get("telefon_beruflich"),
-                            anmerkungen=f"Importiert aus '{filename}'\n\n---\n\n{msg.body}",
+                            anmerkungen=f"Importiert aus '{filename}'\n\n---\n\n{body_content}",
                             mitarbeiter_id=mitarbeiter_id,
                         )
                         db.session.add(neuer_kunde)

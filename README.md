@@ -12,7 +12,7 @@ Die Anwendung bietet eine zentrale Oberfläche, um den Überblick über die Weih
 - **Kundenverwaltung:** Kunden können manuell angelegt, aus Outlook `.msg`-Dateien importiert und bearbeitet werden. Jeder Kunde ist einem Mitarbeiter zugeordnet.
 - **Status-System:** Jeder Kunde hat einen Status (Neu 🆕, In Ordnung ✅, Unklar ❓, Fehler ❌, Doppelt 🔃), um den Bearbeitungsfortschritt zu verfolgen.
 - **Weihnachtspost pro Jahr:** Für jeden Kunden kann jährlich festgelegt werden, welche Art von Post er erhalten soll (Postkarte, Kalender, E-Mail, Speziell).
-- **Filterbare Übersicht:** Eine mächtige Übersichtsseite ermöglicht das Filtern der Kunden nach Mitarbeiter, Status oder Postart. Die angezeigten Spalten können individuell ein- und ausgeblendet werden.
+- **Filterbare Übersicht:** Eine Übersichtsseite ermöglicht das Filtern der Kunden nach Mitarbeiter, Status oder Postart. Die angezeigten Spalten können individuell ein- und ausgeblendet werden.
 - **Robuster Import:** Der Import von `.msg`-Dateien (Outlook-Kontakte/Notizen) extrahiert automatisch Kontaktdaten und legt neue Kunden an oder aktualisiert bestehende.
 
 ---
@@ -141,7 +141,7 @@ Das Terminal zeigt dir dann die IP-Adresse an, unter der die Anwendung erreichba
 
   - Export als PDF-Dokument.
 
-  - Generierung einer reinen E-Mail-Liste (für Newsletter-Tools).
+  - Generierung einer reinen E-Mail-Liste.
 
   - Erstellung einer Druckvorlage für Etiketten (z.B. Ultraprip Art. No. 3424).
 
@@ -149,9 +149,9 @@ Das Terminal zeigt dir dann die IP-Adresse an, unter der die Anwendung erreichba
 
 ### `requirements.txt`
 
+Diese Datei listet alle Python-Pakete auf, die für das Projekt benötigt werden. Mit dem Befehl `pip install -r requirements.txt` werden sie alle auf einmal installiert.
+
 ```text
-# Diese Datei listet alle Python-Pakete auf, die für das Projekt benötigt werden.
-# Mit dem Befehl `pip install -r requirements.txt` werden sie alle auf einmal installiert.
 Flask
 Flask-SQLAlchemy
 extract-msg

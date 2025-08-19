@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Weihnachtspost für {{ kunde.vorname }} {{ kunde.nachname }}</h1>
+<div class="card">
+    <h2>Jahr auswählen</h2>
+    <form method="get" action="{{ url_for('weihnachtspost_verwalten', kunde_id=kunde.id) }}">
+        <input type="number" name="jahr" value="{{ jahr }}" min="2020" max="2050" step="1">
+        <button type="submit">Jahr anzeigen</button>
+    </form>
+</div>
+<div class="card">
+    <h2>Auswahl für das Jahr {{ jahr }}</h2>
+    <form action="{{ url_for('weihnachtspost_speichern', kunde_id=kunde.id) }}" method="post">
+        <input type="hidden" name="jahr" value="{{ jahr }}">
+        <fieldset>
+            <legend>Verfügbare Postarten</legend>
+            <div class="checkbox-group">
+                <input type="checkbox" id="postkarte" name="postkarte" {% if post_eintrag and post_eintrag.postkarte
+                    %}checked{% endif %}>
+                <label for="postkarte">Physisch: Postkarte</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="kalender" name="kalender" {% if post_eintrag and post_eintrag.kalender
+                    %}checked{% endif %}>
+                <label for="kalender">Physisch: Kalender</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="email_versand" name="email_versand" {% if post_eintrag and
+                    post_eintrag.email_versand %}checked{% endif %}>
+                <label for="email_versand">Digital: E-Mail</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="speziell" name="speziell" {% if post_eintrag and post_eintrag.speziell
+                    %}checked{% endif %}>
+                <label for="speziell">Spezielle Post (Individuell)</label>
+            </div>
+        </fieldset>
+        <button type="submit">Auswahl speichern</button>
+        <a href="{{ url_for('kunden_liste') }}" class="button-secondary">Zurück zur Kundenliste</a>
+    </form>
+</div>
+{% endblock %}

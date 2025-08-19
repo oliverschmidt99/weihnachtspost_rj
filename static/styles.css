@@ -13,7 +13,7 @@ nav a:hover {
     text-decoration: underline;
 }
 main {
-    padding: 2rem; max-width: 1200px; margin: 0 auto;
+    padding: 2rem; max-width: 95%; /* Breiter für die große Tabelle */ margin: 0 auto;
 }
 .card {
     background: white; padding: 1.5rem; border-radius: 8px;
@@ -24,6 +24,9 @@ input, select, button, textarea {
     padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;
     font-size: 1rem; margin-right: 0.5rem; margin-bottom: 0.5rem;
 }
+input[type="color"] {
+    padding: 2px; height: 40px; vertical-align: middle;
+}
 button {
     cursor: pointer; background-color: #007bff; color: white; border: none;
 }
@@ -32,11 +35,12 @@ button.danger { background-color: #dc3545; }
 button.danger:hover { background-color: #c82333; }
 table {
     width: 100%; border-collapse: collapse; margin-top: 1rem;
+    font-size: 0.9em; /* Kleinere Schrift für mehr Platz */
 }
 th, td {
-    text-align: left; padding: 0.75rem; border-bottom: 1px solid #ddd;
+    text-align: left; padding: 0.5rem; /* Weniger Padding */ border-bottom: 1px solid #ddd;
+    white-space: nowrap; /* Verhindert Zeilenumbruch in Zellen */
 }
-th { background-color: #f9f9f9; }
 .flash-messages { margin-bottom: 1rem; }
 .flash { padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
 .flash.success { background-color: #d4edda; color: #155724; }
@@ -61,18 +65,27 @@ form legend { font-weight: bold; padding: 0 0.5rem; }
 .checkbox-group { display: flex; align-items: center; margin-bottom: 0.75rem; }
 .checkbox-group input[type="checkbox"] { width: auto; margin-right: 0.75rem; }
 .checkbox-group label { margin-top: 0; font-weight: normal; }
-
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+.table-container {
+    overflow-x: auto; /* Scrollbalken nur, wenn es WIRKLICH nicht passt */
+}
+.column-toggler {
+    display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.9em;
+}
+.column-toggler label {
+    display: flex; align-items: center; gap: 5px;
+    font-weight: normal; margin-top: 0;
+}
+.column-toggler input {
+    margin: 0;
+}
 .button-primary {
-    display: inline-block;
-    padding: 0.75rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    text-align: center;
-    border: none;
+    display: inline-block; padding: 0.75rem; border-radius: 4px; font-size: 1rem;
+    background-color: #007bff; color: white; text-decoration: none;
+    text-align: center; border: none;
 }
-.button-primary:hover {
-    background-color: #0056b3;
-}
+.button-primary:hover { background-color: #0056b3; }

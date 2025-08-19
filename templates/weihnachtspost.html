@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
+
 {% block content %}
 <h1>Weihnachtspost für {{ kunde.vorname }} {{ kunde.nachname }}</h1>
+
 <div class="card">
     <h2>Jahr auswählen</h2>
     <form method="get" action="{{ url_for('weihnachtspost_verwalten', kunde_id=kunde.id) }}">
@@ -9,6 +11,7 @@
         <button type="submit">Jahr anzeigen</button>
     </form>
 </div>
+
 <div class="card">
     <h2>Auswahl für das Jahr {{ jahr }}</h2>
     <form action="{{ url_for('weihnachtspost_speichern', kunde_id=kunde.id) }}" method="post">

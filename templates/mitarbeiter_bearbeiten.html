@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Kunde bearbeiten</h1>
+<div class="card">
+    <form action="{{ url_for('kunde_update', id=kunde.id) }}" method="post">
+        <fieldset>
+            <legend>Persönliche Informationen</legend>
+            <label for="anrede">Anrede</label><input type="text" name="anrede" value="{{ kunde.anrede }}">
+            <label for="titel">Titel</label><input type="text" name="titel" value="{{ kunde.titel }}">
+            <label for="vorname">Vorname</label><input type="text" name="vorname" value="{{ kunde.vorname }}">
+            <label for="nachname">Nachname</label><input type="text" name="nachname" value="{{ kunde.nachname }}"
+                required>
+        </fieldset>
+        <fieldset>
+            <legend>Adresse</legend>
+            <label for="strasse">Straße</label><input type="text" name="strasse" value="{{ kunde.strasse }}">
+            <label for="postleitzahl">PLZ</label><input type="text" name="postleitzahl"
+                value="{{ kunde.postleitzahl }}">
+            <label for="ort">Ort</label><input type="text" name="ort" value="{{ kunde.ort }}">
+            <label for="land">Land</label><input type="text" name="land" value="{{ kunde.land }}">
+        </fieldset>
+        <fieldset>
+            <legend>Firma</legend>
+            <label for="anschriftswahl">Anschriftswahl (Privat/Firma)</label><input type="text" name="anschriftswahl"
+                value="{{ kunde.anschriftswahl }}">
+            <label for="firma1">Firma 1</label><input type="text" name="firma1" value="{{ kunde.firma1 }}">
+            <label for="firma2">Firma 2</label><input type="text" name="firma2" value="{{ kunde.firma2 }}">
+            <label for="abteilung">Abteilung</label><input type="text" name="abteilung" value="{{ kunde.abteilung }}">
+            <label for="funktion">Funktion</label><input type="text" name="funktion" value="{{ kunde.funktion }}">
+        </fieldset>
+        <fieldset>
+            <legend>Kontakt</legend>
+            <label for="email">E-Mail</label><input type="email" name="email" value="{{ kunde.email }}">
+            <label for="telefon_beruflich">Telefon (beruflich)</label><input type="text" name="telefon_beruflich"
+                value="{{ kunde.telefon_beruflich }}">
+            <label for="mobil_telefon">Mobil</label><input type="text" name="mobil_telefon"
+                value="{{ kunde.mobil_telefon }}">
+            <label for="telefon_privat">Telefon (privat)</label><input type="text" name="telefon_privat"
+                value="{{ kunde.telefon_privat }}">
+        </fieldset>
+        <fieldset>
+            <legend>Sonstiges</legend>
+            <label for="anmerkungen">Anmerkungen</label><textarea name="anmerkungen">{{ kunde.anmerkungen }}</textarea>
+            <label for="mitarbeiter_id">Zugeordneter Mitarbeiter</label>
+            <select name="mitarbeiter_id" required>
+                {% for m in mitarbeiter %}
+                <option value="{{ m.id }}" {% if m.id==kunde.mitarbeiter_id %}selected="selected" {% endif %}>
+                    {{ m.vorname }} {{ m.nachname }}
+                </option>
+                {% endfor %}
+            </select>
+        </fieldset>
+        <button type="submit">Änderungen speichern</button>
+        <a href="{{ url_for('kunden_liste') }}" class="button-secondary">Abbrechen</a>
+    </form>
+</div>
+{% endblock %}

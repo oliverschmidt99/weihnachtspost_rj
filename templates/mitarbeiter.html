@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Mitarbeiterverwaltung</h1>
+<div class="card">
+    <h2>Neuen Mitarbeiter anlegen</h2>
+    <form action="{{ url_for('mitarbeiter_neu') }}" method="post">
+        <input type="text" name="anrede" placeholder="Anrede" required>
+        <input type="text" name="vorname" placeholder="Vorname" required>
+        <input type="text" name="nachname" placeholder="Nachname" required>
+        <input type="text" name="abteilung" placeholder="Abteilung">
+        <input type="text" name="position" placeholder="Position">
+        <input type="text" name="telefon" placeholder="Telefon">
+        <button type="submit">Hinzufügen</button>
+    </form>
+</div>
+<div class="card">
+    <h2>Bestehende Mitarbeiter</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Anrede</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Abteilung</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in mitarbeiter %}
+            <tr>
+                <td>{{ m.anrede }}</td>
+                <td>{{ m.vorname }}</td>
+                <td>{{ m.nachname }}</td>
+                <td>{{ m.abteilung }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}" class="button-secondary">Bearbeiten</a>
+                    <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
+                        onsubmit="return confirm('Mitarbeiter und alle zugehörigen Kunden wirklich löschen?');">
+                        <button type="submit" class="danger">Löschen</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">Noch keine Mitarbeiter angelegt.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

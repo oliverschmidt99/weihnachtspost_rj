@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Kundenverwaltung</h1>
+
+<div class="card">
+    <h2>Aktionen</h2>
+    <a href="{{ url_for('kunde_neu_form') }}" class="button-primary">Neuen Kunden anlegen</a>
+</div>
+
+<div class="card">
+    <h2>Kunden aus .msg-Dateien importieren</h2>
+    <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
+        <label for="mitarbeiter_id">Mitarbeiter zuordnen:</label>
+        <select name="mitarbeiter_id" id="mitarbeiter_id" required>
+            <option value="" disabled selected>-- Bitte wählen --</option>
+            {% for m in mitarbeiter %}
+            <option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <label for="msg_files">.msg-Dateien auswählen:</label>
+        <input type="file" name="msg_files" multiple required>
+        <br><br>
+        <button type="submit">Hochladen & Importieren</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Bestehende Kunden</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nachname</th>
+                <th>Vorname</th>
+                <th>Email</th>
+                <th>Zugeordnet zu</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for k in kunden %}
+            <tr>
+                <td>{{ k.nachname }}</td>
+                <td>{{ k.vorname }}</td>
+                <td>{{ k.email }}</td>
+                <td>{{ k.mitarbeiter.vorname }} {{ k.mitarbeiter.nachname }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('weihnachtspost_verwalten', kunde_id=k.id) }}" class="button-secondary">Post</a>
+                    <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button-secondary">Bearbeiten</a>
+                    <form action="{{ url_for('kunde_loeschen', id=k.id) }}" method="post"
+                        onsubmit="return confirm('Kunde wirklich löschen?');">
+                        <button type="submit" class="danger">Löschen</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">Noch keine Kunden angelegt.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

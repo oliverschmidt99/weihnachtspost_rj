@@ -13,7 +13,9 @@
         <a href="{{ url_for('index') }}">Start</a>
         <a href="{{ url_for('mitarbeiter_liste') }}">Mitarbeiter</a>
         <a href="{{ url_for('kunden_liste') }}">Kunden</a>
+        <a href="{{ url_for('uebersicht') }}">Übersicht</a>
     </nav>
+
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -24,6 +26,7 @@
         </div>
         {% endif %}
         {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
 </body>

@@ -2,7 +2,6 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1>Neuen Kunden anlegen</h1>
-
 <div class="card">
     <form action="{{ url_for('kunde_erstellen') }}" method="post">
         <fieldset>
@@ -11,14 +10,6 @@
             <label for="titel">Titel</label><input type="text" name="titel">
             <label for="vorname">Vorname</label><input type="text" name="vorname">
             <label for="nachname">Nachname</label><input type="text" name="nachname" required>
-        </fieldset>
-
-        <fieldset>
-            <legend>Adresse</legend>
-            <label for="strasse">Straße</label><input type="text" name="strasse">
-            <label for="postleitzahl">PLZ</label><input type="text" name="postleitzahl">
-            <label for="ort">Ort</label><input type="text" name="ort">
-            <label for="land">Land</label><input type="text" name="land">
         </fieldset>
 
         <fieldset>
@@ -49,11 +40,17 @@
         </fieldset>
 
         <fieldset>
-            <legend>Zuordnung</legend>
+            <legend>Zuordnung & Status</legend>
             <label for="mitarbeiter_id">Zugeordneter Mitarbeiter</label>
             <select name="mitarbeiter_id" required>
                 {% for m in mitarbeiter %}
                 <option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}</option>
+                {% endfor %}
+            </select>
+            <label for="status">Status</label>
+            <select name="status" required>
+                {% for s in status_optionen %}
+                <option value="{{ s }}">{{ s }}</option>
                 {% endfor %}
             </select>
         </fieldset>

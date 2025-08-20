@@ -1,19 +1,16 @@
 # app.py
-# --- Importe von Python-Bibliotheken ---
 import os
 import re
-import subprocess  # Um Kommandozeilen-Befehle auszuführen (für extract_msg)
-import tempfile  # Um temporäre Ordner zu erstellen
-import shutil  # Um Ordner und deren Inhalte zu löschen
+import subprocess
+import tempfile
+import shutil
 from datetime import datetime
-
-# --- Importe von Flask und Erweiterungen ---
 from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-from models import db, Mitarbeiter, Kunde, Weihnachtspost  # Unsere Datenbank-Modelle
+from models import db, Mitarbeiter, Kunde, Weihnachtspost
 from sqlalchemy import or_
 
-# --- Globale Konfiguration ---
+# -- Konfiguration --
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"msg"}
 STATUS_OPTIONEN = ["Neu", "In Ordnung", "Unklar", "Fehler", "Doppelt"]
@@ -25,27 +22,21 @@ STATUS_EMOJIS = {
     "Doppelt": "🔃",
 }
 
-# --- Initialisierung der Flask-App ---
 app = Flask(__name__)
-app.config["SECRET_KEY"] = (
-    "dein-super-geheimer-schluessel-hier"  # Wichtig für Flash-Nachrichten
-)
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "sqlite:///weihnachtspost.db"  # Pfad zur Datenbank-Datei
-)
+app.config["SECRET_KEY"] = "dein-super-geheimer-schluessel-hier"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///weihnachtspost.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-db.init_app(app)  # Verknüpft die Datenbank mit der App
+db.init_app(app)
 
 
-# --- Hilfsfunktionen ---
+# (Der Großteil der Datei bleibt unverändert)
+# ...
 def allowed_file(filename):
-    """Prüft, ob eine hochgeladene Datei die erlaubte Endung (.msg) hat."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def parse_vcard_text(text):
-    """Liest den aus `message.txt` extrahierten Text und wandelt ihn in ein Daten-Dictionary um."""
     data = {}
     patterns = {
         "vorname": r"(?:First Name|Vorname):\s*(.+)",
@@ -79,24 +70,19 @@ def parse_vcard_text(text):
     return data
 
 
-# --- Routen der Web-Anwendung ---
 @app.route("/")
 def index():
-    """Zeigt die Startseite."""
     return render_template("index.html")
 
 
-# --- Übersicht ---
 @app.route("/uebersicht")
 def uebersicht():
-    """Zeigt die filterbare Kundenübersicht."""
     query = db.session.query(Kunde)
     mitarbeiter_id = request.args.get("mitarbeiter_id")
     post_art = request.args.get("post_art")
     status = request.args.get("status")
     jahr = request.args.get("jahr", datetime.now().year, type=int)
 
-    # Filter dynamisch anwenden
     if mitarbeiter_id:
         query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
     if status:
@@ -125,16 +111,13 @@ def uebersicht():
     )
 
 
-# --- Mitarbeiter-Verwaltung ---
 @app.route("/mitarbeiter")
 def mitarbeiter_liste():
-    """Zeigt die Liste aller Mitarbeiter."""
     return render_template("mitarbeiter.html", mitarbeiter=Mitarbeiter.query.all())
 
 
 @app.route("/mitarbeiter/neu", methods=["POST"])
 def mitarbeiter_neu():
-    """Erstellt einen neuen Mitarbeiter."""
     neuer_mitarbeiter = Mitarbeiter(**request.form)
     db.session.add(neuer_mitarbeiter)
     db.session.commit()
@@ -144,7 +127,6 @@ def mitarbeiter_neu():
 
 @app.route("/mitarbeiter/bearbeiten/<int:id>")
 def mitarbeiter_bearbeiten(id):
-    """Zeigt das Formular zum Bearbeiten eines Mitarbeiters."""
     return render_template(
         "mitarbeiter_bearbeiten.html", mitarbeiter=Mitarbeiter.query.get_or_404(id)
     )
@@ -152,7 +134,6 @@ def mitarbeiter_bearbeiten(id):
 
 @app.route("/mitarbeiter/update/<int:id>", methods=["POST"])
 def mitarbeiter_update(id):
-    """Speichert die Änderungen an einem Mitarbeiter."""
     mitarbeiter = Mitarbeiter.query.get_or_404(id)
     for key, value in request.form.items():
         setattr(mitarbeiter, key, value)
@@ -163,7 +144,6 @@ def mitarbeiter_update(id):
 
 @app.route("/mitarbeiter/loeschen/<int:id>", methods=["POST"])
 def mitarbeiter_loeschen(id):
-    """Löscht einen Mitarbeiter, aber nicht seine Kunden."""
     mitarbeiter = Mitarbeiter.query.get_or_404(id)
     db.session.delete(mitarbeiter)
     db.session.commit()
@@ -174,10 +154,8 @@ def mitarbeiter_loeschen(id):
     return redirect(url_for("mitarbeiter_liste"))
 
 
-# --- Kunden-Verwaltung ---
 @app.route("/kunden")
 def kunden_liste():
-    """Zeigt die Liste aller Kunden."""
     return render_template(
         "kunden.html",
         kunden=Kunde.query.all(),
@@ -188,7 +166,6 @@ def kunden_liste():
 
 @app.route("/kunden/neu", methods=["GET"])
 def kunde_neu_form():
-    """Zeigt das Formular zum manuellen Erstellen eines Kunden."""
     return render_template(
         "kunde_neu.html",
         mitarbeiter=Mitarbeiter.query.all(),
@@ -199,13 +176,12 @@ def kunde_neu_form():
 
 @app.route("/kunden/erstellen", methods=["POST"])
 def kunde_erstellen():
-    """Speichert den neuen, manuell erstellten Kunden und seine Postauswahl."""
     neuer_kunde = Kunde()
     for key, value in request.form.items():
         if hasattr(Kunde, key):
             setattr(neuer_kunde, key, value)
     db.session.add(neuer_kunde)
-    db.session.flush()  # Holt die ID des neuen Kunden vor dem Commit
+    db.session.flush()
     post_eintrag = Weihnachtspost(
         kunde_id=neuer_kunde.id,
         jahr=datetime.now().year,
@@ -222,7 +198,6 @@ def kunde_erstellen():
 
 @app.route("/kunden/bearbeiten/<int:id>")
 def kunde_bearbeiten(id):
-    """Zeigt das Formular zum Bearbeiten eines Kunden."""
     return render_template(
         "kunde_bearbeiten.html",
         kunde=Kunde.query.get_or_404(id),
@@ -233,9 +208,7 @@ def kunde_bearbeiten(id):
 
 @app.route("/kunden/update/<int:id>", methods=["POST"])
 def kunde_update(id):
-    """Speichert die Änderungen an einem Kunden."""
     kunde = Kunde.query.get_or_404(id)
-    # Spezialfall: Wenn "Kein Mitarbeiter" ausgewählt wird
     if "mitarbeiter_id" in request.form and not request.form["mitarbeiter_id"]:
         kunde.mitarbeiter_id = None
         form_data = request.form.to_dict()
@@ -252,17 +225,14 @@ def kunde_update(id):
 
 @app.route("/kunden/loeschen/<int:id>", methods=["POST"])
 def kunde_loeschen(id):
-    """Löscht einen Kunden und alle zugehörigen Post-Einträge."""
     db.session.delete(Kunde.query.get_or_404(id))
     db.session.commit()
     flash("Kunde erfolgreich gelöscht!", "success")
     return redirect(url_for("kunden_liste"))
 
 
-# --- Weihnachtspost-Verwaltung pro Kunde ---
 @app.route("/kunde/<int:kunde_id>/weihnachtspost")
 def weihnachtspost_verwalten(kunde_id):
-    """Zeigt die Seite zur Verwaltung der Postarten für einen Kunden."""
     kunde = Kunde.query.get_or_404(kunde_id)
     jahr = request.args.get("jahr", datetime.now().year, type=int)
     post_eintrag = Weihnachtspost.query.filter_by(kunde_id=kunde.id, jahr=jahr).first()
@@ -273,7 +243,6 @@ def weihnachtspost_verwalten(kunde_id):
 
 @app.route("/kunde/<int:kunde_id>/weihnachtspost/speichern", methods=["POST"])
 def weihnachtspost_speichern(kunde_id):
-    """Speichert die Auswahl der Postarten für ein bestimmtes Jahr."""
     jahr = request.form.get("jahr", type=int)
     post_eintrag = Weihnachtspost.query.filter_by(kunde_id=kunde_id, jahr=jahr).first()
     if not post_eintrag:
@@ -288,10 +257,8 @@ def weihnachtspost_speichern(kunde_id):
     return redirect(url_for("weihnachtspost_verwalten", kunde_id=kunde_id, jahr=jahr))
 
 
-# --- MSG-Import ---
 @app.route("/import/msg", methods=["POST"])
 def upload_msg():
-    """Verarbeitet den Upload von .msg-Dateien und importiert die Kunden."""
     files = request.files.getlist("msg_files")
     mitarbeiter_id = request.form.get("mitarbeiter_id")
     if not mitarbeiter_id:
@@ -372,13 +339,10 @@ def upload_msg():
     return redirect(url_for("kunden_liste"))
 
 
-# --- Startpunkt der Anwendung ---
 if __name__ == "__main__":
-    # Erstellt den Upload-Ordner, falls er nicht existiert
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-    # Erstellt die Datenbank und Tabellen, falls sie nicht existieren
     with app.app_context():
         db.create_all()
-    # Startet den Entwicklungs-Server, der im Netzwerk erreichbar ist
-    app.run(host="0.0.0.0", debug=True)
+    # KORREKTUR: Port auf 6060 geändert
+    app.run(host="0.0.0.0", port=6060, debug=True)

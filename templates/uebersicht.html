@@ -1,9 +1,7 @@
-<!DOCTYPE html>
 {% extends 'base.html' %}
 
 {% block content %}
 <h1>Kundenübersicht & Filter</h1>
-
 <div class="card">
     <form method="get" action="{{ url_for('uebersicht') }}">
         <div class="filter-grid">
@@ -47,8 +45,7 @@
 
 <div class="card">
     <h2>Spalten ein-/ausblenden</h2>
-    <div id="column-toggler" class="column-toggler">
-    </div>
+    <div id="column-toggler" class="column-toggler"></div>
 </div>
 
 <div class="card">
@@ -89,30 +86,30 @@
                     <td class="col-id">{{ k.id }}</td>
                     <td class="col-status">{{ status_emojis.get(k.status, '') }} {{ k.status }}</td>
                     <td class="col-mitarbeiter"
-                        style="background-color: {% if k.mitarbeiter %}{{ k.mitarbeiter.farbe }}{% else %}transparent{% endif %};">
+                        style="background-color: {{ k.mitarbeiter.farbe if k.mitarbeiter else 'transparent' }};">
                         {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
                     </td>
-                    <td class="col-anrede">{{ k.anrede }}</td>
-                    <td class="col-titel">{{ k.titel }}</td>
-                    <td class="col-vorname">{{ k.vorname }}</td>
-                    <td class="col-nachname">{{ k.nachname }}</td>
-                    <td class="col-firma1">{{ k.firma1 }}</td>
-                    <td class="col-firma2">{{ k.firma2 }}</td>
-                    <td class="col-funktion">{{ k.funktion }}</td>
-                    <td class="col-abteilung">{{ k.abteilung }}</td>
-                    <td class="col-strasse">{{ k.strasse }}</td>
-                    <td class="col-plz">{{ k.postleitzahl }}</td>
-                    <td class="col-ort">{{ k.ort }}</td>
-                    <td class="col-land">{{ k.land }}</td>
-                    <td class="col-anschriftswahl">{{ k.anschriftswahl }}</td>
-                    <td class="col-email">{{ k.email }}</td>
-                    <td class="col-tel-beruflich">{{ k.telefon_beruflich }}</td>
-                    <td class="col-durchwahl">{{ k.durchwahl_buero }}</td>
-                    <td class="col-mobil">{{ k.mobil_telefon }}</td>
-                    <td class="col-fax">{{ k.faxnummer }}</td>
-                    <td class="col-tel-privat">{{ k.telefon_privat }}</td>
-                    <td class="col-anmerkungen" title="{{ k.anmerkungen }}">{{ k.anmerkungen[:30] if k.anmerkungen else
-                        '' }}{% if k.anmerkungen and k.anmerkungen|length > 30 %}...{% endif %}</td>
+                    <td class="col-anrede">{{ k.anrede or '' }}</td>
+                    <td class="col-titel">{{ k.titel or '' }}</td>
+                    <td class="col-vorname">{{ k.vorname or '' }}</td>
+                    <td class="col-nachname">{{ k.nachname or '' }}</td>
+                    <td class="col-firma1">{{ k.firma1 or '' }}</td>
+                    <td class="col-firma2">{{ k.firma2 or '' }}</td>
+                    <td class="col-funktion">{{ k.funktion or '' }}</td>
+                    <td class="col-abteilung">{{ k.abteilung or '' }}</td>
+                    <td class="col-strasse">{{ k.strasse or '' }}</td>
+                    <td class="col-plz">{{ k.postleitzahl or '' }}</td>
+                    <td class="col-ort">{{ k.ort or '' }}</td>
+                    <td class="col-land">{{ k.land or '' }}</td>
+                    <td class="col-anschriftswahl">{{ k.anschriftswahl or '' }}</td>
+                    <td class="col-email">{{ k.email or '' }}</td>
+                    <td class="col-tel-beruflich">{{ k.telefon_beruflich or '' }}</td>
+                    <td class="col-durchwahl">{{ k.durchwahl_buero or '' }}</td>
+                    <td class="col-mobil">{{ k.mobil_telefon or '' }}</td>
+                    <td class="col-fax">{{ k.faxnummer or '' }}</td>
+                    <td class="col-tel-privat">{{ k.telefon_privat or '' }}</td>
+                    <td class="col-anmerkungen" title="{{ k.anmerkungen or '' }}">{{ k.anmerkungen[:30] if k.anmerkungen
+                        else '' }}{% if k.anmerkungen and k.anmerkungen|length > 30 %}...{% endif %}</td>
                     <td class="actions col-aktionen">
                         <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button-secondary">Bearbeiten</a>
                     </td>
@@ -126,7 +123,6 @@
         </table>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const table = document.getElementById('overview-table');

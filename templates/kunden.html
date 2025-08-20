@@ -2,12 +2,10 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1>Kundenverwaltung</h1>
-
 <div class="card">
     <h2>Aktionen</h2>
     <a href="{{ url_for('kunde_neu_form') }}" class="button-primary">Neuen Kunden anlegen</a>
 </div>
-
 <div class="card">
     <h2>Kunden aus .msg-Dateien importieren</h2>
     <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
@@ -21,7 +19,6 @@
                 {% endfor %}
             </select>
         </fieldset>
-
         <fieldset>
             <legend>2. Standard-Postart für diesen Import festlegen</legend>
             <div class="checkbox-group">
@@ -41,17 +38,14 @@
                 <label for="speziell">Spezielle Post</label>
             </div>
         </fieldset>
-
         <fieldset>
             <legend>3. Dateien auswählen</legend>
             <label for="msg_files">.msg-Dateien auswählen:</label>
             <input type="file" name="msg_files" multiple required>
         </fieldset>
-
         <button type="submit">Hochladen & Importieren</button>
     </form>
 </div>
-
 <div class="card">
     <h2>Bestehende Kunden</h2>
     <table>
@@ -70,7 +64,7 @@
                 <td>{{ status_emojis.get(k.status, '') }} {{ k.status }}</td>
                 <td>{{ k.nachname }}</td>
                 <td>{{ k.vorname }}</td>
-                <td style="background-color: {{ k.mitarbeiter.farbe if k.mitarbeiter else 'transparent' }}">
+                <td style="background-color: {{ k.mitarbeiter.farbe if k.mitarbeiter else 'transparent' }};">
                     {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
                 </td>
                 <td class="actions">

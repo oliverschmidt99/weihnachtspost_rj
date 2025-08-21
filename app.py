@@ -344,5 +344,4 @@ if __name__ == "__main__":
         os.makedirs(UPLOAD_FOLDER)
     with app.app_context():
         db.create_all()
-    # KORREKTUR: Port auf 6060 geändert
     app.run(port=6060, debug=True)

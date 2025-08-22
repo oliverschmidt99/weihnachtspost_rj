@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
+{% block title %}Weihnachtspost für {{ kunde.vorname }} {{ kunde.nachname }}{% endblock %}
 
 {% block content %}
 <h1>Weihnachtspost für {{ kunde.vorname }} {{ kunde.nachname }}</h1>
 
-<div class="card">
-    <h2>Jahr auswählen</h2>
-    <form method="get" action="{{ url_for('weihnachtspost_verwalten', kunde_id=kunde.id) }}">
-        <input type="number" name="jahr" value="{{ jahr }}" min="2020" max="2050" step="1">
+<div class="card config-section active">
+    <form method="get" action="{{ url_for('weihnachtspost_verwalten', kunde_id=kunde.id) }}" class="form-inline">
+        <div class="form-group">
+            <label for="jahr-select">Jahr auswählen</label>
+            <input type="number" name="jahr" id="jahr-select" value="{{ jahr }}" min="2020" max="2050" step="1">
+        </div>
         <button type="submit">Jahr anzeigen</button>
     </form>
 </div>
 
-<div class="card">
+<div class="card config-section active">
     <h2>Auswahl für das Jahr {{ jahr }}</h2>
     <form action="{{ url_for('weihnachtspost_speichern', kunde_id=kunde.id) }}" method="post">
         <input type="hidden" name="jahr" value="{{ jahr }}">
@@ -39,8 +42,10 @@
                 <label for="speziell">Spezielle Post (Individuell)</label>
             </div>
         </fieldset>
-        <button type="submit">Auswahl speichern</button>
-        <a href="{{ url_for('kunden_liste') }}" class="button-secondary">Zurück zur Kundenliste</a>
+        <div class="button-group">
+            <button type="submit">Auswahl speichern</button>
+            <a href="{{ url_for('kunden_liste') }}" class="button secondary">Zurück zur Kundenliste</a>
+        </div>
     </form>
 </div>
 {% endblock %}

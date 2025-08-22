@@ -1,41 +1,42 @@
+<!DOCTYPE html>
 {% extends 'base.html' %}
+{% block title %}Kundenübersicht{% endblock %}
 
 {% block content %}
 <h1>Kundenübersicht & Filter</h1>
-<div class="card">
+<div class="card config-section active">
     <form method="get" action="{{ url_for('uebersicht') }}">
         <div class="filter-grid">
-            <div>
+            <div class="form-group">
                 <label for="mitarbeiter_id">Mitarbeiter</label>
-                <select name="mitarbeiter_id" onchange="this.form.submit()">
+                <select name="mitarbeiter_id" id="mitarbeiter_id" onchange="this.form.submit()">
                     <option value="">Alle Mitarbeiter</option>
                     {% for m in mitarbeiter_liste %}
-                    <option value="{{ m.id }}" {% if aktiver_mitarbeiter==m.id|string %}selected="selected" {% endif %}>
+                    <option value="{{ m.id }}" {% if aktiver_mitarbeiter==m.id|string %}selected{% endif %}>
                         {{ m.vorname }} {{ m.nachname }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="post_art">Postart (für {{ aktives_jahr }})</label>
-                <select name="post_art" onchange="this.form.submit()">
+                <select name="post_art" id="post_art" onchange="this.form.submit()">
                     <option value="">Alle Arten</option>
-                    <option value="postkarte" {% if aktive_post_art=='postkarte' %}selected="selected" {% endif %}>
-                        Physisch: Postkarte</option>
-                    <option value="kalender" {% if aktive_post_art=='kalender' %}selected="selected" {% endif %}>
-                        Physisch: Kalender</option>
-                    <option value="email_versand" {% if aktive_post_art=='email_versand' %}selected="selected" {% endif
-                        %}>Digital: E-Mail</option>
-                    <option value="speziell" {% if aktive_post_art=='speziell' %}selected="selected" {% endif %}>
-                        Spezielle Post</option>
+                    <option value="postkarte" {% if aktive_post_art=='postkarte' %}selected{% endif %}>Postkarte
+                    </option>
+                    <option value="kalender" {% if aktive_post_art=='kalender' %}selected{% endif %}>Kalender</option>
+                    <option value="email_versand" {% if aktive_post_art=='email_versand' %}selected{% endif %}>E-Mail
+                    </option>
+                    <option value="speziell" {% if aktive_post_art=='speziell' %}selected{% endif %}>Spezielle Post
+                    </option>
                 </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="status">Status</label>
-                <select name="status" onchange="this.form.submit()">
+                <select name="status" id="status" onchange="this.form.submit()">
                     <option value="">Alle Status</option>
                     {% for s in status_optionen %}
-                    <option value="{{ s }}" {% if aktiver_status==s %}selected="selected" {% endif %}>{{ s }}</option>
+                    <option value="{{ s }}" {% if aktiver_status==s %}selected{% endif %}>{{ s }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -43,41 +44,17 @@
     </form>
 </div>
 
-<div class="card">
+<div class="card config-section active">
     <h2>Spalten ein-/ausblenden</h2>
     <div id="column-toggler" class="column-toggler"></div>
 </div>
 
-<div class="card">
+<div class="card config-section active">
     <h2>Gefilterte Kunden ({{ kunden|length }})</h2>
     <div class="table-container">
         <table id="overview-table">
             <thead>
                 <tr>
-                    <th class="col-id">ID</th>
-                    <th class="col-status">Status</th>
-                    <th class="col-mitarbeiter">Mitarbeiter</th>
-                    <th class="col-anrede">Anrede</th>
-                    <th class="col-titel">Titel</th>
-                    <th class="col-vorname">Vorname</th>
-                    <th class="col-nachname">Nachname</th>
-                    <th class="col-firma1">Firma 1</th>
-                    <th class="col-firma2">Firma 2</th>
-                    <th class="col-funktion">Funktion</th>
-                    <th class="col-abteilung">Abteilung</th>
-                    <th class="col-strasse">Straße</th>
-                    <th class="col-plz">PLZ</th>
-                    <th class="col-ort">Ort</th>
-                    <th class="col-land">Land</th>
-                    <th class="col-anschriftswahl">Anschriftswahl</th>
-                    <th class="col-email">E-Mail</th>
-                    <th class="col-tel-beruflich">Telefon (berufl.)</th>
-                    <th class="col-durchwahl">Durchwahl</th>
-                    <th class="col-mobil">Mobil</th>
-                    <th class="col-fax">Fax</th>
-                    <th class="col-tel-privat">Telefon (privat)</th>
-                    <th class="col-anmerkungen">Anmerkungen</th>
-                    <th class="col-aktionen">Aktionen</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,59 +85,98 @@
                     <td class="col-mobil">{{ k.mobil_telefon or '' }}</td>
                     <td class="col-fax">{{ k.faxnummer or '' }}</td>
                     <td class="col-tel-privat">{{ k.telefon_privat or '' }}</td>
-                    <td class="col-anmerkungen" title="{{ k.anmerkungen or '' }}">{{ k.anmerkungen[:30] if k.anmerkungen
-                        else '' }}{% if k.anmerkungen and k.anmerkungen|length > 30 %}...{% endif %}</td>
+                    <td class="col-anmerkungen" title="{{ k.anmerkungen or '' }}">{{ (k.anmerkungen[:30] + '...') if
+                        k.anmerkungen and k.anmerkungen|length > 30 else (k.anmerkungen or '') }}</td>
                     <td class="actions col-aktionen">
-                        <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button-secondary">Bearbeiten</a>
+                        <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button secondary">Bearbeiten</a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="24">Keine Kunden für die aktuellen Filter gefunden.</td>
+                    <td id="no-customer-cell" colspan="24">Keine Kunden für die aktuellen Filter gefunden.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const table = document.getElementById('overview-table');
         const toggler = document.getElementById('column-toggler');
-        const headers = table.querySelectorAll('thead th');
+        const noCustomerCell = document.getElementById('no-customer-cell');
+
+        const allColumns = [
+            { class: 'col-id', text: 'ID' }, { class: 'col-status', text: 'Status' },
+            { class: 'col-mitarbeiter', text: 'Mitarbeiter' }, { class: 'col-anrede', text: 'Anrede' },
+            { class: 'col-titel', text: 'Titel' }, { class: 'col-vorname', text: 'Vorname' },
+            { class: 'col-nachname', text: 'Nachname' }, { class: 'col-firma1', text: 'Firma 1' },
+            { class: 'col-firma2', text: 'Firma 2' }, { class: 'col-funktion', text: 'Funktion' },
+            { class: 'col-abteilung', text: 'Abteilung' }, { class: 'col-strasse', text: 'Straße' },
+            { class: 'col-plz', text: 'PLZ' }, { class: 'col-ort', text: 'Ort' },
+            { class: 'col-land', text: 'Land' }, { class: 'col-anschriftswahl', text: 'Anschriftswahl' },
+            { class: 'col-email', text: 'E-Mail' }, { class: 'col-tel-beruflich', text: 'Telefon (berufl.)' },
+            { class: 'col-durchwahl', text: 'Durchwahl' }, { class: 'col-mobil', text: 'Mobil' },
+            { class: 'col-fax', text: 'Fax' }, { class: 'col-tel-privat', text: 'Telefon (privat)' },
+            { class: 'col-anmerkungen', text: 'Anmerkungen' }, { class: 'col-aktionen', text: 'Aktionen' }
+        ];
+
         const STORAGE_KEY = 'weihnachtspost_column_visibility';
         let visibility = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-        headers.forEach((header) => {
-            const columnClass = header.classList[0];
-            if (columnClass && columnClass.startsWith('col-')) {
-                const label = document.createElement('label');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = columnClass;
-                const isVisibleByDefault = ['col-id', 'col-nachname', 'col-mitarbeiter', 'col-aktionen', 'col-status'].includes(columnClass);
-                checkbox.checked = (visibility[columnClass] === undefined) ? isVisibleByDefault : visibility[columnClass];
+        function applyVisibility() {
+            const theadTr = table.querySelector('thead tr');
+            theadTr.innerHTML = '';
+            let visibleColumnCount = 0;
 
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(header.textContent));
-                toggler.appendChild(label);
+            allColumns.forEach(col => {
+                const isVisible = visibility[col.class] !== false;
+                if (isVisible) {
+                    const th = document.createElement('th');
+                    th.className = col.class;
+                    th.textContent = col.text;
+                    theadTr.appendChild(th);
+                    visibleColumnCount++;
+                }
 
-                checkbox.addEventListener('change', () => {
-                    toggleColumn(columnClass, checkbox.checked);
-                    visibility[columnClass] = checkbox.checked;
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(visibility));
+                table.querySelectorAll(`tbody .${col.class}`).forEach(cell => {
+                    cell.style.display = isVisible ? '' : 'none';
                 });
+            });
 
-                toggleColumn(columnClass, checkbox.checked);
+            if (noCustomerCell) {
+                noCustomerCell.setAttribute('colspan', visibleColumnCount);
             }
+        }
+
+        allColumns.forEach(col => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+
+            const isVisibleByDefault = ['col-id', 'col-status', 'col-mitarbeiter', 'col-nachname', 'col-vorname', 'col-firma1', 'col-email', 'col-aktionen'].includes(col.class);
+
+            if (visibility[col.class] === undefined) {
+                visibility[col.class] = isVisibleByDefault;
+            }
+            checkbox.checked = visibility[col.class];
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(col.text));
+            toggler.appendChild(label);
+
+            checkbox.addEventListener('change', () => {
+                visibility[col.class] = checkbox.checked;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(visibility));
+                applyVisibility();
+            });
         });
 
-        function toggleColumn(columnClass, isVisible) {
-            const cells = table.querySelectorAll(`.${columnClass}`);
-            cells.forEach(cell => {
-                cell.style.display = isVisible ? '' : 'none';
-            });
-        }
+        // Initial anwenden
+        applyVisibility();
     });
 </script>
 {% endblock %}

@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
+{% block title %}Mitarbeiter bearbeiten{% endblock %}
+
 {% block content %}
 <h1>Mitarbeiter bearbeiten</h1>
-<div class="card">
+<div class="card config-section active">
     <form action="{{ url_for('mitarbeiter_update', id=mitarbeiter.id) }}" method="post">
-        <label for="anrede">Anrede</label>
-        <input type="text" id="anrede" name="anrede" value="{{ mitarbeiter.anrede }}" required>
-        <label for="vorname">Vorname</label>
-        <input type="text" id="vorname" name="vorname" value="{{ mitarbeiter.vorname }}" required>
-        <label for="nachname">Nachname</label>
-        <input type="text" id="nachname" name="nachname" value="{{ mitarbeiter.nachname }}" required>
-        <label for="abteilung">Abteilung</label>
-        <input type="text" id="abteilung" name="abteilung" value="{{ mitarbeiter.abteilung or '' }}">
-        <label for="position">Position</label>
-        <input type="text" id="position" name="position" value="{{ mitarbeiter.position or '' }}">
-        <label for="telefon">Telefon</label>
-        <input type="text" id="telefon" name="telefon" value="{{ mitarbeiter.telefon or '' }}">
-        <label for="farbe">Farbe</label>
-        <input type="color" id="farbe" name="farbe" value="{{ mitarbeiter.farbe or '#FFFFFF' }}">
+        <div class="form-group"><label for="anrede">Anrede</label><input type="text" id="anrede" name="anrede"
+                value="{{ mitarbeiter.anrede }}" required></div>
+        <div class="form-group"><label for="vorname">Vorname</label><input type="text" id="vorname" name="vorname"
+                value="{{ mitarbeiter.vorname }}" required></div>
+        <div class="form-group"><label for="nachname">Nachname</label><input type="text" id="nachname" name="nachname"
+                value="{{ mitarbeiter.nachname }}" required></div>
+        <div class="form-group"><label for="abteilung">Abteilung</label><input type="text" id="abteilung"
+                name="abteilung" value="{{ mitarbeiter.abteilung or '' }}"></div>
+        <div class="form-group"><label for="position">Position</label><input type="text" id="position" name="position"
+                value="{{ mitarbeiter.position or '' }}"></div>
+        <div class="form-group"><label for="telefon">Telefon</label><input type="text" id="telefon" name="telefon"
+                value="{{ mitarbeiter.telefon or '' }}"></div>
+        <div class="form-group"><label for="farbe">Farbe</label><input type="color" id="farbe" name="farbe"
+                value="{{ mitarbeiter.farbe or '#FFFFFF' }}"></div>
 
-        <button type="submit">Änderungen speichern</button>
-        <a href="{{ url_for('mitarbeiter_liste') }}" class="button-secondary">Abbrechen</a>
+        <div class="button-group">
+            <button type="submit">Änderungen speichern</button>
+            <a href="{{ url_for('mitarbeiter_liste') }}" class="button secondary">Abbrechen</a>
+        </div>
     </form>
 </div>
 {% endblock %}

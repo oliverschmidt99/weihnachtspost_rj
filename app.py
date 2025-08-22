@@ -22,7 +22,8 @@ STATUS_EMOJIS = {
     "Doppelt": "🔃",
 }
 
-app = Flask(__name__)
+
+app = Flask(__name__, static_folder="static")
 app.config["SECRET_KEY"] = "dein-super-geheimer-schluessel-hier"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///weihnachtspost.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

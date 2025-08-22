@@ -1,86 +1,64 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
+{% block title %}Kunde bearbeiten{% endblock %}
+
 {% block content %}
 <h1>Kunde bearbeiten</h1>
-<div class="card">
+<div class="card config-section active">
     <form action="{{ url_for('kunde_update', id=kunde.id) }}" method="post">
         <fieldset>
             <legend>Persönliche Informationen</legend>
-            <label for="anrede">Anrede</label>
-            <input type="text" name="anrede" value="{{ kunde.anrede or '' }}">
-            <label for="titel">Titel</label>
-            <input type="text" name="titel" value="{{ kunde.titel or '' }}">
-            <label for="vorname">Vorname</label>
-            <input type="text" name="vorname" value="{{ kunde.vorname or '' }}">
-            <label for="nachname">Nachname</label>
-            <input type="text" name="nachname" value="{{ kunde.nachname or '' }}" required>
+            <div class="form-group"><label for="anrede">Anrede</label><input type="text" id="anrede" name="anrede"
+                    value="{{ kunde.anrede or '' }}"></div>
+            <div class="form-group"><label for="titel">Titel</label><input type="text" id="titel" name="titel"
+                    value="{{ kunde.titel or '' }}"></div>
+            <div class="form-group"><label for="vorname">Vorname</label><input type="text" id="vorname" name="vorname"
+                    value="{{ kunde.vorname or '' }}"></div>
+            <div class="form-group"><label for="nachname">Nachname</label><input type="text" id="nachname"
+                    name="nachname" value="{{ kunde.nachname or '' }}" required></div>
         </fieldset>
 
         <fieldset>
             <legend>Adresse</legend>
-            <label for="strasse">Straße</label>
-            <input type="text" name="strasse" value="{{ kunde.strasse or '' }}">
-            <label for="postleitzahl">PLZ</label>
-            <input type="text" name="postleitzahl" value="{{ kunde.postleitzahl or '' }}">
-            <label for="ort">Ort</label>
-            <input type="text" name="ort" value="{{ kunde.ort or '' }}">
-            <label for="land">Land</label>
-            <input type="text" name="land" value="{{ kunde.land or '' }}">
-        </fieldset>
-
-        <fieldset>
-            <legend>Firma</legend>
-            <label for="anschriftswahl">Anschriftswahl (Privat/Firma)</label>
-            <input type="text" name="anschriftswahl" value="{{ kunde.anschriftswahl or '' }}">
-            <label for="firma1">Firma 1</label>
-            <input type="text" name="firma1" value="{{ kunde.firma1 or '' }}">
-            <label for="firma2">Firma 2</label>
-            <input type="text" name="firma2" value="{{ kunde.firma2 or '' }}">
-            <label for="abteilung">Abteilung</label>
-            <input type="text" name="abteilung" value="{{ kunde.abteilung or '' }}">
-            <label for="funktion">Funktion</label>
-            <input type="text" name="funktion" value="{{ kunde.funktion or '' }}">
-        </fieldset>
-
-        <fieldset>
-            <legend>Kontakt</legend>
-            <label for="email">E-Mail</label>
-            <input type="email" name="email" value="{{ kunde.email or '' }}">
-            <label for="telefon_beruflich">Telefon (beruflich)</label>
-            <input type="text" name="telefon_beruflich" value="{{ kunde.telefon_beruflich or '' }}">
-            <label for="durchwahl_buero">Durchwahl Büro</label>
-            <input type="text" name="durchwahl_buero" value="{{ kunde.durchwahl_buero or '' }}">
-            <label for="mobil_telefon">Mobil</label>
-            <input type="text" name="mobil_telefon" value="{{ kunde.mobil_telefon or '' }}">
-            <label for="faxnummer">Faxnummer</label>
-            <input type="text" name="faxnummer" value="{{ kunde.faxnummer or '' }}">
-            <label for="telefon_privat">Telefon (privat)</label>
-            <input type="text" name="telefon_privat" value="{{ kunde.telefon_privat or '' }}">
+            <div class="form-group"><label for="strasse">Straße</label><input type="text" id="strasse" name="strasse"
+                    value="{{ kunde.strasse or '' }}"></div>
+            <div class="form-group"><label for="postleitzahl">PLZ</label><input type="text" id="postleitzahl"
+                    name="postleitzahl" value="{{ kunde.postleitzahl or '' }}"></div>
+            <div class="form-group"><label for="ort">Ort</label><input type="text" id="ort" name="ort"
+                    value="{{ kunde.ort or '' }}"></div>
+            <div class="form-group"><label for="land">Land</label><input type="text" id="land" name="land"
+                    value="{{ kunde.land or '' }}"></div>
         </fieldset>
 
         <fieldset>
             <legend>Sonstiges</legend>
-            <label for="status">Status</label>
-            <select name="status" required>
-                {% for s in status_optionen %}
-                <option value="{{ s }}" {% if s==kunde.status %}selected="selected" {% endif %}>{{ s }}</option>
-                {% endfor %}
-            </select>
-            <label for="anmerkungen">Anmerkungen</label>
-            <textarea name="anmerkungen">{{ kunde.anmerkungen or '' }}</textarea>
-            <label for="mitarbeiter_id">Zugeordneter Mitarbeiter</label>
-            <select name="mitarbeiter_id">
-                <option value="">Kein Mitarbeiter</option>
-                {% for m in mitarbeiter %}
-                <option value="{{ m.id }}" {% if m.id==kunde.mitarbeiter_id %}selected="selected" {% endif %}>
-                    {{ m.vorname }} {{ m.nachname }}
-                </option>
-                {% endfor %}
-            </select>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                    {% for s in status_optionen %}
+                    <option value="{{ s }}" {% if s==kunde.status %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="mitarbeiter_id">Zugeordneter Mitarbeiter</label>
+                <select id="mitarbeiter_id" name="mitarbeiter_id">
+                    <option value="">Kein Mitarbeiter</option>
+                    {% for m in mitarbeiter %}
+                    <option value="{{ m.id }}" {% if m.id==kunde.mitarbeiter_id %}selected{% endif %}>
+                        {{ m.vorname }} {{ m.nachname }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label for="anmerkungen">Anmerkungen</label><textarea id="anmerkungen"
+                    name="anmerkungen">{{ kunde.anmerkungen or '' }}</textarea></div>
         </fieldset>
 
-        <button type="submit">Änderungen speichern</button>
-        <a href="{{ url_for('kunden_liste') }}" class="button-secondary">Abbrechen</a>
+        <div class="button-group">
+            <button type="submit">Änderungen speichern</button>
+            <a href="{{ url_for('kunden_liste') }}" class="button secondary">Abbrechen</a>
+        </div>
     </form>
 </div>
 {% endblock %}

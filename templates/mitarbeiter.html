@@ -1,21 +1,22 @@
+<!DOCTYPE html>
 {% extends 'base.html' %}
+{% block title %}Mitarbeiterverwaltung{% endblock %}
+
 {% block content %}
 <h1>Mitarbeiterverwaltung</h1>
-<div class="card">
+
+<div class="card config-section active">
     <h2>Neuen Mitarbeiter anlegen</h2>
-    <form action="{{ url_for('mitarbeiter_neu') }}" method="post">
+    <form action="{{ url_for('mitarbeiter_neu') }}" method="post" class="form-inline">
         <input type="text" name="anrede" placeholder="Anrede" required>
         <input type="text" name="vorname" placeholder="Vorname" required>
         <input type="text" name="nachname" placeholder="Nachname" required>
-        <input type="text" name="abteilung" placeholder="Abteilung">
-        <input type="text" name="position" placeholder="Position">
-        <input type="text" name="telefon" placeholder="Telefon">
-        <label for="farbe" style="display: inline-block; margin-right: 1rem;">Farbe:</label>
         <input type="color" id="farbe" name="farbe" value="#e66465">
-        <button type="submit" style="margin-left: 2rem;">Hinzufügen</button>
+        <button type="submit">Hinzufügen</button>
     </form>
 </div>
-<div class="card">
+
+<div class="card config-section active">
     <h2>Bestehende Mitarbeiter</h2>
     <table>
         <thead>
@@ -33,7 +34,7 @@
             <tr>
                 <td>
                     <div
-                        style="width: 20px; height: 20px; background-color: {{ m.farbe }}; border: 1px solid #ccc; border-radius: 4px;">
+                        style="width: 24px; height: 24px; background-color: {{ m.farbe or 'transparent' }}; border: 1px solid var(--border-color); border-radius: 50%;">
                     </div>
                 </td>
                 <td>{{ m.anrede }}</td>
@@ -41,9 +42,9 @@
                 <td>{{ m.nachname }}</td>
                 <td>{{ m.abteilung }}</td>
                 <td class="actions">
-                    <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}" class="button-secondary">Bearbeiten</a>
+                    <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}" class="button">Bearbeiten</a>
                     <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
-                        onsubmit="return confirm('Mitarbeiter wirklich löschen? Zugehörige Kunden werden keinem Mitarbeiter mehr zugeordnet.');">
+                        onsubmit="return confirm('Mitarbeiter wirklich löschen?');">
                         <button type="submit" class="danger">Löschen</button>
                     </form>
                 </td>

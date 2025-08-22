@@ -21,18 +21,33 @@ STATUS_EMOJIS = {
     "Fehler": "❌",
     "Doppelt": "🔃",
 }
-
+PASTEL_COLORS = [
+    "#FFADAD",
+    "#FFD6A5",
+    "#FDFFB6",
+    "#CAFFBF",
+    "#9BF6FF",
+    "#A0C4FF",
+    "#BDB2FF",
+    "#FFC6FF",
+]
 
 app = Flask(__name__, static_folder="static")
+
+# --- Absoluter Pfad für die Datenbank ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+instance_path = os.path.join(basedir, "instance")
+os.makedirs(instance_path, exist_ok=True)
+
 app.config["SECRET_KEY"] = "dein-super-geheimer-schluessel-hier"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///weihnachtspost.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"sqlite:///{os.path.join(instance_path, 'weihnachtspost.db')}"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 db.init_app(app)
 
 
-# (Der Großteil der Datei bleibt unverändert)
-# ...
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -79,26 +94,26 @@ def index():
 @app.route("/uebersicht")
 def uebersicht():
     query = db.session.query(Kunde)
-    mitarbeiter_id = request.args.get("mitarbeiter_id")
-    post_art = request.args.get("post_art")
-    status = request.args.get("status")
+    mitarbeiter_id, post_art, status = (
+        request.args.get("mitarbeiter_id"),
+        request.args.get("post_art"),
+        request.args.get("status"),
+    )
     jahr = request.args.get("jahr", datetime.now().year, type=int)
-
     if mitarbeiter_id:
         query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
     if status:
         query = query.filter(Kunde.status == status)
     if post_art:
         query = query.join(Weihnachtspost).filter(Weihnachtspost.jahr == jahr)
-        if post_art == "postkarte":
-            query = query.filter(Weihnachtspost.postkarte == True)
-        elif post_art == "kalender":
-            query = query.filter(Weihnachtspost.kalender == True)
-        elif post_art == "email_versand":
-            query = query.filter(Weihnachtspost.email_versand == True)
-        elif post_art == "speziell":
-            query = query.filter(Weihnachtspost.speziell == True)
-
+        conditions = {
+            "postkarte": Weihnachtspost.postkarte == True,
+            "kalender": Weihnachtspost.kalender == True,
+            "email_versand": Weihnachtspost.email_versand == True,
+            "speziell": Weihnachtspost.speziell == True,
+        }
+        if post_art in conditions:
+            query = query.filter(conditions[post_art])
     return render_template(
         "uebersicht.html",
         kunden=query.all(),
@@ -114,7 +129,11 @@ def uebersicht():
 
 @app.route("/mitarbeiter")
 def mitarbeiter_liste():
-    return render_template("mitarbeiter.html", mitarbeiter=Mitarbeiter.query.all())
+    return render_template(
+        "mitarbeiter.html",
+        mitarbeiter=Mitarbeiter.query.all(),
+        pastel_colors=PASTEL_COLORS,
+    )
 
 
 @app.route("/mitarbeiter/neu", methods=["POST"])
@@ -129,7 +148,9 @@ def mitarbeiter_neu():
 @app.route("/mitarbeiter/bearbeiten/<int:id>")
 def mitarbeiter_bearbeiten(id):
     return render_template(
-        "mitarbeiter_bearbeiten.html", mitarbeiter=Mitarbeiter.query.get_or_404(id)
+        "mitarbeiter_bearbeiten.html",
+        mitarbeiter=Mitarbeiter.query.get_or_404(id),
+        pastel_colors=PASTEL_COLORS,
     )
 
 
@@ -145,8 +166,7 @@ def mitarbeiter_update(id):
 
 @app.route("/mitarbeiter/loeschen/<int:id>", methods=["POST"])
 def mitarbeiter_loeschen(id):
-    mitarbeiter = Mitarbeiter.query.get_or_404(id)
-    db.session.delete(mitarbeiter)
+    db.session.delete(Mitarbeiter.query.get_or_404(id))
     db.session.commit()
     flash(
         "Mitarbeiter gelöscht. Kunden wurden keinem Mitarbeiter mehr zugeordnet.",
@@ -210,15 +230,12 @@ def kunde_bearbeiten(id):
 @app.route("/kunden/update/<int:id>", methods=["POST"])
 def kunde_update(id):
     kunde = Kunde.query.get_or_404(id)
-    if "mitarbeiter_id" in request.form and not request.form["mitarbeiter_id"]:
+    form_data = request.form.to_dict()
+    if "mitarbeiter_id" in form_data and not form_data["mitarbeiter_id"]:
         kunde.mitarbeiter_id = None
-        form_data = request.form.to_dict()
         del form_data["mitarbeiter_id"]
-        for key, value in form_data.items():
-            setattr(kunde, key, value)
-    else:
-        for key, value in request.form.items():
-            setattr(kunde, key, value)
+    for key, value in form_data.items():
+        setattr(kunde, key, value)
     db.session.commit()
     flash("Kunde erfolgreich aktualisiert!", "success")
     return redirect(url_for("kunden_liste"))
@@ -258,6 +275,7 @@ def weihnachtspost_speichern(kunde_id):
     return redirect(url_for("weihnachtspost_verwalten", kunde_id=kunde_id, jahr=jahr))
 
 
+# HIER IST DIE WIEDERHERGESTELLTE FUNKTION
 @app.route("/import/msg", methods=["POST"])
 def upload_msg():
     files = request.files.getlist("msg_files")
@@ -323,7 +341,13 @@ def upload_msg():
                 db.session.add(post_eintrag)
                 erfolgreich += 1
 
+            # Clean up message.txt for the next file
             os.remove(message_txt_path)
+            # Clean up the extracted msg folder as well
+            for item in os.listdir(temp_dir):
+                if item.startswith(secure_filename(file.filename).rsplit(".", 1)[0]):
+                    shutil.rmtree(os.path.join(temp_dir, item))
+
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -340,9 +364,12 @@ def upload_msg():
     return redirect(url_for("kunden_liste"))
 
 
+@app.route("/settings")
+def settings():
+    return render_template("settings.html")
+
+
 if __name__ == "__main__":
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
     with app.app_context():
         db.create_all()
     app.run(port=6060, debug=True)

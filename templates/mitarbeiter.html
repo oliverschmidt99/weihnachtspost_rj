@@ -11,50 +11,64 @@
         <input type="text" name="anrede" placeholder="Anrede" required>
         <input type="text" name="vorname" placeholder="Vorname" required>
         <input type="text" name="nachname" placeholder="Nachname" required>
-        <input type="color" id="farbe" name="farbe" value="#e66465">
+
+        <div class="color-palette-container">
+            <label>Farbe</label>
+            <div class="color-palette">
+                {% for color in pastel_colors %}
+                <label class="color-swatch-label">
+                    <input type="radio" name="farbe" value="{{ color }}" {% if loop.first %}checked{% endif %}>
+                    <span class="color-swatch" style="background-color: {{ color }};"></span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
         <button type="submit">Hinzufügen</button>
     </form>
 </div>
 
 <div class="card config-section active">
     <h2>Bestehende Mitarbeiter</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Farbe</th>
-                <th>Anrede</th>
-                <th>Vorname</th>
-                <th>Nachname</th>
-                <th>Abteilung</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for m in mitarbeiter %}
-            <tr>
-                <td>
-                    <div
-                        style="width: 24px; height: 24px; background-color: {{ m.farbe or 'transparent' }}; border: 1px solid var(--border-color); border-radius: 50%;">
-                    </div>
-                </td>
-                <td>{{ m.anrede }}</td>
-                <td>{{ m.vorname }}</td>
-                <td>{{ m.nachname }}</td>
-                <td>{{ m.abteilung }}</td>
-                <td class="actions">
-                    <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}" class="button">Bearbeiten</a>
-                    <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
-                        onsubmit="return confirm('Mitarbeiter wirklich löschen?');">
-                        <button type="submit" class="danger">Löschen</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6">Noch keine Mitarbeiter angelegt.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Farbe</th>
+                    <th>Anrede</th>
+                    <th>Vorname</th>
+                    <th>Nachname</th>
+                    <th>Abteilung</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in mitarbeiter %}
+                <tr>
+                    <td>
+                        <div
+                            style="width: 24px; height: 24px; background-color: {{ m.farbe }}; border: 1px solid var(--border-color); border-radius: 50%;">
+                        </div>
+                    </td>
+                    <td>{{ m.anrede }}</td>
+                    <td>{{ m.vorname }}</td>
+                    <td>{{ m.nachname }}</td>
+                    <td>{{ m.abteilung }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}"
+                            class="button secondary">Bearbeiten</a>
+                        <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
+                            onsubmit="return confirm('Mitarbeiter wirklich löschen?');">
+                            <button type="submit" class="danger">Löschen</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">Noch keine Mitarbeiter angelegt.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

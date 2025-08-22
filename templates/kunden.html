@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
+{% block title %}Kundenverwaltung{% endblock %}
+
 {% block content %}
 <h1>Kundenverwaltung</h1>
-<div class="card">
+
+<div class="card config-section active">
     <h2>Aktionen</h2>
-    <a href="{{ url_for('kunde_neu_form') }}" class="button-primary">Neuen Kunden anlegen</a>
+    <a href="{{ url_for('kunde_neu_form') }}" class="button">Neuen Kunden anlegen</a>
 </div>
-<div class="card">
+
+<div class="card config-section active">
     <h2>Kunden aus .msg-Dateien importieren</h2>
     <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
         <fieldset>
@@ -46,42 +50,46 @@
         <button type="submit">Hochladen & Importieren</button>
     </form>
 </div>
-<div class="card">
+
+<div class="card config-section active">
     <h2>Bestehende Kunden</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Nachname</th>
-                <th>Vorname</th>
-                <th>Zugeordnet zu</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for k in kunden %}
-            <tr>
-                <td>{{ status_emojis.get(k.status, '') }} {{ k.status }}</td>
-                <td>{{ k.nachname }}</td>
-                <td>{{ k.vorname }}</td>
-                <td style="background-color: {{ k.mitarbeiter.farbe if k.mitarbeiter else 'transparent' }};">
-                    {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
-                </td>
-                <td class="actions">
-                    <a href="{{ url_for('weihnachtspost_verwalten', kunde_id=k.id) }}" class="button-secondary">Post</a>
-                    <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button-secondary">Bearbeiten</a>
-                    <form action="{{ url_for('kunde_loeschen', id=k.id) }}" method="post"
-                        onsubmit="return confirm('Kunde wirklich löschen?');">
-                        <button type="submit" class="danger">Löschen</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5">Noch keine Kunden angelegt.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Nachname</th>
+                    <th>Vorname</th>
+                    <th>Zugeordnet zu</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in kunden %}
+                <tr>
+                    <td>{{ status_emojis.get(k.status, '') }} {{ k.status }}</td>
+                    <td>{{ k.nachname }}</td>
+                    <td>{{ k.vorname }}</td>
+                    <td style="background-color: {{ k.mitarbeiter.farbe if k.mitarbeiter else 'transparent' }};">
+                        {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
+                    </td>
+                    <td class="actions">
+                        <a href="{{ url_for('weihnachtspost_verwalten', kunde_id=k.id) }}"
+                            class="button secondary">Post</a>
+                        <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}" class="button secondary">Bearbeiten</a>
+                        <form action="{{ url_for('kunde_loeschen', id=k.id) }}" method="post"
+                            onsubmit="return confirm('Kunde wirklich löschen?');">
+                            <button type="submit" class="danger">Löschen</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">Noch keine Kunden angelegt.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

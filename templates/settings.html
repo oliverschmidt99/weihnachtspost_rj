@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %}Einstellungen{% endblock %}
+
+{% block content %}
+<h1>Einstellungen</h1>
+
+<div class="card config-section active" style="margin-top: 2rem;">
+    <h2>Design</h2>
+    <div class="theme-switcher">
+        <label for="theme-toggle" style="margin-right: 1rem; font-weight: bold;">Dark Mode</label>
+        <label class="switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider round"></span>
+        </label>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Dieses Skript wird nur auf dieser Seite geladen, um den Schalter zu steuern. #}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

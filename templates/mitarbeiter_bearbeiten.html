@@ -5,26 +5,37 @@
 {% block content %}
 <h1>Mitarbeiter bearbeiten</h1>
 <div class="card config-section active">
-    <form action="{{ url_for('mitarbeiter_update', id=mitarbeiter.id) }}" method="post">
-        <div class="form-group"><label for="anrede">Anrede</label><input type="text" id="anrede" name="anrede"
-                value="{{ mitarbeiter.anrede }}" required></div>
-        <div class="form-group"><label for="vorname">Vorname</label><input type="text" id="vorname" name="vorname"
-                value="{{ mitarbeiter.vorname }}" required></div>
-        <div class="form-group"><label for="nachname">Nachname</label><input type="text" id="nachname" name="nachname"
-                value="{{ mitarbeiter.nachname }}" required></div>
-        <div class="form-group"><label for="abteilung">Abteilung</label><input type="text" id="abteilung"
-                name="abteilung" value="{{ mitarbeiter.abteilung or '' }}"></div>
-        <div class="form-group"><label for="position">Position</label><input type="text" id="position" name="position"
-                value="{{ mitarbeiter.position or '' }}"></div>
-        <div class="form-group"><label for="telefon">Telefon</label><input type="text" id="telefon" name="telefon"
-                value="{{ mitarbeiter.telefon or '' }}"></div>
-        <div class="form-group"><label for="farbe">Farbe</label><input type="color" id="farbe" name="farbe"
-                value="{{ mitarbeiter.farbe or '#FFFFFF' }}"></div>
+        <form action="{{ url_for('mitarbeiter_update', id=mitarbeiter.id) }}" method="post">
+                <div class="form-group"><label for="anrede">Anrede</label><input type="text" id="anrede" name="anrede"
+                                value="{{ mitarbeiter.anrede }}" required></div>
+                <div class="form-group"><label for="vorname">Vorname</label><input type="text" id="vorname"
+                                name="vorname" value="{{ mitarbeiter.vorname }}" required></div>
+                <div class="form-group"><label for="nachname">Nachname</label><input type="text" id="nachname"
+                                name="nachname" value="{{ mitarbeiter.nachname }}" required></div>
+                <div class="form-group"><label for="abteilung">Abteilung</label><input type="text" id="abteilung"
+                                name="abteilung" value="{{ mitarbeiter.abteilung or '' }}"></div>
+                <div class="form-group"><label for="position">Position</label><input type="text" id="position"
+                                name="position" value="{{ mitarbeiter.position or '' }}"></div>
+                <div class="form-group"><label for="telefon">Telefon</label><input type="text" id="telefon"
+                                name="telefon" value="{{ mitarbeiter.telefon or '' }}"></div>
 
-        <div class="button-group">
-            <button type="submit">Änderungen speichern</button>
-            <a href="{{ url_for('mitarbeiter_liste') }}" class="button secondary">Abbrechen</a>
-        </div>
-    </form>
+                <div class="form-group">
+                        <label>Farbe</label>
+                        <div class="color-palette">
+                                {% for color in pastel_colors %}
+                                <label class="color-swatch-label">
+                                        <input type="radio" name="farbe" value="{{ color }}" {% if
+                                                mitarbeiter.farbe==color %}checked{% endif %}>
+                                        <span class="color-swatch" style="background-color: {{ color }};"></span>
+                                </label>
+                                {% endfor %}
+                        </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 2rem;">
+                        <button type="submit">Änderungen speichern</button>
+                        <a href="{{ url_for('mitarbeiter_liste') }}" class="button secondary">Abbrechen</a>
+                </div>
+        </form>
 </div>
 {% endblock %}

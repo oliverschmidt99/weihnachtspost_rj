@@ -21,69 +21,78 @@
 <div id="verwaltung-sektionen">
 
     <div id="mitarbeiter-section" class="config-section active">
-        <div class="card">
-            <h4>Neuen Mitarbeiter hinzufügen</h4>
-            <form action="{{ url_for('mitarbeiter_neu') }}" method="post">
-                <fieldset>
-                    <legend>Persönliche Informationen</legend>
-                    <div class="form-grid-3">
-                        <div class="form-group"><label for="anrede_neu">Anrede</label><input type="text" id="anrede_neu"
-                                name="anrede" required></div>
-                        <div class="form-group"><label for="vorname_neu">Vorname</label><input type="text"
-                                id="vorname_neu" name="vorname" required></div>
-                        <div class="form-group"><label for="nachname_neu">Nachname</label><input type="text"
-                                id="nachname_neu" name="nachname" required></div>
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Firma & Position</legend>
-                    <div class="form-grid-3">
-                        <div class="form-group"><label for="firmenname_neu">Firma</label><input type="text"
-                                id="firmenname_neu" name="firmenname"></div>
-                        <div class="form-group"><label for="abteilung_neu">Abteilung</label><input type="text"
-                                id="abteilung_neu" name="abteilung"></div>
-                        <div class="form-group"><label for="position_neu">Position</label><input type="text"
-                                id="position_neu" name="position"></div>
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Kontakt</legend>
-                    <div class="form-grid-3">
-                        <div class="form-group"><label for="email_neu">E-Mail</label><input type="email" id="email_neu"
-                                name="email"></div>
-                        <div class="form-group"><label for="telefon_neu">Telefon</label><input type="text"
-                                id="telefon_neu" name="telefon"></div>
-                        <div class="form-group"><label for="durchwahl_neu">Durchwahl</label><input type="text"
-                                id="durchwahl_neu" name="durchwahl"></div>
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Firmenadresse</legend>
-                    <div class="form-grid-3">
-                        <div class="form-group" style="grid-column: 1 / 4;"><label
-                                for="strasse_neu">Straße</label><input type="text" id="strasse_neu"
-                                name="firma_strasse"></div>
-                        <div class="form-group"><label for="plz_neu">PLZ</label><input type="text" id="plz_neu"
-                                name="firma_plz"></div>
-                        <div class="form-group" style="grid-column: 2 / 4;"><label for="ort_neu">Ort</label><input
-                                type="text" id="ort_neu" name="firma_ort"></div>
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Darstellung</legend>
-                    <div class="form-group">
-                        <label>Farbe</label>
-                        <div class="color-palette">
-                            {% for color in pastel_colors %}<label class="color-swatch-label"><input type="radio"
-                                    name="farbe" value="{{ color }}" {% if loop.first %}checked{% endif %}><span
-                                    class="color-swatch" style="background-color: {{ color }};"></span></label>{% endfor
-                            %}
-                        </div>
-                    </div>
-                </fieldset>
-                <div class="button-group"><button type="submit">Mitarbeiter erstellen</button></div>
-            </form>
+        <div class="accordion-container">
+            <button class="accordion-button">
+                <h4>Neuen Mitarbeiter hinzufügen</h4>
+                <span class="icon"></span>
+            </button>
+            <div class="accordion-content">
+                <div class="card">
+                    <form action="{{ url_for('mitarbeiter_neu') }}" method="post">
+                        <fieldset>
+                            <legend>Persönliche Informationen</legend>
+                            <div class="form-grid-3">
+                                <div class="form-group"><label for="anrede_neu">Anrede</label><input type="text"
+                                        id="anrede_neu" name="anrede" required></div>
+                                <div class="form-group"><label for="vorname_neu">Vorname</label><input type="text"
+                                        id="vorname_neu" name="vorname" required></div>
+                                <div class="form-group"><label for="nachname_neu">Nachname</label><input type="text"
+                                        id="nachname_neu" name="nachname" required></div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Firma & Position</legend>
+                            <div class="form-grid-3">
+                                <div class="form-group"><label for="firmenname_neu">Firma</label><input type="text"
+                                        id="firmenname_neu" name="firmenname"></div>
+                                <div class="form-group"><label for="abteilung_neu">Abteilung</label><input type="text"
+                                        id="abteilung_neu" name="abteilung"></div>
+                                <div class="form-group"><label for="position_neu">Position</label><input type="text"
+                                        id="position_neu" name="position"></div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Kontakt</legend>
+                            <div class="form-grid-3">
+                                <div class="form-group"><label for="email_neu">E-Mail</label><input type="email"
+                                        id="email_neu" name="email"></div>
+                                <div class="form-group"><label for="telefon_neu">Telefon</label><input type="text"
+                                        id="telefon_neu" name="telefon"></div>
+                                <div class="form-group"><label for="durchwahl_neu">Durchwahl</label><input type="text"
+                                        id="durchwahl_neu" name="durchwahl"></div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Firmenadresse</legend>
+                            <div class="form-grid-3">
+                                <div class="form-group" style="grid-column: 1 / 4;"><label
+                                        for="strasse_neu">Straße</label><input type="text" id="strasse_neu"
+                                        name="firma_strasse"></div>
+                                <div class="form-group"><label for="plz_neu">PLZ</label><input type="text" id="plz_neu"
+                                        name="firma_plz"></div>
+                                <div class="form-group" style="grid-column: 2 / 4;"><label
+                                        for="ort_neu">Ort</label><input type="text" id="ort_neu" name="firma_ort"></div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Darstellung</legend>
+                            <div class="form-group">
+                                <label>Farbe</label>
+                                <div class="color-palette">
+                                    {% for color in pastel_colors %}<label class="color-swatch-label"><input
+                                            type="radio" name="farbe" value="{{ color }}" {% if loop.first %}checked{%
+                                            endif %}><span class="color-swatch"
+                                            style="background-color: {{ color }};"></span></label>{% endfor
+                                    %}
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="button-group"><button type="submit">Mitarbeiter erstellen</button></div>
+                    </form>
+                </div>
+            </div>
         </div>
+        <hr>
 
         <h2>Bestehende Mitarbeiter</h2>
         <div class="card">
@@ -244,6 +253,22 @@
     document.addEventListener("DOMContentLoaded", () => {
         initializeCardNavigation('verwaltung-nav', 'verwaltung-sektionen');
         initializeCardNavigation('kunden-nav', 'kunden-sektionen');
+        initializeAccordion(); // Füge den Aufruf für das neue Akkordeon hinzu
     });
+
+    // NEU: Logik für die Akkordeons
+    function initializeAccordion() {
+        document.querySelectorAll(".accordion-button").forEach(button => {
+            button.addEventListener("click", () => {
+                const content = button.nextElementSibling;
+                button.classList.toggle("active");
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+    }
 </script>
 {% endblock %}

@@ -69,26 +69,26 @@ class Kunde(db.Model):
     mitarbeiter_id = db.Column(
         db.Integer, db.ForeignKey("mitarbeiter.id", ondelete="SET NULL"), nullable=True
     )
-    weihnachtspost = db.relationship(
-        "Weihnachtspost", backref="kunde", lazy=True, cascade="all, delete-orphan"
+    benachrichtigungen = db.relationship(
+        "Benachrichtigung", backref="kunde", lazy=True, cascade="all, delete-orphan"
     )
 
     def __repr__(self):
         return f"<Kunde {self.vorname} {self.nachname}>"
 
 
-class Weihnachtspost(db.Model):
+class Benachrichtigung(db.Model):
     """
-    Speichert die Auswahl der Postart für einen bestimmten Kunden in einem bestimmten Jahr.
+    Speichert die Auswahl der Kommunikationsart für einen bestimmten Kunden in einem bestimmten Jahr.
     """
 
     id = db.Column(db.Integer, primary_key=True)
     jahr = db.Column(db.Integer, nullable=False)
-    postkarte = db.Column(db.Boolean, default=False)
+    brief = db.Column(db.Boolean, default=False)
     kalender = db.Column(db.Boolean, default=False)
     email_versand = db.Column(db.Boolean, default=False)
     speziell = db.Column(db.Boolean, default=False)
     kunde_id = db.Column(db.Integer, db.ForeignKey("kunde.id"), nullable=False)
 
     def __repr__(self):
-        return f"<Weihnachtspost {self.kunde.nachname} ({self.jahr})>"
+        return f"<Benachrichtigung {self.kunde.nachname} ({self.jahr})>"

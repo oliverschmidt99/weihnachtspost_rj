@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 {% extends "base.html" %}
 {% block title %}Verwaltung{% endblock %}
 
@@ -216,8 +217,8 @@
                                 {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
                             </td>
                             <td class="actions">
-                                <a href="{{ url_for('weihnachtspost_verwalten', kunde_id=k.id) }}"
-                                    class="button secondary">Post</a>
+                                <a href="{{ url_for('benachrichtigung_verwalten', kunde_id=k.id) }}"
+                                    class="button secondary">Benachrichtigung</a>
                                 <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}"
                                     class="button secondary">Bearbeiten</a>
                                 <form action="{{ url_for('kunden_loeschen', id=k.id) }}" method="post"

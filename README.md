@@ -1,157 +1,174 @@
-# Weihnachtspost-Verwaltung (weihnachtspost_rj)
+# Kunden-Benachrichtigungs-App (kundenkommunikation)
 
-Dieses Projekt ist eine Web-Anwendung zur Verwaltung von Mitarbeiter- und Kundendaten im Kontext des jährlichen Weihnachtspost-Versands. Sie wurde mit Python und dem Flask-Framework entwickelt und nutzt eine SQLite-Datenbank zur Datenspeicherung.
+Dieses Projekt ist eine Web-Anwendung zur Verwaltung von Mitarbeiter- und Kundendaten im Kontext von Post-, E-Mail- und sonstigen Benachrichtigungen.
+Sie wurde mit **Python** und dem **Flask-Framework** entwickelt und nutzt eine **SQLite-Datenbank** zur Datenspeicherung.
 
 ---
 
 ## Funktionsweise & Features
 
-Die Anwendung bietet eine zentrale Oberfläche, um den Überblick über die Weihnachtspost zu behalten:
+Die Anwendung bietet eine zentrale Oberfläche, um den Überblick über die Kundenkommunikation zu behalten:
 
-- **Mitarbeiterverwaltung:** Du kannst Mitarbeiter anlegen, bearbeiten und löschen. Jedem Mitarbeiter kann eine Farbe zur besseren visuellen Erkennung zugewiesen werden.
+- **Mitarbeiterverwaltung:** Anlegen, Bearbeiten und Löschen von Mitarbeitern. Jedem Mitarbeiter kann eine Farbe zur visuellen Erkennung zugewiesen werden.
 - **Kundenverwaltung:** Kunden können manuell angelegt, aus Outlook `.msg`-Dateien importiert und bearbeitet werden. Jeder Kunde ist einem Mitarbeiter zugeordnet.
-- **Status-System:** Jeder Kunde hat einen Status (Neu 🆕, In Ordnung ✅, Unklar ❓, Fehler ❌, Doppelt 🔃), um den Bearbeitungsfortschritt zu verfolgen.
-- **Weihnachtspost pro Jahr:** Für jeden Kunden kann jährlich festgelegt werden, welche Art von Post er erhalten soll (Postkarte, Kalender, E-Mail, Speziell).
-- **Filterbare Übersicht:** Eine Übersichtsseite ermöglicht das Filtern der Kunden nach Mitarbeiter, Status oder Postart. Die angezeigten Spalten können individuell ein- und ausgeblendet werden.
-- **Robuster Import:** Der Import von `.msg`-Dateien (Outlook-Kontakte/Notizen) extrahiert automatisch Kontaktdaten und legt neue Kunden an oder aktualisiert bestehende.
+- **Status-System:** Kundenstatus zur Verfolgung des Bearbeitungsfortschritts:
+  - Neu 🆕
+  - In Ordnung ✅
+  - Unklar ❓
+  - Fehler ❌
+  - Doppelt 🔃
+- **Benachrichtigungen pro Jahr:** Pro Kunde kann jährlich festgelegt werden, welche Art von Kommunikation erfolgt (Brief, Kalender, E-Mail, Speziell).
+- **Filterbare Übersicht:** Kunden können nach Mitarbeiter, Status oder Benachrichtigungsart gefiltert werden. Spalten sind individuell ein-/ausblendbar.
+- **Robuster Import:** Automatische Extraktion von Kontaktdaten aus `.msg`-Dateien (Outlook-Kontakte/Notizen) und Anlage/Aktualisierung von Kunden.
 
 ---
 
 ## Installation
 
-Die Anwendung ist plattformunabhängig und läuft auf Windows und Linux.
+Die Anwendung ist plattformunabhängig und läuft auf **Windows** und **Linux**.
 
 ### Voraussetzungen
 
-- **Python 3.8** oder neuer muss installiert sein. Du kannst das im Terminal mit `python --version` oder `python3 --version` prüfen.
+- **Python 3.8+** muss installiert sein.
+  Prüfen mit:
+
+  ```bash
+  python --version
+  # oder
+  python3 --version
+  ```
 
 ### Schritte für Windows
 
-1.  **Projekt herunterladen/klonen:** Lade die Projektdateien in einen Ordner deiner Wahl (z.B. `C:\Projekte\weihnachtspost_rj`).
+1. **Projekt herunterladen/klonen**
+   z.B. nach `C:\Projekte\kundenkommunikation`
 
-2.  **Terminal öffnen:** Öffne die Eingabeaufforderung (`cmd`) oder PowerShell. Navigiere in dein Projektverzeichnis:
+2. **Terminal öffnen & ins Projekt wechseln**
 
-    ```bash
-    cd C:\Projekte\weihnachtspost_rj
-    ```
+   ```bash
+   cd C:\Projekte\kundenkommunikation
+   ```
 
-3.  **Virtuelle Umgebung erstellen:** Dies isoliert die benötigten Pakete vom Rest deines Systems.
+3. **Virtuelle Umgebung erstellen**
 
-    ```bash
-    python -m venv venv
-    ```
+   ```bash
+   python -m venv venv
+   ```
 
-4.  **Virtuelle Umgebung aktivieren:** Dies muss in jedem neuen Terminalfenster erneut gemacht werden.
+4. **Virtuelle Umgebung aktivieren**
 
-    ```bash
-    .\venv\Scripts\activate
-    ```
+   ```bash
+   .\venv\Scripts\activate
+   ```
 
-    Deine Kommandozeile sollte nun `(venv)` am Anfang anzeigen.
+   → `(venv)` sollte in der Kommandozeile erscheinen.
 
-5.  **Abhängigkeiten installieren:**
+5. **Abhängigkeiten installieren**
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-6.  **Anwendung starten:**
+6. **Anwendung starten**
 
-    ```bash
-    python app.py
-    ```
+   ```bash
+   python app.py
+   ```
 
-7.  Öffne deinen Webbrowser und gehe zu **`http://127.0.0.1:5000`**.
+7. **Webbrowser öffnen:**
+   [http://127.0.0.1:5000](http://127.0.0.1:5000)
+
+---
 
 ### Schritte für Linux
 
-1.  **Projekt herunterladen/klonen:** Lade die Projektdateien in einen Ordner deiner Wahl (z.B. `~/projekte/weihnachtspost_rj`).
+1. **Projekt herunterladen/klonen**
+   z.B. nach `~/projekte/kundenkommunikation`
 
-2.  **Terminal öffnen:** Navigiere in dein Projektverzeichnis:
+2. **Terminal öffnen & ins Projekt wechseln**
 
-    ```bash
-    cd ~/projekte/weihnachtspost_rj
-    ```
+   ```bash
+   cd ~/projekte/kundenkommunikation
+   ```
 
-3.  **Virtuelle Umgebung erstellen:**
+3. **Virtuelle Umgebung erstellen**
 
-    ```bash
-    python3 -m venv venv
-    ```
+   ```bash
+   python3 -m venv venv
+   ```
 
-4.  **Virtuelle Umgebung aktivieren:**
+4. **Virtuelle Umgebung aktivieren**
 
-    ```bash
-    source venv/bin/activate
-    ```
+   ```bash
+   source venv/bin/activate
+   ```
 
-    Deine Kommandozeile sollte nun `(venv)` am Anfang anzeigen.
+   → `(venv)` sollte in der Kommandozeile erscheinen.
 
-5.  **Abhängigkeiten installieren:**
+5. **Abhängigkeiten installieren**
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-6.  **Anwendung starten:**
+6. **Anwendung starten**
 
-    ```bash
-    python3 app.py
-    ```
+   ```bash
+   python3 app.py
+   ```
 
-7.  Öffne deinen Webbrowser und gehe zu **`http://127.0.0.1:5000`**.
+7. **Webbrowser öffnen:**
+   [http://127.0.0.1:5000](http://127.0.0.1:5000)
+
+---
 
 ### Im Netzwerk verfügbar machen
 
-Um die Anwendung für andere im selben Netzwerk zugänglich zu machen, starte sie mit dem zusätzlichen `host`-Parameter:
+Starte mit zusätzlichem Host-Parameter:
 
 ```bash
 python app.py --host=0.0.0.0
 ```
 
-Das Terminal zeigt dir dann die IP-Adresse an, unter der die Anwendung erreichbar ist (z.B. http://192.168.1.10:5000).
-
-## Offene Punkte & Roadmap
-
-### Folgende Features sind für zukünftige Versionen geplant:
-
-- ✅ Duplikat-Prüfung: Es muss zuverlässig geprüft werden, ob ein Kunde beim Import bereits existiert. (Teilweise umgesetzt über E-Mail, könnte durch Namens-Abgleich erweitert werden).
-
-- ✅ Umgang mit leeren Feldern: Die Anwendung sollte keine Fehler auslösen, wenn importierte Felder leer sind. (Umgesetzt).
-
-- ✅ Sicheres Löschen von Mitarbeitern: Das Löschen eines Mitarbeiters darf nicht die zugehörigen Kunden löschen. (Umgesetzt: Die Zuordnung wird aufgehoben).
-
-- ⏳ Backup-System: Nach wichtigen Aktionen (Löschen, Hinzufügen) sollte automatisch ein Backup der Datenbank (weihnachtspost.db) erstellt werden.
-
-- ⏳ Sicherheit (HTTPS): Die Webseite sollte über HTTPS verschlüsselt sein, besonders im Netzwerkbetrieb.
-
-- ⏳ Benutzerauthentifizierung: Die Anwendung sollte mit einem Passwort geschützt werden.
-
-- ⏳ Postlisten pro Jahr: Für jedes neue Jahr sollten automatisch die Post-Auswahlen des Vorjahres für alle Kunden übernommen und als neue Liste angelegt werden können.
-
-- ⏳ Zusätzliche Import-Formate:
-
-  - Import aus Excel-Listen (.xlsx).
-
-  - Import aus Text-Listen (.csv, .txt).
-
-- ⏳ Export-Funktionen:
-
-  - Export der gefilterten Übersicht als CSV-Datei.
-
-  - Export als PDF-Dokument.
-
-  - Generierung einer reinen E-Mail-Liste.
-
-  - Erstellung einer Druckvorlage für Etiketten (z.B. Ultraprip Art. No. 3424).
+→ Das Terminal zeigt die IP-Adresse an, z.B. `http://192.168.1.10:5000`.
 
 ---
 
-### `requirements.txt`
+## Offene Punkte & Roadmap
 
-Diese Datei listet alle Python-Pakete auf, die für das Projekt benötigt werden. Mit dem Befehl `pip install -r requirements.txt` werden sie alle auf einmal installiert.
+- ✅ **Duplikat-Prüfung:** Teilweise umgesetzt (über E-Mail), soll durch Namensabgleich erweitert werden.
+- ✅ **Umgang mit leeren Feldern:** Fehlerfreie Verarbeitung leerer Import-Felder (umgesetzt).
+- ✅ **Sicheres Löschen von Mitarbeitern:** Kunden bleiben erhalten, Zuordnung wird aufgehoben.
+- ⏳ **Backup-System:** Automatisches Backup der DB (`kundenverwaltung.db`) nach wichtigen Aktionen.
+- ⏳ **Sicherheit (HTTPS):** Verschlüsselung für Netzwerkbetrieb.
+- ⏳ **Benutzerauthentifizierung:** Passwortschutz für die Anwendung.
+- ⏳ **Benachrichtigungslisten pro Jahr:** Automatische Übernahme der Kommunikations-Auswahlen vom Vorjahr.
+- ⏳ **Zusätzliche Import-Formate:**
 
-```text
+  - Excel-Listen (`.xlsx`)
+  - Text-Listen (`.csv`, `.txt`)
+
+- ⏳ **Export-Funktionen:**
+
+  - Gefilterte Übersicht als CSV
+  - Export als PDF
+  - Generierung einer reinen E-Mail-Liste
+  - Druckvorlage für Etiketten (z.B. Ultraprip Art. No. 3424)
+
+---
+
+## requirements.txt
+
+Diese Datei listet alle benötigten Python-Pakete auf.
+Installation mit:
+
+```bash
+pip install -r requirements.txt
+```
+
+**Inhalt:**
+
+```plaintext
 Flask
 Flask-SQLAlchemy
 extract-msg

@@ -7,7 +7,7 @@ import shutil
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from werkzeug.utils import secure_filename
-from src.models import db, Mitarbeiter, Kunde, Weihnachtspost
+from src.models import db, Mitarbeiter, Kunde, Benachrichtigung
 import csv
 import io
 
@@ -15,9 +15,9 @@ import io
 from flask_migrate import Migrate
 
 # -- Konfiguration --
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "upload_files"
 ALLOWED_EXTENSIONS = {"msg", "db"}  # .db für den Import erlauben
-BACKUP_FOLDER = "backup"
+BACKUP_FOLDER = "backups"
 
 STATUS_EMOJIS = {
     "Neu": "🆕",
@@ -56,7 +56,7 @@ os.makedirs(upload_path, exist_ok=True)
 
 app.config["SECRET_KEY"] = "dein-super-geheimer-schluessel-hier"
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"sqlite:///{os.path.join(instance_path, 'weihnachtspost.db')}"
+    f"sqlite:///{os.path.join(instance_path, 'kundenverwaltung.db')}"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = upload_path
@@ -68,8 +68,8 @@ migrate = Migrate(app, db)
 
 def backup_database():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_filename = f"weihnachtspost_{timestamp}.db.bak"
-    source_db = os.path.join(instance_path, "weihnachtspost.db")
+    backup_filename = f"kundenverwaltung_{timestamp}.db.bak"
+    source_db = os.path.join(instance_path, "kundenverwaltung.db")
     backup_filepath = os.path.join(backup_path, backup_filename)
     if os.path.exists(source_db):
         try:
@@ -142,9 +142,9 @@ def verwaltung():
 @app.route("/uebersicht")
 def uebersicht():
     query = db.session.query(Kunde)
-    mitarbeiter_id, post_art, status = (
+    mitarbeiter_id, benachrichtigungsart, status = (
         request.args.get("mitarbeiter_id"),
-        request.args.get("post_art"),
+        request.args.get("benachrichtigungsart"),
         request.args.get("status"),
     )
     jahr = request.args.get("jahr", datetime.now().year, type=int)
@@ -152,16 +152,16 @@ def uebersicht():
         query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
     if status:
         query = query.filter(Kunde.status == status)
-    if post_art:
-        query = query.join(Weihnachtspost).filter(Weihnachtspost.jahr == jahr)
+    if benachrichtigungsart:
+        query = query.join(Benachrichtigung).filter(Benachrichtigung.jahr == jahr)
         conditions = {
-            "postkarte": Weihnachtspost.postkarte.is_(True),
-            "kalender": Weihnachtspost.kalender.is_(True),
-            "email_versand": Weihnachtspost.email_versand.is_(True),
-            "speziell": Weihnachtspost.speziell.is_(True),
+            "brief": Benachrichtigung.brief.is_(True),
+            "kalender": Benachrichtigung.kalender.is_(True),
+            "email_versand": Benachrichtigung.email_versand.is_(True),
+            "speziell": Benachrichtigung.speziell.is_(True),
         }
-        if post_art in conditions:
-            query = query.filter(conditions[post_art])
+        if benachrichtigungsart in conditions:
+            query = query.filter(conditions[benachrichtigungsart])
     return render_template(
         "uebersicht.html",
         kunden=query.all(),
@@ -169,7 +169,7 @@ def uebersicht():
         status_optionen=STATUS_OPTIONEN,
         status_emojis=STATUS_EMOJIS,
         aktiver_mitarbeiter=mitarbeiter_id,
-        aktive_post_art=post_art,
+        aktive_benachrichtigungsart=benachrichtigungsart,
         aktiver_status=status,
         aktives_jahr=jahr,
     )
@@ -178,26 +178,26 @@ def uebersicht():
 @app.route("/export")
 def export_page():
     query = db.session.query(Kunde)
-    mitarbeiter_id, status, post_art = (
+    mitarbeiter_id, status, benachrichtigungsart = (
         request.args.get("mitarbeiter_id"),
         request.args.get("status"),
-        request.args.get("post_art"),
+        request.args.get("benachrichtigungsart"),
     )
     jahr = request.args.get("jahr", type=int, default=datetime.now().year)
     if mitarbeiter_id:
         query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
     if status:
         query = query.filter(Kunde.status == status)
-    if post_art:
-        query = query.join(Weihnachtspost).filter(Weihnachtspost.jahr == jahr)
+    if benachrichtigungsart:
+        query = query.join(Benachrichtigung).filter(Benachrichtigung.jahr == jahr)
         conditions = {
-            "postkarte": Weihnachtspost.postkarte.is_(True),
-            "kalender": Weihnachtspost.kalender.is_(True),
-            "email_versand": Weihnachtspost.email_versand.is_(True),
-            "speziell": Weihnachtspost.speziell.is_(True),
+            "brief": Benachrichtigung.brief.is_(True),
+            "kalender": Benachrichtigung.kalender.is_(True),
+            "email_versand": Benachrichtigung.email_versand.is_(True),
+            "speziell": Benachrichtigung.speziell.is_(True),
         }
-        if post_art in conditions:
-            query = query.filter(conditions[post_art])
+        if benachrichtigungsart in conditions:
+            query = query.filter(conditions[benachrichtigungsart])
     return render_template(
         "export.html",
         kunden=query.all(),
@@ -205,7 +205,7 @@ def export_page():
         status_optionen=STATUS_OPTIONEN,
         status_emojis=STATUS_EMOJIS,
         aktiver_mitarbeiter=mitarbeiter_id,
-        aktive_post_art=post_art,
+        aktive_benachrichtigungsart=benachrichtigungsart,
         aktiver_status=status,
         aktives_jahr=jahr,
     )
@@ -214,26 +214,26 @@ def export_page():
 @app.route("/export/csv")
 def export_csv():
     query = db.session.query(Kunde)
-    mitarbeiter_id, status, post_art = (
+    mitarbeiter_id, status, benachrichtigungsart = (
         request.args.get("mitarbeiter_id"),
         request.args.get("status"),
-        request.args.get("post_art"),
+        request.args.get("benachrichtigungsart"),
     )
     jahr = request.args.get("jahr", type=int, default=datetime.now().year)
     if mitarbeiter_id:
         query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
     if status:
         query = query.filter(Kunde.status == status)
-    if post_art:
-        query = query.join(Weihnachtspost).filter(Weihnachtspost.jahr == jahr)
+    if benachrichtigungsart:
+        query = query.join(Benachrichtigung).filter(Benachrichtigung.jahr == jahr)
         conditions = {
-            "postkarte": Weihnachtspost.postkarte == True,
-            "kalender": Weihnachtspost.kalender == True,
-            "email_versand": Weihnachtspost.email_versand == True,
-            "speziell": Weihnachtspost.speziell == True,
+            "brief": Benachrichtigung.brief == True,
+            "kalender": Benachrichtigung.kalender == True,
+            "email_versand": Benachrichtigung.email_versand == True,
+            "speziell": Benachrichtigung.speziell == True,
         }
-        if post_art in conditions:
-            query = query.filter(conditions[post_art])
+        if benachrichtigungsart in conditions:
+            query = query.filter(conditions[benachrichtigungsart])
     kunden_liste = query.all()
     output = io.StringIO()
     writer = csv.writer(output)
@@ -332,17 +332,15 @@ def kunde_erstellen():
             setattr(new_kunde, key, value)
     db.session.add(new_kunde)
     db.session.flush()
-    post_eintrag = Weihnachtspost(
+    benachrichtigungs_eintrag = Benachrichtigung(
         kunde_id=new_kunde.id,
         jahr=datetime.now().year,
-        postkarte="postkarte"
-        in request.form,  # This will be True if present, False otherwise
-        kalender="kalender"
-        in request.form,  # This will be True if present, False otherwise
+        brief="brief" in request.form,
+        kalender="kalender" in request.form,
         email_versand="email_versand" in request.form,
         speziell="speziell" in request.form,
     )
-    db.session.add(post_eintrag)
+    db.session.add(benachrichtigungs_eintrag)
     db.session.commit()
     backup_database()
     flash("Kunde erfolgreich erstellt!", "success")
@@ -352,7 +350,7 @@ def kunde_erstellen():
 @app.route("/kunden/bearbeiten/<int:kunde_id>")
 def kunde_bearbeiten(kunde_id):
     return render_template(
-        "kunde_bearbeiten.html",  # Typo: Should be 'kunde_bearbeiten.html'
+        "kunde_bearbeiten.html",
         kunde=Kunde.query.get_or_404(kunde_id),
         mitarbeiter=Mitarbeiter.query.all(),
         status_optionen=STATUS_OPTIONEN,
@@ -384,31 +382,38 @@ def kunde_loeschen(kunde_id):
     return redirect(url_for("verwaltung"))
 
 
-@app.route("/kunde/<int:kunde_id>/weihnachtspost")
-def weihnachtspost_verwalten(kunde_id):
+@app.route("/kunde/<int:kunde_id>/benachrichtigung")
+def benachrichtigung_verwalten(kunde_id):
     kunde = Kunde.query.get_or_404(kunde_id)
     jahr = request.args.get("jahr", datetime.now().year, type=int)
-    post_eintrag = Weihnachtspost.query.filter_by(kunde_id=kunde.id, jahr=jahr).first()
+    benachrichtigungs_eintrag = Benachrichtigung.query.filter_by(
+        kunde_id=kunde.id, jahr=jahr
+    ).first()
     return render_template(
-        "weihnachtspost.html", kunde=kunde, post_eintrag=post_eintrag, jahr=jahr
+        "benachrichtigung.html",
+        kunde=kunde,
+        benachrichtigungs_eintrag=benachrichtigungs_eintrag,
+        jahr=jahr,
     )
 
 
-@app.route("/kunde/<int:kunde_id>/weihnachtspost/speichern", methods=["POST"])
-def weihnachtspost_speichern(kunde_id):
+@app.route("/kunde/<int:kunde_id>/benachrichtigung/speichern", methods=["POST"])
+def benachrichtigung_speichern(kunde_id):
     jahr = request.form.get("jahr", type=int)
-    post_eintrag = Weihnachtspost.query.filter_by(kunde_id=kunde_id, jahr=jahr).first()
-    if not post_eintrag:
-        post_eintrag = Weihnachtspost(kunde_id=kunde_id, jahr=jahr)
-        db.session.add(post_eintrag)
-    post_eintrag.postkarte = "postkarte" in request.form
-    post_eintrag.kalender = "kalender" in request.form
-    post_eintrag.email_versand = "email_versand" in request.form
-    post_eintrag.speziell = "speziell" in request.form
+    benachrichtigungs_eintrag = Benachrichtigung.query.filter_by(
+        kunde_id=kunde_id, jahr=jahr
+    ).first()
+    if not benachrichtigungs_eintrag:
+        benachrichtigungs_eintrag = Benachrichtigung(kunde_id=kunde_id, jahr=jahr)
+        db.session.add(benachrichtigungs_eintrag)
+    benachrichtigungs_eintrag.brief = "brief" in request.form
+    benachrichtigungs_eintrag.kalender = "kalender" in request.form
+    benachrichtigungs_eintrag.email_versand = "email_versand" in request.form
+    benachrichtigungs_eintrag.speziell = "speziell" in request.form
     db.session.commit()
     backup_database()
-    flash(f"Weihnachtspost-Auswahl für {jahr} gespeichert.", "success")
-    return redirect(url_for("weihnachtspost_verwalten", kunde_id=kunde_id, jahr=jahr))
+    flash(f"Benachrichtigungs-Auswahl für {jahr} gespeichert.", "success")
+    return redirect(url_for("benachrichtigung_verwalten", kunde_id=kunde_id, jahr=jahr))
 
 
 @app.route("/import/msg", methods=["POST"])
@@ -419,8 +424,8 @@ def upload_msg():
     if not mitarbeiter_id:
         flash("Bitte einen Mitarbeiter für den Import auswählen!", "danger")
         return redirect(url_for("verwaltung"))
-    post_auswahl = {
-        "postkarte": "postkarte" in request.form,
+    benachrichtigungs_auswahl = {
+        "brief": "brief" in request.form,
         "kalender": "kalender" in request.form,
         "email_versand": "email_versand" in request.form,
         "speziell": "speziell" in request.form,
@@ -459,13 +464,13 @@ def upload_msg():
             if (
                 not kunde
                 and (vorname := data.get("vorname"))
-                and (nachname := data.get("nachname"))  # Typo: Should be 'nachname'
+                and (nachname := data.get("nachname"))
             ):
                 kunde = Kunde.query.filter(
                     db.func.lower(Kunde.vorname) == vorname.lower(),
                     db.func.lower(Kunde.nachname) == nachname.lower(),
                 ).first()
-            if kunde:  # Typo: Should be 'kunde'
+            if kunde:
                 for key, value in data.items():
                     if value and not getattr(kunde, key, None):
                         setattr(kunde, key, value)
@@ -473,13 +478,15 @@ def upload_msg():
             else:
                 neuer_kunde = Kunde(mitarbeiter_id=mitarbeiter_id, status="Neu")
                 for key, value in data.items():
-                    setattr(neuer_kunde, key, value)  # Typo: Should be 'neuer_kunde'
-                db.session.add(neuer_kunde)  # Typo: Should be 'neuer_kunde'
+                    setattr(neuer_kunde, key, value)
+                db.session.add(neuer_kunde)
                 db.session.flush()
-                post_eintrag = Weihnachtspost(  # Typo: Should be 'post_eintrag'
-                    kunde_id=neuer_kunde.id, jahr=datetime.now().year, **post_auswahl
+                benachrichtigungs_eintrag = Benachrichtigung(
+                    kunde_id=neuer_kunde.id,
+                    jahr=datetime.now().year,
+                    **benachrichtigungs_auswahl,
                 )
-                db.session.add(post_eintrag)
+                db.session.add(benachrichtigungs_eintrag)
                 erfolgreich += 1
             os.remove(message_txt_path)
             for item in os.listdir(temp_dir):
@@ -501,19 +508,19 @@ def upload_msg():
     return redirect(url_for("verwaltung"))
 
 
-@app.route("/weihnachtspost/copy-previous-year", methods=["POST"])
-def copy_previous_year_post():
+@app.route("/benachrichtigung/copy-previous-year", methods=["POST"])
+def copy_previous_year_notifications():
     current_year, previous_year = datetime.now().year, datetime.now().year - 1
-    previous_year_entries = Weihnachtspost.query.filter_by(jahr=previous_year).all()
+    previous_year_entries = Benachrichtigung.query.filter_by(jahr=previous_year).all()
     copied_count = 0
     for entry in previous_year_entries:
-        if not Weihnachtspost.query.filter_by(
+        if not Benachrichtigung.query.filter_by(
             kunde_id=entry.kunde_id, jahr=current_year
         ).first():
-            new_entry = Weihnachtspost(
+            new_entry = Benachrichtigung(
                 kunde_id=entry.kunde_id,
                 jahr=current_year,
-                postkarte=entry.postkarte,
+                brief=entry.brief,
                 kalender=entry.kalender,
                 email_versand=entry.email_versand,
                 speziell=entry.speziell,
@@ -524,11 +531,14 @@ def copy_previous_year_post():
         db.session.commit()
         backup_database()
         flash(
-            f"{copied_count} Post-Einträge vom Vorjahr wurden für {current_year} übernommen.",
+            f"{copied_count} Benachrichtigungs-Einträge vom Vorjahr wurden für {current_year} übernommen.",
             "success",
         )
     else:
-        flash("Keine neuen Post-Einträge zum Kopieren vom Vorjahr gefunden.", "info")
+        flash(
+            "Keine neuen Benachrichtigungs-Einträge zum Kopieren vom Vorjahr gefunden.",
+            "info",
+        )
     return redirect(url_for("uebersicht", jahr=current_year))
 
 
@@ -554,12 +564,12 @@ def import_db():
         filename = secure_filename(file.filename)
         upload_filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(upload_filepath)
-        current_db_path = os.path.join(instance_path, "weihnachtspost.db")
+        current_db_path = os.path.join(instance_path, "kundenverwaltung.db")
         try:
             if os.path.exists(current_db_path):
                 os.rename(current_db_path, current_db_path + ".old")
             shutil.copy2(upload_filepath, current_db_path)
-            flash(  # Typo: Should be 'flash'
+            flash(
                 "Datenbank erfolgreich importiert! Bitte starte die Anwendung manuell neu.",
                 "success",
             )
@@ -567,7 +577,7 @@ def import_db():
             if os.path.exists(current_db_path + ".old"):
                 os.remove(current_db_path + ".old")
         except OSError as e:
-            flash(  # Typo: Should be 'flash'
+            flash(
                 f"Ein Fehler ist beim Ersetzen der Datenbank aufgetreten: {e}", "danger"
             )
             if os.path.exists(current_db_path + ".old"):
@@ -580,5 +590,15 @@ def import_db():
 
 
 if __name__ == "__main__":
-    # db.create_all() wird durch Migrationen ersetzt
+    with app.app_context():
+        # db.create_all() wird durch Migrationen ersetzt,
+        # kann aber für die initiale Erstellung automatisiert werden.
+        db_path = os.path.join(basedir, "instance", "kundenverwaltung.db")
+        if not os.path.exists(db_path):
+            print("Datenbankdatei nicht gefunden. Erstelle Datenbank...")
+            db.create_all()
+            print("Datenbank wurde erfolgreich erstellt.")
+        else:
+            print("Datenbankdatei existiert bereits.")
+
     app.run(port=6060, debug=True)

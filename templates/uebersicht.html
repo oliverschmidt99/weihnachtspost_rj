@@ -19,15 +19,18 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="post_art">Postart (für {{ aktives_jahr }})</label>
-                <select name="post_art" id="post_art" onchange="this.form.submit()">
+                <label for="benachrichtigungsart">Benachrichtigungsart (für {{ aktives_jahr }})</label>
+                <select name="benachrichtigungsart" id="benachrichtigungsart" onchange="this.form.submit()">
                     <option value="">Alle Arten</option>
-                    <option value="postkarte" {% if aktive_post_art=='postkarte' %}selected{% endif %}>Postkarte
+                    <option value="brief" {% if aktive_benachrichtigungsart=='brief' %}selected{% endif %}>Brief
                     </option>
-                    <option value="kalender" {% if aktive_post_art=='kalender' %}selected{% endif %}>Kalender</option>
-                    <option value="email_versand" {% if aktive_post_art=='email_versand' %}selected{% endif %}>E-Mail
+                    <option value="kalender" {% if aktive_benachrichtigungsart=='kalender' %}selected{% endif %}>
+                        Kalender</option>
+                    <option value="email_versand" {% if aktive_benachrichtigungsart=='email_versand' %}selected{% endif
+                        %}>E-Mail
                     </option>
-                    <option value="speziell" {% if aktive_post_art=='speziell' %}selected{% endif %}>Spezielle Post
+                    <option value="speziell" {% if aktive_benachrichtigungsart=='speziell' %}selected{% endif %}>
+                        Spezielle Benachrichtigung
                     </option>
                 </select>
             </div>
@@ -124,7 +127,7 @@
             { class: 'col-anmerkungen', text: 'Anmerkungen' }, { class: 'col-aktionen', text: 'Aktionen' }
         ];
 
-        const STORAGE_KEY = 'weihnachtspost_column_visibility';
+        const STORAGE_KEY = 'kundenkommunikation_column_visibility';
         let visibility = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
         function applyVisibility() {

@@ -24,16 +24,19 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="post_art">Postart (für {{ aktives_jahr }})</label>
-                <select name="post_art" id="post_art">
+                <label for="benachrichtigungsart">Benachrichtigungsart (für {{ aktives_jahr }})</label>
+                <select name="benachrichtigungsart" id="benachrichtigungsart">
                     <option value="">Alle Arten</option>
-                    &lt;option value="postkarte" {% if aktive_post_art=='postkarte' %}selected{% endif %}>Postkarte
+                    <option value="brief" {% if aktive_benachrichtigungsart=='brief' %}selected{% endif %}>Brief
                     </option>
-                    &lt;option value="kalender" {% if aktive_post_art=='kalender' %}selected{% endif %}>Kalender
+                    <option value="kalender" {% if aktive_benachrichtigungsart=='kalender' %}selected{% endif %}>
+                        Kalender
                     </option>
-                    &lt;option value="email_versand" {% if aktive_post_art=='email_versand' %}selected{% endif %}>E-Mail
+                    <option value="email_versand" {% if aktive_benachrichtigungsart=='email_versand' %}selected{% endif
+                        %}>E-Mail
                     </option>
-                    <option value="speziell" {% if aktive_post_art=='speziell' %}selected{% endif %}>Spezielle Post
+                    <option value="speziell" {% if aktive_benachrichtigungsart=='speziell' %}selected{% endif %}>
+                        Spezielle Benachrichtigung
                     </option>
                 </select>
             </div>
@@ -60,7 +63,7 @@
         Basierend auf deinen Filtern wurden <strong>{{ kunden|length }}</strong> Kunden gefunden.
     </p>
 
-    <a href="{{ url_for('export_csv', mitarbeiter_id=aktiver_mitarbeiter, status=aktiver_status, post_art=aktive_post_art, jahr=aktives_jahr) }}"
+    <a href="{{ url_for('export_csv', mitarbeiter_id=aktiver_mitarbeiter, status=aktiver_status, benachrichtigungsart=aktive_benachrichtigungsart, jahr=aktives_jahr) }}"
         class="button">
         Als CSV-Datei herunterladen
     </a>

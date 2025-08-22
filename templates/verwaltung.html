@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
-{% block title %}Verwaltung{% endblock %}
+{% from '_macros.html' import render_kontakt_form %}
 
 {% block content %}
 <h1>Verwaltung</h1>
@@ -19,91 +19,20 @@
 <hr>
 
 <div id="verwaltung-sektionen">
-
     <div id="mitarbeiter-section" class="config-section active">
-        <div class="accordion-container">
-            <button class="accordion-button">
-                <h4>Neuen Mitarbeiter hinzufügen</h4>
-                <span class="icon"></span>
-            </button>
-            <div class="accordion-content">
-                <div class="card">
-                    <form action="{{ url_for('mitarbeiter_neu') }}" method="post">
-                        <fieldset>
-                            <legend>Persönliche Informationen</legend>
-                            <div class="form-grid-3">
-                                <div class="form-group"><label for="anrede_neu">Anrede</label><input type="text"
-                                        id="anrede_neu" name="anrede" required></div>
-                                <div class="form-group"><label for="vorname_neu">Vorname</label><input type="text"
-                                        id="vorname_neu" name="vorname" required></div>
-                                <div class="form-group"><label for="nachname_neu">Nachname</label><input type="text"
-                                        id="nachname_neu" name="nachname" required></div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Firma & Position</legend>
-                            <div class="form-grid-3">
-                                <div class="form-group"><label for="firmenname_neu">Firma</label><input type="text"
-                                        id="firmenname_neu" name="firmenname"></div>
-                                <div class="form-group"><label for="abteilung_neu">Abteilung</label><input type="text"
-                                        id="abteilung_neu" name="abteilung"></div>
-                                <div class="form-group"><label for="position_neu">Position</label><input type="text"
-                                        id="position_neu" name="position"></div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Kontakt</legend>
-                            <div class="form-grid-3">
-                                <div class="form-group"><label for="email_neu">E-Mail</label><input type="email"
-                                        id="email_neu" name="email"></div>
-                                <div class="form-group"><label for="telefon_neu">Telefon</label><input type="text"
-                                        id="telefon_neu" name="telefon"></div>
-                                <div class="form-group"><label for="durchwahl_neu">Durchwahl</label><input type="text"
-                                        id="durchwahl_neu" name="durchwahl"></div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Firmenadresse</legend>
-                            <div class="form-grid-3">
-                                <div class="form-group" style="grid-column: 1 / 4;"><label
-                                        for="strasse_neu">Straße</label><input type="text" id="strasse_neu"
-                                        name="firma_strasse"></div>
-                                <div class="form-group"><label for="plz_neu">PLZ</label><input type="text" id="plz_neu"
-                                        name="firma_plz"></div>
-                                <div class="form-group" style="grid-column: 2 / 4;"><label
-                                        for="ort_neu">Ort</label><input type="text" id="ort_neu" name="firma_ort"></div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Darstellung</legend>
-                            <div class="form-group">
-                                <label>Farbe</label>
-                                <div class="color-palette">
-                                    {% for color in pastel_colors %}<label class="color-swatch-label"><input
-                                            type="radio" name="farbe" value="{{ color }}" {% if loop.first %}checked{%
-                                            endif %}><span class="color-swatch"
-                                            style="background-color: {{ color }};"></span></label>{% endfor
-                                    %}
-                                </div>
-                            </div>
-                        </fieldset>
-                        <div class="button-group"><button type="submit">Mitarbeiter erstellen</button></div>
-                    </form>
-                </div>
-            </div>
+        <div class="actions-header">
+            <h2>Bestehende Mitarbeiter</h2>
+            <button id="add-mitarbeiter-btn" class="button">+ Neuen Mitarbeiter anlegen</button>
         </div>
-        <hr>
-
-        <h2>Bestehende Mitarbeiter</h2>
         <div class="card">
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Farbe</th>
-                            <th>Vorname</th>
-                            <th>Nachname</th>
-                            <th>Abteilung</th>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>E-Mail</th>
                             <th>Aktionen</th>
                         </tr>
                     </thead>
@@ -115,11 +44,11 @@
                                     style="width: 24px; height: 24px; background-color: {{ m.farbe }}; border: 1px solid var(--border-color); border-radius: 50%;">
                                 </div>
                             </td>
-                            <td>{{ m.vorname }}</td>
-                            <td>{{ m.nachname }}</td>
-                            <td>{{ m.abteilung }}</td>
+                            <td>{{ m.vorname }} {{ m.nachname }}</td>
+                            <td>{{ m.position or '---' }}</td>
+                            <td>{{ m.email or '---' }}</td>
                             <td class="actions">
-                                <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}"
+                                <a href="{{ url_for('mitarbeiter_bearbeiten', mitarbeiter_id=m.id) }}"
                                     class="button secondary">Bearbeiten</a>
                                 <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
                                     onsubmit="return confirm('Mitarbeiter wirklich löschen?');"><button type="submit"
@@ -138,79 +67,21 @@
     </div>
 
     <div id="kunden-section" class="config-section">
-        <div class="card-container" id="kunden-nav">
-            <div class="card active" data-target="kunde-anlegen-content">
-                <h5>Neuen Kunden anlegen</h5>
-            </div>
-            <div class="card" data-target="kunde-import-content">
-                <h5>Kunden importieren</h5>
-            </div>
-        </div>
-        <div id="kunden-sektionen">
-            <div id="kunde-anlegen-content" class="config-section active">
-                <div class="card">
-                    <h4>Neuen Kunden manuell anlegen</h4>
-                    <form action="{{ url_for('kunde_erstellen') }}" method="post">
-                        <fieldset>
-                            <legend>Persönliches</legend>
-                            <input type="text" name="vorname" placeholder="Vorname"><input type="text" name="nachname"
-                                placeholder="Nachname" required>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Zuordnung & Status</legend>
-                            <div class="form-group">
-                                <label for="mitarbeiter_id_neu">Zugeordneter Mitarbeiter</label>
-                                <select name="mitarbeiter_id" id="mitarbeiter_id_neu" required>
-                                    <option value="" disabled selected>Mitarbeiter zuordnen...</option>
-                                    {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname
-                                        }}</option>{% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Status</label>
-                                <div class="status-palette">
-                                    {% for status, emoji in status_emojis.items() %}<label class="status-label"><input
-                                            type="radio" name="status" value="{{ status }}" {% if loop.first %}checked{%
-                                            endif %}><span class="status-swatch">{{ emoji }} {{ status
-                                            }}</span></label>{% endfor %}
-                                </div>
-                            </div>
-                        </fieldset>
-                        <button type="submit">Kunden erstellen</button>
-                    </form>
-                </div>
-            </div>
-            <div id="kunde-import-content" class="config-section">
-                <div class="card">
-                    <h4>Kunden aus .msg-Dateien importieren</h4>
-                    <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
-                        <fieldset>
-                            <label for="mitarbeiter_id_import">Für welchen Mitarbeiter importieren?</label>
-                            <select name="mitarbeiter_id" id="mitarbeiter_id_import" required>
-                                <option value="" disabled selected>-- Bitte wählen --</option>
-                                {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}
-                                </option>{% endfor %}
-                            </select>
-                        </fieldset>
-                        <fieldset>
-                            <label>Dateien auswählen:</label>
-                            <input type="file" name="msg_files" multiple required>
-                        </fieldset>
-                        <button type="submit">Hochladen & Importieren</button>
-                    </form>
-                </div>
+        <div class="actions-header">
+            <h2>Bestehende Kunden</h2>
+            <div>
+                <button id="add-kunde-btn" class="button">+ Neuen Kunden anlegen</button>
+                <button id="import-kunde-btn" class="button secondary">↑ Kunden importieren</button>
             </div>
         </div>
-        <hr>
-        <h2>Bestehende Kunden</h2>
         <div class="card">
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Status</th>
-                            <th>Nachname</th>
-                            <th>Vorname</th>
+                            <th>Name</th>
+                            <th>Firma</th>
                             <th>Zugeordnet zu</th>
                             <th>Aktionen</th>
                         </tr>
@@ -219,8 +90,8 @@
                         {% for k in kunden %}
                         <tr>
                             <td>{{ status_emojis.get(k.status, '') }} {{ k.status }}</td>
-                            <td>{{ k.nachname }}</td>
-                            <td>{{ k.vorname }}</td>
+                            <td>{{ k.vorname }} {{ k.nachname }}</td>
+                            <td>{{ k.firma or '---' }}</td>
                             <td
                                 style="background-color: {{ k.mitarbeiter.farbe if k.mitarbeiter else 'transparent' }};">
                                 {% if k.mitarbeiter %}{{ k.mitarbeiter.nachname }}{% else %}---{% endif %}
@@ -228,7 +99,7 @@
                             <td class="actions">
                                 <a href="{{ url_for('benachrichtigung_verwalten', kunde_id=k.id) }}"
                                     class="button secondary">Benachrichtigung</a>
-                                <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}"
+                                <a href="{{ url_for('kunde_bearbeiten', kunde_id=k.id) }}"
                                     class="button secondary">Bearbeiten</a>
                                 <form action="{{ url_for('kunden_loeschen', id=k.id) }}" method="post"
                                     onsubmit="return confirm('Kunde wirklich löschen?');"><button type="submit"
@@ -246,51 +117,64 @@
         </div>
     </div>
 </div>
+
+<div id="modal-add-mitarbeiter" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <h3>Neuen Mitarbeiter hinzufügen</h3>
+        {{ render_kontakt_form('Mitarbeiter', {}, url_for('mitarbeiter_neu'), akademische_titel=akademische_titel,
+        pastel_colors=pastel_colors) }}
+    </div>
+</div>
+
+<div id="modal-add-kunde" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <h3>Neuen Kunden manuell anlegen</h3>
+        {{ render_kontakt_form('Kunde', {}, url_for('kunde_erstellen'), mitarbeiter_liste=mitarbeiter,
+        status_optionen=status_optionen, status_emojis=status_emojis, akademische_titel=akademische_titel) }}
+    </div>
+</div>
+
+<div id="modal-import-kunde" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <h3>Kunden aus .msg-Dateien importieren</h3>
+        <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
+            <fieldset>
+                <label for="mitarbeiter_id_import">Für welchen Mitarbeiter importieren?</label>
+                <select name="mitarbeiter_id" id="mitarbeiter_id_import" required>
+                    <option value="" disabled selected>-- Bitte wählen --</option>
+                    {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}</option>{%
+                    endfor %}
+                </select>
+            </fieldset>
+            <fieldset>
+                <label>Dateien auswählen:</label>
+                <input type="file" name="msg_files" multiple required>
+            </fieldset>
+            <div class="button-group">
+                <button type="submit">Hochladen & Importieren</button>
+                <button type="button" class="button secondary modal-cancel-btn">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="tag-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <h3>Tags auswählen</h3>
+        <div id="modal-tag-list"></div>
+        <div class="button-group">
+            <button type="button" id="modal-save-btn">Fertig</button>
+            <button type="button" class="button secondary modal-cancel-btn">Abbrechen</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        initializeCardNavigation('verwaltung-nav', 'verwaltung-sektionen');
-        initializeCardNavigation('kunden-nav', 'kunden-sektionen');
-        initializeAccordion();
-    });
-
-    // Logik für die Akkordeons
-    function initializeAccordion() {
-        document.querySelectorAll(".accordion-button").forEach(button => {
-            button.addEventListener("click", () => {
-                const content = button.nextElementSibling;
-                button.classList.toggle("active");
-                if (content.style.maxHeight) {
-                    content.style.maxHeight = null;
-                } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }
-            });
-        });
-    }
-
-    // Diese Funktion steuert die Kachel-Navigation
-    function initializeCardNavigation(navId, sectionContainerId) {
-        const cards = document.querySelectorAll(`#${navId} .card`);
-        const sections = document.querySelectorAll(`#${sectionContainerId} .config-section`);
-        if (cards.length === 0) return;
-
-        cards.forEach((card) => {
-            card.addEventListener("click", () => {
-                // Deaktiviere alle Sektionen und Kacheln
-                sections.forEach((s) => s.classList.remove("active"));
-                cards.forEach((c) => c.classList.remove("active"));
-
-                // Aktiviere die Ziel-Sektion und die geklickte Kachel
-                const targetElement = document.getElementById(card.dataset.target);
-                if (targetElement) {
-                    targetElement.classList.add("active");
-                }
-                card.classList.add("active");
-            });
-        });
-    }
-</script>
+<script src="{{ url_for('static', filename='js/verwaltung.js') }}"></script>
+<script src="{{ url_for('static', filename='js/forms.js') }}"></script>
 {% endblock %}

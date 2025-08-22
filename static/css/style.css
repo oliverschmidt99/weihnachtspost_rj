@@ -29,9 +29,9 @@ body {
     margin: 0; padding: 0; background-color: var(--bg-main);
     color: var(--text-primary); display: flex; flex-direction: column; min-height: 100vh;
     transition: background-color 0.2s, color 0.2s;
-    font-size: 0.8em;
+    font-size: 0.9em; /* Schriftgröße leicht erhöht für bessere Lesbarkeit */
 }
-main { flex: 1; padding: 1.2rem; display: flex; flex-direction: column; align-items: center; }
+main { flex: 1; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; }
 header {
     background-color: var(--header-bg);
     color: var(--header-text);
@@ -40,14 +40,14 @@ header {
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     box-shadow: 0 2px 4px var(--shadow-color);
-    height: 12rem;
+    height: 6rem; /* Header etwas verkleinert */
     border-bottom: 0.1rem solid var(--border-color);
 }
 .header-left {
     display: flex;
     align-items: center;
 }
-#header-logo { height: 10rem; width: auto; }
+#header-logo { height: 4.5rem; width: auto; } /* Logo angepasst */
 header h1 { display: none; }
 nav {
     display: flex;
@@ -70,11 +70,13 @@ nav a.active { color: var(--nav-active-text); }
     background-color: var(--nav-slider-bg); border-radius: 8px;
     z-index: 5; transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+
+/* --- KORREKTUR: Container verkleinert --- */
 .container {
-    width: 90%;
-    max-width: 70rem;
+    width: 95%;
+    max-width: 60rem; /* Maximale Breite reduziert für kompaktere Ansicht */
     background-color: var(--bg-container);
-    padding: 1.2rem;
+    padding: 1.5rem; /* Padding angepasst */
     border-radius: 8px; box-shadow: 0 4px 8px var(--shadow-color);
     border: 0.1rem solid var(--border-color);
 }
@@ -103,27 +105,42 @@ hr { border: 0; border-top: 0.1rem solid var(--border-color); margin: 1.2rem 0; 
     color: var(--card-active-text);
 }
 
+/* --- Logik für Kachel-Navigation (Tabs) --- */
+.config-section {
+    display: none;
+    animation: fadeIn 0.5s;
+}
+.config-section.active {
+    display: block;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Formulare, Buttons, etc. */
 input, select, button, textarea {
-    padding: 0.5rem;
+    padding: 0.6rem;
     border: 0.1rem solid var(--border-color); border-radius: 4px;
-    font-size: 0.8em;
+    font-size: 0.9em;
     margin-right: 0.3rem;
     margin-bottom: 0.3rem;
     background-color: var(--bg-main); color: var(--text-primary);
+    box-sizing: border-box; /* Stellt sicher, dass Padding die Breite nicht beeinflusst */
 }
 button, a.button {
     cursor: pointer; background-color: var(--accent-color); color: white; border: none;
     text-decoration: none; display: inline-block;
+    padding: 0.6rem 1rem;
 }
 html[data-theme='dark'] a.button { color: #212529; font-weight: 500; }
 button:hover, a.button:hover { background-color: var(--accent-hover); }
 button.danger { background-color: var(--danger-color); }
 button.danger:hover { background-color: var(--danger-hover); }
-a.button.secondary { background-color: var(--button-secondary-bg); color: white; }
-a.button.secondary:hover { background-color: var(--button-secondary-hover); }
-form label { display: block; margin-top: 0.7rem; font-weight: bold; margin-bottom: 0.1rem;}
-form input, form select, form textarea { width: 100%; box-sizing: border-box; }
+a.button.secondary, button.secondary { background-color: var(--button-secondary-bg); color: white; }
+a.button.secondary:hover, button.secondary:hover { background-color: var(--button-secondary-hover); }
+form label { display: block; margin-top: 0.7rem; font-weight: bold; margin-bottom: 0.2rem;}
+form input, form select, form textarea { width: 100%; }
 fieldset { border: 0.1rem solid var(--border-color); border-radius: 4px; padding: 1rem; margin-bottom: 1rem; }
 legend { font-weight: bold; padding: 0 0.5rem; }
 
@@ -147,7 +164,7 @@ input:checked + .slider:before { transform: translateX(1.8rem); }
 .color-swatch { display: block; width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 0.2rem solid var(--border-color); transition: transform 0.2s; }
 .color-swatch-label input[type="radio"]:checked + .color-swatch { transform: scale(1.1); border-color: var(--accent-color); }
 
-/* NEUE Akkordeon-Stile */
+/* Akkordeon-Stile */
 .accordion-container {
     border: 0.1rem solid var(--border-color);
     border-radius: 8px;
@@ -174,38 +191,21 @@ input:checked + .slider:before { transform: translateX(1.8rem); }
     background-color: var(--card-active-bg);
     color: var(--card-active-text);
 }
-.accordion-button h4 {
-    margin: 0;
-    font-size: 1rem;
-}
+.accordion-button h4 { margin: 0; font-size: 1rem; }
 .accordion-button .icon {
-    content: '';
-    width: 0.8rem;
-    height: 0.8rem;
-    border: solid var(--text-primary);
-    border-width: 0 2px 2px 0;
-    display: inline-block;
-    padding: 3px;
-    transform: rotate(45deg);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    content: ''; width: 0.8rem; height: 0.8rem; border: solid var(--text-primary);
+    border-width: 0 2px 2px 0; display: inline-block; padding: 3px;
+    transform: rotate(45deg); transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .accordion-button.active .icon {
-    transform: rotate(-135deg);
-    border-color: var(--card-active-text);
+    transform: rotate(-135deg); border-color: var(--card-active-text);
 }
 .accordion-content {
     background-color: var(--card-bg);
-    padding: 0 1rem;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.2s ease-out;
+    padding: 0 1rem; max-height: 0;
+    overflow: hidden; transition: max-height 0.2s ease-out;
 }
-.accordion-content .card {
-    border: none;
-    box-shadow: none;
-    padding: 1rem 0;
-    margin: 0;
-}
+.accordion-content .card { border: none; box-shadow: none; padding: 1rem 0; margin: 0; }
 
 /* Kleinere Schrift und Anpassungen für die Sub-Navigation der Kunden */
 #kunden-nav.card-container { display: flex; justify-content: center; align-items: center; }
@@ -229,26 +229,107 @@ input:checked + .slider:before { transform: translateX(1.8rem); }
 
 /* Form Grid Layout */
 .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-.form-grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .form-grid-2 .form-group, .form-grid-3 .form-group { margin: 0; }
 
 /* Styling für die Warn-Box */
 .warning-box {
-    background-color: #fff3cd;
-    color: #664d03;
-    border: 0.1rem solid #ffecb5;
-    border-left: 0.5rem solid #ffc107;
-    padding: 0.7rem 1rem;
-    border-radius: 8px;
-    margin-top: 0.7rem;
+    background-color: #fff3cd; color: #664d03; border: 0.1rem solid #ffecb5;
+    border-left: 0.5rem solid #ffc107; padding: 0.7rem 1rem;
+    border-radius: 8px; margin-top: 0.7rem;
 }
 html[data-theme='dark'] .warning-box {
-    background-color: #3e3824;
-    color: #ffda6a;
-    border-color: #5a4f2c;
-    border-left-color: #ffc107;
+    background-color: #3e3824; color: #ffda6a;
+    border-color: #5a4f2c; border-left-color: #ffc107;
 }
+
+/* Styling für Modals (Pop-up Fenster) */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center; align-items: center; z-index: 1000;
+}
+/* --- KORREKTUR: Modal verkleinert --- */
+.modal-content {
+    background-color: var(--bg-container); padding: 2rem;
+    border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%; max-width: 45rem; /* Maximale Breite reduziert */
+    position: relative; animation: fadeIn 0.3s;
+    max-height: 90vh; /* Verhindert, dass das Modal aus dem Bild läuft */
+    overflow-y: auto; /* Fügt Scrollen hinzu, wenn der Inhalt zu lang ist */
+}
+.modal-close-btn {
+    position: absolute; top: 0.5rem; right: 1rem;
+    background: none; border: none; font-size: 2rem;
+    cursor: pointer; color: var(--text-secondary);
+}
+.modal-close-btn:hover { color: var(--text-primary); }
+
+.button-group {
+    display: flex; gap: 0.5rem; margin-top: 1rem;
+    justify-content: flex-end;
+}
+
+/* Styling für den Header über den Tabellen */
+.actions-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;
+}
+.actions-header h2 { margin: 0; }
+
+/* ... (vorheriger CSS-Code) ... */
+
+/* --- KORREKTUR: Kleinere Formular-Elemente --- */
+input, select, button, textarea, .button {
+    padding: 0.5rem 0.8rem; /* Innenabstand verkleinert */
+    font-size: 0.85em; /* Schriftgröße verkleinert */
+}
+fieldset { padding: 0.8rem; }
+legend { font-weight: bold; padding: 0 0.5rem; }
+
+/* --- NEU: Styling für Tag-Auswahl --- */
+.tag-selector-container .selected-tags {
+    display: flex; flex-wrap: wrap; gap: 0.3rem;
+    padding: 0.5rem; border: 1px solid var(--border-color);
+    border-radius: 4px; min-height: 2.2rem;
+    background-color: var(--bg-main);
+}
+.tag-badge {
+    display: inline-flex; align-items: center; padding: 0.2rem 0.5rem;
+    border-radius: 4px; font-size: 0.8rem;
+}
+.remove-tag {
+    margin-left: 0.4rem; font-weight: bold; cursor: pointer;
+    font-size: 1.1rem; line-height: 1; opacity: 0.7;
+}
+.remove-tag:hover { opacity: 1; }
+.add-tags-btn { margin-top: 0.5rem; }
+
+#modal-tag-list {
+    display: flex; flex-direction: column; gap: 1rem;
+    margin-top: 1rem; max-height: 50vh; overflow-y: auto;
+}
+#modal-tag-list .tag-group div { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+#modal-tag-list .tag-badge { cursor: pointer; }
+#modal-tag-list .tag-badge.selected { box-shadow: 0 0 0 2px var(--accent-color); }
+
+
+/* --- NEU: Styling für Titel-Auswahl (Multi-Select) --- */
+.title-selector-container .selected-titles {
+    display: flex; flex-wrap: wrap; gap: 0.3rem;
+    padding: 0.5rem; border: 1px solid var(--border-color);
+    border-radius: 4px; min-height: 2.2rem;
+    background-color: var(--bg-main);
+}
+.title-selector-container .title-search { width: 100%; margin-top: 0.5rem; }
+.title-options {
+    display: block; max-height: 150px; overflow-y: auto;
+    border: 1px solid var(--border-color); border-top: none;
+    padding: 0.5rem;
+}
+.title-options label {
+    display: block; padding: 0.2rem;
+    cursor: pointer;
+}
+.title-options label:hover { background-color: var(--card-active-bg); }
+.title-options label input { margin-right: 0.5rem; }

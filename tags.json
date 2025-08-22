@@ -1,0 +1,20 @@
+{
+  "categories": [
+    {
+      "name": "Priorität",
+      "tags": [
+        { "name": "A-Kunde", "color": "#FFADAD" },
+        { "name": "B-Kunde", "color": "#FFD6A5" },
+        { "name": "C-Kunde", "color": "#FDFFB6" }
+      ]
+    },
+    {
+      "name": "Branche",
+      "tags": [
+        { "name": "IT", "color": "#CAFFBF" },
+        { "name": "Handwerk", "color": "#9BF6FF" },
+        { "name": "Industrie", "color": "#A0C4FF" }
+      ]
+    }
+  ]
+}

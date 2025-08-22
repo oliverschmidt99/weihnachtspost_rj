@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialisiert die blaue Hervorhebung in der Navigation
   handleNavSlider();
 
+  // Initialisiert die Kachel-Navigation (Tabs) für die Verwaltungsseite
+  initializeCardNavigation("verwaltung-nav", "verwaltung-sektionen");
+  initializeCardNavigation("kunden-nav", "kunden-sektionen");
+
   // Initialisiert die Akkordeon-Buttons (aufklappbare Menüs)
   document.querySelectorAll(".accordion-button").forEach((button) => {
     button.addEventListener("click", () => {

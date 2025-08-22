@@ -1,51 +1,25 @@
-/* static/css/style.css - Original aus dem frontend-starter-kit */
+/* static/css/style.css */
 
 /* Hellmodus-Farben */
 :root {
-    --bg-main: #f8f9fa;
-    --bg-container: #ffffff;
-    --text-primary: #212529;
-    --text-secondary: #6c757d;
-    --header-bg: #ffffff;
-    --header-text: #212529;
-    --nav-slider-bg: #0d6efd;
-    --nav-active-text: #ffffff;
-    --border-color: #dee2e6;
-    --accent-color: #0d6efd;
-    --accent-hover: #0b5ed7;
-    --card-bg: #f8f9fa;
-    --card-hover-border: #0d6efd;
-    --card-active-bg: #e7f1ff;
-    --card-active-text: #0d6efd;
-    --button-secondary-bg: #6c757d;
-    --button-secondary-hover: #5a6268;
-    --danger-color: #dc3545;
-    --danger-hover: #c82333;
-    --shadow-color: rgba(0, 0, 0, 0.05);
+    --bg-main: #f8f9fa; --bg-container: #ffffff; --text-primary: #212529;
+    --text-secondary: #6c757d; --header-bg: #ffffff; --header-text: #212529;
+    --nav-slider-bg: #0d6efd; --nav-active-text: #ffffff; --border-color: #dee2e6;
+    --accent-color: #0d6efd; --accent-hover: #0b5ed7; --card-bg: #ffffff;
+    --card-hover-border: #0d6efd; --card-active-bg: #e7f1ff; --card-active-text: #0d6efd;
+    --button-secondary-bg: #6c757d; --button-secondary-hover: #5a6268;
+    --danger-color: #dc3545; --danger-hover: #c82333; --shadow-color: rgba(0, 0, 0, 0.05);
 }
 
 /* Dunkelmodus-Farben */
 html[data-theme='dark'] {
-    --bg-main: #212529;
-    --bg-container: #2c3034;
-    --text-primary: #e9ecef;
-    --text-secondary: #adb5bd;
-    --header-bg: #2c3034;
-    --header-text: #e9ecef;
-    --nav-slider-bg: #4dabf7;
-    --nav-active-text: #ffffff;
-    --border-color: #495057;
-    --accent-color: #4dabf7;
-    --accent-hover: #74c0fc;
-    --card-bg: #343a40;
-    --card-hover-border: #4dabf7;
-    --card-active-bg: #364964;
-    --card-active-text: #74c0fc;
-    --button-secondary-bg: #495057;
-    --button-secondary-hover: #5a6268;
-    --danger-color: #ff7b72;
-    --danger-hover: #ff9d96;
-    --shadow-color: rgba(0, 0, 0, 0.2);
+    --bg-main: #212529; --bg-container: #2c3034; --text-primary: #e9ecef;
+    --text-secondary: #adb5bd; --header-bg: #2c3034; --header-text: #e9ecef;
+    --nav-slider-bg: #4dabf7; --nav-active-text: #212529; --border-color: #495057;
+    --accent-color: #4dabf7; --accent-hover: #74c0fc; --card-bg: #343a40;
+    --card-hover-border: #4dabf7; --card-active-bg: #364964; --card-active-text: #74c0fc;
+    --button-secondary-bg: #495057; --button-secondary-hover: #5a6268;
+    --danger-color: #ff7b72; --danger-hover: #ff9d96; --shadow-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Allgemeines Styling */
@@ -55,9 +29,7 @@ body {
     color: var(--text-primary); display: flex; flex-direction: column; min-height: 100vh;
     transition: background-color 0.2s, color 0.2s;
 }
-
 main { flex: 1; padding: 2rem; display: flex; justify-content: center; }
-
 header {
     background-color: var(--header-bg); color: var(--header-text); padding: 0 2rem;
     display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
@@ -80,12 +52,49 @@ nav a.active { color: var(--nav-active-text); }
     height: 3.5rem; background-color: var(--nav-slider-bg); border-radius: 8px;
     z-index: 5; transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-
 .container {
     width: 100%; max-width: 1200px; background-color: var(--bg-container);
     padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px var(--shadow-color);
     border: 1px solid var(--border-color);
 }
+hr { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
+
+/* --- KORREKTUR: Geteilte Card-Stile --- */
+
+/* Allgemeiner Stil für alle Karten (Hintergrund, Padding, etc.) */
+.card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+    text-align: left; /* Standard-Ausrichtung */
+}
+
+/* Spezifische Stile NUR für die Navigations-Kacheln */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+.card-container .card {
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    border-width: 2px;
+    border-color: transparent;
+}
+.card-container .card:hover {
+    border-color: var(--card-hover-border);
+    transform: translateY(-3px);
+}
+.card-container .card.active {
+    background-color: var(--card-active-bg);
+    border-color: var(--card-hover-border);
+    color: var(--card-active-text);
+}
+
 
 /* Formulare, Buttons, etc. */
 input, select, button, textarea {
@@ -97,12 +106,12 @@ button, a.button {
     cursor: pointer; background-color: var(--accent-color); color: white; border: none;
     text-decoration: none; display: inline-block;
 }
+html[data-theme='dark'] a.button { color: #212529; font-weight: 500; }
 button:hover, a.button:hover { background-color: var(--accent-hover); }
 button.danger { background-color: var(--danger-color); }
 button.danger:hover { background-color: var(--danger-hover); }
 a.button.secondary { background-color: var(--button-secondary-bg); color: white; }
 a.button.secondary:hover { background-color: var(--button-secondary-hover); }
-.card { background: var(--card-bg); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px var(--shadow-color); margin-bottom: 2rem; border: 1px solid var(--border-color); }
 form label { display: block; margin-top: 1rem; font-weight: bold; }
 form input, form select, form textarea { width: 100%; box-sizing: border-box; }
 fieldset { border: 1px solid var(--border-color); border-radius: 4px; padding: 1.5rem; margin-bottom: 1.5rem; }
@@ -129,32 +138,33 @@ input:checked + .slider:before { transform: translateX(26px); }
 .color-swatch-label input[type="radio"]:checked + .color-swatch { transform: scale(1.2); border-color: var(--accent-color); }
 .form-inline .color-palette-container { margin-right: 1rem; }
 
-/* Dark Mode Kontrast-Korrektur */
-html[data-theme='dark'] button, html[data-theme='dark'] a.button {
-    color: var(--text-primary);
-}
-html[data-theme='dark'] button.secondary, html[data-theme='dark'] a.button.secondary, html[data-theme='dark'] button.danger {
-    color: var(--text-primary);
-}
-html[data-theme='dark'] nav a.active {
-    color: var(--header-text);
-}
-
-
 footer {
     text-align: center; padding: 1rem; background-color: var(--header-bg);
     color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color);
 }
-html[data-theme='dark'] button,
-html[data-theme='dark'] a.button {
-    color: #212529; /* Dunkle Schrift für helle Buttons */
-    font-weight: 500;
-}
 
-/* Rück-Korrektur für Buttons, die bereits einen dunklen Hintergrund haben */
-html[data-theme='dark'] button.secondary,
-html[data-theme='dark'] a.button.secondary,
-html[data-theme='dark'] button.danger {
-    color: #e9ecef; /* Helle Schrift für dunkle Buttons */
-    font-weight: normal;
+/* Sektionen & Akkordeon-Button */
+.config-section { display: none; margin-top: 2rem; animation: fadeIn 0.5s; }
+.config-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.accordion-button {
+    background-color: var(--card-bg); color: var(--text-primary); cursor: pointer;
+    padding: 1rem; width: 100%; border: 1px solid var(--border-color);
+    text-align: left; outline: none; font-size: 1.2rem; font-weight: bold;
+    transition: background-color 0.2s; display: flex; justify-content: space-between;
+    align-items: center; border-radius: 8px; margin-bottom: 1rem;
 }
+.accordion-button:hover, .accordion-button.active {
+    background-color: var(--card-active-bg); color: var(--card-active-text);
+}
+.accordion-content {
+    padding: 0; max-height: 0; overflow: hidden;
+    transition: max-height 0.3s ease-out; background-color: transparent;
+}
+.add-icon {
+    font-size: 1.5rem; font-weight: bold; color: var(--accent-color);
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--accent-color); transition: transform 0.3s;
+}
+.accordion-button.active .add-icon { transform: rotate(45deg); }

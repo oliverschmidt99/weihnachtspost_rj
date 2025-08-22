@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Weihnachtspost RJ{% endblock %}</title>
+    <title>{% block title %}Kunden und Post{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/logo_rolf-janssen_2024.svg') }}" type="image/svg+xml">
     <script>
@@ -18,19 +18,15 @@
         <div class="header-left">
             <img src="{{ url_for('static', filename='img/logo_rolf-janssen_2024.svg') }}" alt="Rolf Janssen GmbH Logo"
                 id="header-logo">
-            <h1>Weihnachtspost</h1>
+            <h1>Kunden und Post</h1>
         </div>
         <nav id="main-nav">
             <div class="nav-item">
                 <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">Start</a>
             </div>
             <div class="nav-item">
-                <a href="{{ url_for('mitarbeiter_liste') }}"
-                    class="{{ 'active' if 'mitarbeiter' in request.endpoint else '' }}">Mitarbeiter</a>
-            </div>
-            <div class="nav-item">
-                <a href="{{ url_for('kunden_liste') }}"
-                    class="{{ 'active' if 'kunde' in request.endpoint or 'weihnachtspost' in request.endpoint else '' }}">Kunden</a>
+                <a href="{{ url_for('verwaltung') }}"
+                    class="{{ 'active' if request.endpoint in ['verwaltung', 'mitarbeiter_bearbeiten', 'kunde_bearbeiten'] else '' }}">Verwaltung</a>
             </div>
             <div class="nav-item">
                 <a href="{{ url_for('uebersicht') }}"

@@ -4,23 +4,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const theme = document.documentElement.getAttribute("data-theme");
   applyTheme(theme);
 
-  // WICHTIG: Diese Funktion steuert die blaue Hervorhebung
+  // Initialisiert die blaue Hervorhebung in der Navigation
   handleNavSlider();
 
-  // Event Listener für andere UI-Elemente
-  if (document.getElementById("action-button")) {
-    document.getElementById("action-button").addEventListener("click", () => {
-      alert("Button wurde geklickt!");
-    });
-  }
-
+  // Initialisiert die Akkordeon-Buttons (aufklappbare Menüs)
   document.querySelectorAll(".accordion-button").forEach((button) => {
     button.addEventListener("click", () => {
       button.classList.toggle("active");
       const content = button.nextElementSibling;
-      content.style.maxHeight = content.style.maxHeight
-        ? null
-        : content.scrollHeight + "px";
+      if (content.style.maxHeight) {
+        content.style.maxHeight = null;
+      } else {
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
     });
   });
 });
@@ -39,10 +35,33 @@ function handleNavSlider() {
   )?.parentElement;
 
   if (activeNavItem) {
-    // Kurze Verzögerung, um sicherzustellen, dass alles gerendert ist
     setTimeout(() => {
       slider.style.width = `${activeNavItem.offsetWidth}px`;
       slider.style.left = `${activeNavItem.offsetLeft}px`;
     }, 10);
   }
+}
+
+// Diese Funktion steuert die Kachel-Navigation
+function initializeCardNavigation(navId, sectionContainerId) {
+  const cards = document.querySelectorAll(`#${navId} .card`);
+  const sections = document.querySelectorAll(
+    `#${sectionContainerId} .config-section`
+  );
+  if (cards.length === 0) return;
+
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      // Deaktiviere alle Sektionen und Kacheln
+      sections.forEach((s) => s.classList.remove("active"));
+      cards.forEach((c) => c.classList.remove("active"));
+
+      // Aktiviere die Ziel-Sektion und die geklickte Kachel
+      const targetElement = document.getElementById(card.dataset.target);
+      if (targetElement) {
+        targetElement.classList.add("active");
+      }
+      card.classList.add("active");
+    });
+  });
 }

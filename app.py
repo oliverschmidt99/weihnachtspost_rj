@@ -13,14 +13,20 @@ from sqlalchemy import or_
 # -- Konfiguration --
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"msg"}
-STATUS_OPTIONEN = ["Neu", "In Ordnung", "Unklar", "Fehler", "Doppelt"]
+
 STATUS_EMOJIS = {
     "Neu": "🆕",
-    "In Ordnung": "✅",
+    "In Bearbeitung": "🔧",
+    "Erledigt": "✅",
     "Unklar": "❓",
-    "Fehler": "❌",
-    "Doppelt": "🔃",
+    "Fehler": "⚠️",
+    "Doppelt": "🔁",
+    "Warten": "⏳",
+    "Abgelehnt": "🚫",
+    "Inaktiv": "⏸️",
 }
+STATUS_OPTIONEN = list(STATUS_EMOJIS.keys())
+
 PASTEL_COLORS = [
     "#FFADAD",
     "#FFD6A5",
@@ -34,7 +40,6 @@ PASTEL_COLORS = [
 
 app = Flask(__name__, static_folder="static")
 
-# --- Absoluter Pfad für die Datenbank ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_path = os.path.join(basedir, "instance")
 os.makedirs(instance_path, exist_ok=True)
@@ -91,6 +96,31 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/verwaltung")
+def verwaltung():
+    mitarbeiter_liste = Mitarbeiter.query.all()
+    kunden_liste = Kunde.query.all()
+    return render_template(
+        "verwaltung.html",
+        mitarbeiter=mitarbeiter_liste,
+        kunden=kunden_liste,
+        pastel_colors=PASTEL_COLORS,
+        status_emojis=STATUS_EMOJIS,
+        status_optionen=STATUS_OPTIONEN,
+        jahr=datetime.now().year,
+    )
+
+
+@app.route("/mitarbeiter")
+def mitarbeiter_liste_redirect():
+    return redirect(url_for("verwaltung"))
+
+
+@app.route("/kunden")
+def kunden_liste_redirect():
+    return redirect(url_for("verwaltung"))
+
+
 @app.route("/uebersicht")
 def uebersicht():
     query = db.session.query(Kunde)
@@ -127,22 +157,13 @@ def uebersicht():
     )
 
 
-@app.route("/mitarbeiter")
-def mitarbeiter_liste():
-    return render_template(
-        "mitarbeiter.html",
-        mitarbeiter=Mitarbeiter.query.all(),
-        pastel_colors=PASTEL_COLORS,
-    )
-
-
 @app.route("/mitarbeiter/neu", methods=["POST"])
 def mitarbeiter_neu():
     neuer_mitarbeiter = Mitarbeiter(**request.form)
     db.session.add(neuer_mitarbeiter)
     db.session.commit()
     flash("Mitarbeiter erfolgreich hinzugefügt!", "success")
-    return redirect(url_for("mitarbeiter_liste"))
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/mitarbeiter/bearbeiten/<int:id>")
@@ -161,38 +182,20 @@ def mitarbeiter_update(id):
         setattr(mitarbeiter, key, value)
     db.session.commit()
     flash("Mitarbeiter erfolgreich aktualisiert!", "success")
-    return redirect(url_for("mitarbeiter_liste"))
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/mitarbeiter/loeschen/<int:id>", methods=["POST"])
 def mitarbeiter_loeschen(id):
     db.session.delete(Mitarbeiter.query.get_or_404(id))
     db.session.commit()
-    flash(
-        "Mitarbeiter gelöscht. Kunden wurden keinem Mitarbeiter mehr zugeordnet.",
-        "success",
-    )
-    return redirect(url_for("mitarbeiter_liste"))
-
-
-@app.route("/kunden")
-def kunden_liste():
-    return render_template(
-        "kunden.html",
-        kunden=Kunde.query.all(),
-        mitarbeiter=Mitarbeiter.query.all(),
-        status_emojis=STATUS_EMOJIS,
-    )
+    flash("Mitarbeiter gelöscht.", "success")
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/kunden/neu", methods=["GET"])
 def kunde_neu_form():
-    return render_template(
-        "kunde_neu.html",
-        mitarbeiter=Mitarbeiter.query.all(),
-        status_optionen=STATUS_OPTIONEN,
-        jahr=datetime.now().year,
-    )
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/kunden/erstellen", methods=["POST"])
@@ -214,7 +217,7 @@ def kunde_erstellen():
     db.session.add(post_eintrag)
     db.session.commit()
     flash("Kunde erfolgreich erstellt!", "success")
-    return redirect(url_for("kunden_liste"))
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/kunden/bearbeiten/<int:id>")
@@ -238,7 +241,7 @@ def kunde_update(id):
         setattr(kunde, key, value)
     db.session.commit()
     flash("Kunde erfolgreich aktualisiert!", "success")
-    return redirect(url_for("kunden_liste"))
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/kunden/loeschen/<int:id>", methods=["POST"])
@@ -246,7 +249,7 @@ def kunde_loeschen(id):
     db.session.delete(Kunde.query.get_or_404(id))
     db.session.commit()
     flash("Kunde erfolgreich gelöscht!", "success")
-    return redirect(url_for("kunden_liste"))
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/kunde/<int:kunde_id>/weihnachtspost")
@@ -275,15 +278,13 @@ def weihnachtspost_speichern(kunde_id):
     return redirect(url_for("weihnachtspost_verwalten", kunde_id=kunde_id, jahr=jahr))
 
 
-# HIER IST DIE WIEDERHERGESTELLTE FUNKTION
 @app.route("/import/msg", methods=["POST"])
 def upload_msg():
     files = request.files.getlist("msg_files")
     mitarbeiter_id = request.form.get("mitarbeiter_id")
     if not mitarbeiter_id:
         flash("Bitte einen Mitarbeiter für den Import auswählen!", "danger")
-        return redirect(url_for("kunden_liste"))
-
+        return redirect(url_for("verwaltung"))
     post_auswahl = {
         "postkarte": "postkarte" in request.form,
         "kalender": "kalender" in request.form,
@@ -292,19 +293,16 @@ def upload_msg():
     }
     erfolgreich, aktualisiert, fehler = 0, 0, 0
     temp_dir = tempfile.mkdtemp()
-
     try:
         for file in files:
             if not (file and allowed_file(file.filename)):
                 continue
-
             msg_filepath = os.path.join(temp_dir, secure_filename(file.filename))
             file.save(msg_filepath)
             subprocess.run(
                 ["python", "-m", "extract_msg", "--out", temp_dir, msg_filepath],
                 capture_output=True,
             )
-
             message_txt_path = next(
                 (
                     os.path.join(r, f)
@@ -317,13 +315,11 @@ def upload_msg():
             if not message_txt_path:
                 fehler += 1
                 continue
-
             with open(message_txt_path, "r", encoding="utf-8", errors="ignore") as f:
                 text = f.read()
             data = parse_vcard_text(text)
             email = data.get("email")
             kunde = Kunde.query.filter_by(email=email).first() if email else None
-
             if kunde:
                 for key, value in data.items():
                     if value and not getattr(kunde, key, None):
@@ -340,14 +336,10 @@ def upload_msg():
                 )
                 db.session.add(post_eintrag)
                 erfolgreich += 1
-
-            # Clean up message.txt for the next file
             os.remove(message_txt_path)
-            # Clean up the extracted msg folder as well
             for item in os.listdir(temp_dir):
                 if item.startswith(secure_filename(file.filename).rsplit(".", 1)[0]):
                     shutil.rmtree(os.path.join(temp_dir, item))
-
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -356,12 +348,11 @@ def upload_msg():
         fehler += len(files) - (erfolgreich + aktualisiert)
     finally:
         shutil.rmtree(temp_dir)
-
     flash(
         f"{erfolgreich} neu importiert, {aktualisiert} aktualisiert, {fehler} Fehler.",
         "info",
     )
-    return redirect(url_for("kunden_liste"))
+    return redirect(url_for("verwaltung"))
 
 
 @app.route("/settings")

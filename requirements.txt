@@ -3,3 +3,4 @@ Flask
 Flask-SQLAlchemy
 extract-msg
 Werkzeug
+Flask-Migrate

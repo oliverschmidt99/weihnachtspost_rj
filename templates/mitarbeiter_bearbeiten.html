@@ -5,37 +5,67 @@
 {% block content %}
 <h1>Mitarbeiter bearbeiten</h1>
 <div class="card config-section active">
-        <form action="{{ url_for('mitarbeiter_update', id=mitarbeiter.id) }}" method="post">
+    <form action="{{ url_for('mitarbeiter_update', id=mitarbeiter.id) }}" method="post">
+        <fieldset>
+            <legend>Persönliche Informationen</legend>
+            <div class="form-grid-3">
                 <div class="form-group"><label for="anrede">Anrede</label><input type="text" id="anrede" name="anrede"
-                                value="{{ mitarbeiter.anrede }}" required></div>
+                        value="{{ mitarbeiter.anrede or '' }}" required></div>
                 <div class="form-group"><label for="vorname">Vorname</label><input type="text" id="vorname"
-                                name="vorname" value="{{ mitarbeiter.vorname }}" required></div>
+                        name="vorname" value="{{ mitarbeiter.vorname or '' }}" required></div>
                 <div class="form-group"><label for="nachname">Nachname</label><input type="text" id="nachname"
-                                name="nachname" value="{{ mitarbeiter.nachname }}" required></div>
+                        name="nachname" value="{{ mitarbeiter.nachname or '' }}" required></div>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Firma & Position</legend>
+            <div class="form-grid-3">
+                <div class="form-group"><label for="firmenname">Firma</label><input type="text" id="firmenname"
+                        name="firmenname" value="{{ mitarbeiter.firmenname or '' }}"></div>
                 <div class="form-group"><label for="abteilung">Abteilung</label><input type="text" id="abteilung"
-                                name="abteilung" value="{{ mitarbeiter.abteilung or '' }}"></div>
+                        name="abteilung" value="{{ mitarbeiter.abteilung or '' }}"></div>
                 <div class="form-group"><label for="position">Position</label><input type="text" id="position"
-                                name="position" value="{{ mitarbeiter.position or '' }}"></div>
+                        name="position" value="{{ mitarbeiter.position or '' }}"></div>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Kontakt</legend>
+            <div class="form-grid-3">
+                <div class="form-group"><label for="email">E-Mail</label><input type="email" id="email" name="email"
+                        value="{{ mitarbeiter.email or '' }}"></div>
                 <div class="form-group"><label for="telefon">Telefon</label><input type="text" id="telefon"
-                                name="telefon" value="{{ mitarbeiter.telefon or '' }}"></div>
-
-                <div class="form-group">
-                        <label>Farbe</label>
-                        <div class="color-palette">
-                                {% for color in pastel_colors %}
-                                <label class="color-swatch-label">
-                                        <input type="radio" name="farbe" value="{{ color }}" {% if
-                                                mitarbeiter.farbe==color %}checked{% endif %}>
-                                        <span class="color-swatch" style="background-color: {{ color }};"></span>
-                                </label>
-                                {% endfor %}
-                        </div>
+                        name="telefon" value="{{ mitarbeiter.telefon or '' }}"></div>
+                <div class="form-group"><label for="durchwahl">Durchwahl</label><input type="text" id="durchwahl"
+                        name="durchwahl" value="{{ mitarbeiter.durchwahl or '' }}"></div>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Firmenadresse</legend>
+            <div class="form-grid-3">
+                <div class="form-group" style="grid-column: 1 / 4;"><label for="strasse">Straße</label><input
+                        type="text" id="strasse" name="firma_strasse" value="{{ mitarbeiter.firma_strasse or '' }}">
                 </div>
-
-                <div class="button-group" style="margin-top: 2rem;">
-                        <button type="submit">Änderungen speichern</button>
-                        <a href="{{ url_for('mitarbeiter_liste') }}" class="button secondary">Abbrechen</a>
+                <div class="form-group"><label for="plz">PLZ</label><input type="text" id="plz" name="firma_plz"
+                        value="{{ mitarbeiter.firma_plz or '' }}"></div>
+                <div class="form-group" style="grid-column: 2 / 4;"><label for="ort">Ort</label><input type="text"
+                        id="ort" name="firma_ort" value="{{ mitarbeiter.firma_ort or '' }}"></div>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Darstellung</legend>
+            <div class="form-group">
+                <label>Farbe</label>
+                <div class="color-palette">
+                    {% for color in pastel_colors %}<label class="color-swatch-label"><input type="radio" name="farbe"
+                            value="{{ color }}" {% if mitarbeiter.farbe==color %}checked{% endif %}><span
+                            class="color-swatch" style="background-color: {{ color }};"></span></label>{% endfor %}
                 </div>
-        </form>
+            </div>
+        </fieldset>
+        <div class="button-group" style="margin-top: 2rem;">
+            <button type="submit">Änderungen speichern</button>
+            <a href="{{ url_for('verwaltung') }}" class="button secondary">Abbrechen</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

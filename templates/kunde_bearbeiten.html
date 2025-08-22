@@ -33,12 +33,18 @@
         <fieldset>
             <legend>Sonstiges</legend>
             <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" required>
-                    {% for s in status_optionen %}
-                    <option value="{{ s }}" {% if s==kunde.status %}selected{% endif %}>{{ s }}</option>
-                    {% endfor %}
-                </select>
+                <label>Status</label>
+                <div class="status-palette-container">
+                    <div class="status-palette">
+                        {% for status, emoji in status_emojis.items() %}
+                        <label class="status-label">
+                            <input type="radio" name="status" value="{{ status }}" {% if status==kunde.status
+                                %}checked{% endif %}>
+                            <span class="status-swatch">{{ emoji }} {{ status }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="mitarbeiter_id">Zugeordneter Mitarbeiter</label>
@@ -57,7 +63,7 @@
 
         <div class="button-group">
             <button type="submit">Änderungen speichern</button>
-            <a href="{{ url_for('kunden_liste') }}" class="button secondary">Abbrechen</a>
+            <a href="{{ url_for('verwaltung') }}" class="button secondary">Abbrechen</a>
         </div>
     </form>
 </div>

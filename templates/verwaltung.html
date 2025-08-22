@@ -5,52 +5,86 @@
 <h1>Verwaltung</h1>
 <p>Wähle einen Bereich aus, um Mitarbeiter oder Kunden zu verwalten.</p>
 
-<!-- Kachel-Navigation: Nur diese Karten sind interaktiv -->
 <div class="card-container" id="verwaltung-nav">
     <div class="card active" data-target="mitarbeiter-section">
-        <h3>Mitarbeiter</h3>
-        <p>Mitarbeiter anlegen und verwalten.</p>
+        <h3>Mitarbeiter verwalten</h3>
+        <p>Mitarbeiter anlegen, bearbeiten und die Übersicht behalten.</p>
     </div>
     <div class="card" data-target="kunden-section">
-        <h3>Kunden</h3>
-        <p>Kunden anlegen, importieren und verwalten.</p>
+        <h3>Kunden verwalten</h3>
+        <p>Kunden manuell anlegen oder aus Dateien importieren.</p>
     </div>
 </div>
 <hr>
 
-<!-- Sektionen für die Inhalte -->
 <div id="verwaltung-sektionen">
 
-    <!-- Mitarbeiter-Sektion -->
     <div id="mitarbeiter-section" class="config-section active">
-        <button class="accordion-button">
-            Mitarbeiter hinzufügen
-            <span class="add-icon">+</span>
-        </button>
-        <div class="accordion-content">
-            <div class="card">
-                <form action="{{ url_for('mitarbeiter_neu') }}" method="post" class="form-inline">
-                    <input type="text" name="anrede" placeholder="Anrede" required>
-                    <input type="text" name="vorname" placeholder="Vorname" required>
-                    <input type="text" name="nachname" placeholder="Nachname" required>
-                    <div class="color-palette-container">
+        <div class="card">
+            <h4>Neuen Mitarbeiter hinzufügen</h4>
+            <form action="{{ url_for('mitarbeiter_neu') }}" method="post">
+                <fieldset>
+                    <legend>Persönliche Informationen</legend>
+                    <div class="form-grid-3">
+                        <div class="form-group"><label for="anrede_neu">Anrede</label><input type="text" id="anrede_neu"
+                                name="anrede" required></div>
+                        <div class="form-group"><label for="vorname_neu">Vorname</label><input type="text"
+                                id="vorname_neu" name="vorname" required></div>
+                        <div class="form-group"><label for="nachname_neu">Nachname</label><input type="text"
+                                id="nachname_neu" name="nachname" required></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Firma & Position</legend>
+                    <div class="form-grid-3">
+                        <div class="form-group"><label for="firmenname_neu">Firma</label><input type="text"
+                                id="firmenname_neu" name="firmenname"></div>
+                        <div class="form-group"><label for="abteilung_neu">Abteilung</label><input type="text"
+                                id="abteilung_neu" name="abteilung"></div>
+                        <div class="form-group"><label for="position_neu">Position</label><input type="text"
+                                id="position_neu" name="position"></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Kontakt</legend>
+                    <div class="form-grid-3">
+                        <div class="form-group"><label for="email_neu">E-Mail</label><input type="email" id="email_neu"
+                                name="email"></div>
+                        <div class="form-group"><label for="telefon_neu">Telefon</label><input type="text"
+                                id="telefon_neu" name="telefon"></div>
+                        <div class="form-group"><label for="durchwahl_neu">Durchwahl</label><input type="text"
+                                id="durchwahl_neu" name="durchwahl"></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Firmenadresse</legend>
+                    <div class="form-grid-3">
+                        <div class="form-group" style="grid-column: 1 / 4;"><label
+                                for="strasse_neu">Straße</label><input type="text" id="strasse_neu"
+                                name="firma_strasse"></div>
+                        <div class="form-group"><label for="plz_neu">PLZ</label><input type="text" id="plz_neu"
+                                name="firma_plz"></div>
+                        <div class="form-group" style="grid-column: 2 / 4;"><label for="ort_neu">Ort</label><input
+                                type="text" id="ort_neu" name="firma_ort"></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Darstellung</legend>
+                    <div class="form-group">
+                        <label>Farbe</label>
                         <div class="color-palette">
-                            {% for color in pastel_colors %}
-                            <label class="color-swatch-label">
-                                <input type="radio" name="farbe" value="{{ color }}" {% if loop.first %}checked{% endif
-                                    %}>
-                                <span class="color-swatch" style="background-color: {{ color }};"></span>
-                            </label>
-                            {% endfor %}
+                            {% for color in pastel_colors %}<label class="color-swatch-label"><input type="radio"
+                                    name="farbe" value="{{ color }}" {% if loop.first %}checked{% endif %}><span
+                                    class="color-swatch" style="background-color: {{ color }};"></span></label>{% endfor
+                            %}
                         </div>
                     </div>
-                    <button type="submit">Hinzufügen</button>
-                </form>
-            </div>
+                </fieldset>
+                <div class="button-group"><button type="submit">Mitarbeiter erstellen</button></div>
+            </form>
         </div>
 
         <h2>Bestehende Mitarbeiter</h2>
-        <!-- KORREKTUR: Dies ist jetzt eine normale Inhalts-Karte, keine Navigations-Kachel -->
         <div class="card">
             <div class="table-container">
                 <table>
@@ -78,9 +112,8 @@
                                 <a href="{{ url_for('mitarbeiter_bearbeiten', id=m.id) }}"
                                     class="button secondary">Bearbeiten</a>
                                 <form action="{{ url_for('mitarbeiter_loeschen', id=m.id) }}" method="post"
-                                    onsubmit="return confirm('Mitarbeiter wirklich löschen?');">
-                                    <button type="submit" class="danger">Löschen</button>
-                                </form>
+                                    onsubmit="return confirm('Mitarbeiter wirklich löschen?');"><button type="submit"
+                                        class="danger">Löschen</button></form>
                             </td>
                         </tr>
                         {% else %}
@@ -94,57 +127,72 @@
         </div>
     </div>
 
-    <!-- Kunden-Sektion -->
     <div id="kunden-section" class="config-section">
-        <button class="accordion-button">
-            Kunden-Optionen
-            <span class="add-icon">+</span>
-        </button>
-        <div class="accordion-content">
-            <div class="card">
-                <h4>Neuen Kunden manuell anlegen</h4>
-                <form action="{{ url_for('kunde_erstellen') }}" method="post">
-                    <fieldset>
-                        <legend>Persönliches</legend>
-                        <input type="text" name="vorname" placeholder="Vorname">
-                        <input type="text" name="nachname" placeholder="Nachname" required>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Zuordnung & Status</legend>
-                        <select name="mitarbeiter_id" required>
-                            <option value="" disabled selected>Mitarbeiter zuordnen...</option>
-                            {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}
-                            </option>{% endfor %}
-                        </select>
-                        <select name="status" required>
-                            {% for s in status_optionen %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
-                        </select>
-                    </fieldset>
-                    <button type="submit">Kunden erstellen</button>
-                </form>
+        <div class="card-container" id="kunden-nav">
+            <div class="card active" data-target="kunde-anlegen-content">
+                <h5>Neuen Kunden anlegen</h5>
             </div>
-            <div class="card">
-                <h4>Kunden aus .msg-Dateien importieren</h4>
-                <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
-                    <fieldset>
-                        <label for="mitarbeiter_id_import">Für welchen Mitarbeiter importieren?</label>
-                        <select name="mitarbeiter_id" id="mitarbeiter_id_import" required>
-                            <option value="" disabled selected>-- Bitte wählen --</option>
-                            {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}
-                            </option>{% endfor %}
-                        </select>
-                    </fieldset>
-                    <fieldset>
-                        <label>Dateien auswählen:</label>
-                        <input type="file" name="msg_files" multiple required>
-                    </fieldset>
-                    <button type="submit">Hochladen & Importieren</button>
-                </form>
+            <div class="card" data-target="kunde-import-content">
+                <h5>Kunden importieren</h5>
             </div>
         </div>
-
+        <div id="kunden-sektionen">
+            <div id="kunde-anlegen-content" class="config-section active">
+                <div class="card">
+                    <h4>Neuen Kunden manuell anlegen</h4>
+                    <form action="{{ url_for('kunde_erstellen') }}" method="post">
+                        <fieldset>
+                            <legend>Persönliches</legend>
+                            <input type="text" name="vorname" placeholder="Vorname"><input type="text" name="nachname"
+                                placeholder="Nachname" required>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Zuordnung & Status</legend>
+                            <div class="form-group">
+                                <label for="mitarbeiter_id_neu">Zugeordneter Mitarbeiter</label>
+                                <select name="mitarbeiter_id" id="mitarbeiter_id_neu" required>
+                                    <option value="" disabled selected>Mitarbeiter zuordnen...</option>
+                                    {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname
+                                        }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <div class="status-palette">
+                                    {% for status, emoji in status_emojis.items() %}<label class="status-label"><input
+                                            type="radio" name="status" value="{{ status }}" {% if loop.first %}checked{%
+                                            endif %}><span class="status-swatch">{{ emoji }} {{ status
+                                            }}</span></label>{% endfor %}
+                                </div>
+                            </div>
+                        </fieldset>
+                        <button type="submit">Kunden erstellen</button>
+                    </form>
+                </div>
+            </div>
+            <div id="kunde-import-content" class="config-section">
+                <div class="card">
+                    <h4>Kunden aus .msg-Dateien importieren</h4>
+                    <form action="{{ url_for('upload_msg') }}" method="post" enctype="multipart/form-data">
+                        <fieldset>
+                            <label for="mitarbeiter_id_import">Für welchen Mitarbeiter importieren?</label>
+                            <select name="mitarbeiter_id" id="mitarbeiter_id_import" required>
+                                <option value="" disabled selected>-- Bitte wählen --</option>
+                                {% for m in mitarbeiter %}<option value="{{ m.id }}">{{ m.vorname }} {{ m.nachname }}
+                                </option>{% endfor %}
+                            </select>
+                        </fieldset>
+                        <fieldset>
+                            <label>Dateien auswählen:</label>
+                            <input type="file" name="msg_files" multiple required>
+                        </fieldset>
+                        <button type="submit">Hochladen & Importieren</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <hr>
         <h2>Bestehende Kunden</h2>
-        <!-- KORREKTUR: Dies ist jetzt eine normale Inhalts-Karte, keine Navigations-Kachel -->
         <div class="card">
             <div class="table-container">
                 <table>
@@ -173,9 +221,8 @@
                                 <a href="{{ url_for('kunde_bearbeiten', id=k.id) }}"
                                     class="button secondary">Bearbeiten</a>
                                 <form action="{{ url_for('kunden_loeschen', id=k.id) }}" method="post"
-                                    onsubmit="return confirm('Kunde wirklich löschen?');">
-                                    <button type="submit" class="danger">Löschen</button>
-                                </form>
+                                    onsubmit="return confirm('Kunde wirklich löschen?');"><button type="submit"
+                                        class="danger">Löschen</button></form>
                             </td>
                         </tr>
                         {% else %}
@@ -195,6 +242,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         initializeCardNavigation('verwaltung-nav', 'verwaltung-sektionen');
+        initializeCardNavigation('kunden-nav', 'kunden-sektionen');
     });
 </script>
 {% endblock %}

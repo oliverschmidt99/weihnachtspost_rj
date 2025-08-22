@@ -59,42 +59,26 @@ nav a.active { color: var(--nav-active-text); }
 }
 hr { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 
-/* --- KORREKTUR: Geteilte Card-Stile --- */
-
-/* Allgemeiner Stil für alle Karten (Hintergrund, Padding, etc.) */
+/* --- Geteilte Card-Stile --- */
 .card {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    margin-bottom: 2rem;
-    border: 1px solid var(--border-color);
-    text-align: left; /* Standard-Ausrichtung */
+    background: var(--card-bg); padding: 1.5rem; border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color); margin-bottom: 2rem;
+    border: 1px solid var(--border-color); text-align: left;
 }
-
-/* Spezifische Stile NUR für die Navigations-Kacheln */
 .card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;
 }
 .card-container .card {
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-    border-width: 2px;
-    border-color: transparent;
+    cursor: pointer; text-align: center; transition: all 0.2s ease;
+    border-width: 2px; border-color: transparent;
 }
 .card-container .card:hover {
-    border-color: var(--card-hover-border);
-    transform: translateY(-3px);
+    border-color: var(--card-hover-border); transform: translateY(-3px);
 }
 .card-container .card.active {
-    background-color: var(--card-active-bg);
-    border-color: var(--card-hover-border);
+    background-color: var(--card-active-bg); border-color: var(--card-hover-border);
     color: var(--card-active-text);
 }
-
 
 /* Formulare, Buttons, etc. */
 input, select, button, textarea {
@@ -112,7 +96,7 @@ button.danger { background-color: var(--danger-color); }
 button.danger:hover { background-color: var(--danger-hover); }
 a.button.secondary { background-color: var(--button-secondary-bg); color: white; }
 a.button.secondary:hover { background-color: var(--button-secondary-hover); }
-form label { display: block; margin-top: 1rem; font-weight: bold; }
+form label { display: block; margin-top: 1rem; font-weight: bold; margin-bottom: 0.25rem;}
 form input, form select, form textarea { width: 100%; box-sizing: border-box; }
 fieldset { border: 1px solid var(--border-color); border-radius: 4px; padding: 1.5rem; margin-bottom: 1.5rem; }
 legend { font-weight: bold; padding: 0 0.5rem; }
@@ -130,41 +114,45 @@ input:checked + .slider:before { transform: translateX(26px); }
 .slider.round:before { border-radius: 50%; }
 
 /* Farb-Auswahl für Mitarbeiter */
-.color-palette-container { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
-.color-palette { display: flex; gap: 0.5rem; align-items: center; }
+.color-palette-container { display: flex; flex-direction: column; gap: 0.5rem; }
+.color-palette { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .color-swatch-label { position: relative; cursor: pointer; }
 .color-swatch-label input[type="radio"] { opacity: 0; width: 0; height: 0; position: absolute; }
 .color-swatch { display: block; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-color); transition: transform 0.2s; }
 .color-swatch-label input[type="radio"]:checked + .color-swatch { transform: scale(1.2); border-color: var(--accent-color); }
-.form-inline .color-palette-container { margin-right: 1rem; }
 
 footer {
     text-align: center; padding: 1rem; background-color: var(--header-bg);
     color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color);
 }
 
-/* Sektionen & Akkordeon-Button */
-.config-section { display: none; margin-top: 2rem; animation: fadeIn 0.5s; }
+/* Sektionen & Animation */
+.config-section { display: none; margin-top: 1.5rem; animation: fadeIn 0.5s; }
+.config-section:first-child { margin-top: 0; }
 .config-section.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.accordion-button {
-    background-color: var(--card-bg); color: var(--text-primary); cursor: pointer;
-    padding: 1rem; width: 100%; border: 1px solid var(--border-color);
-    text-align: left; outline: none; font-size: 1.2rem; font-weight: bold;
-    transition: background-color 0.2s; display: flex; justify-content: space-between;
-    align-items: center; border-radius: 8px; margin-bottom: 1rem;
+
+/* Kleinere Schrift und Anpassungen für die Sub-Navigation der Kunden */
+#kunden-nav.card-container { grid-template-columns: 1fr 1fr; }
+#kunden-nav .card { padding: 0.75rem 1.5rem; margin-bottom: 1rem; }
+#kunden-nav h5 { margin: 0; font-size: 0.95rem; }
+
+/* Status-Auswahl */
+.status-palette { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+.status-label { position: relative; cursor: pointer; }
+.status-label input[type="radio"] { opacity: 0; width: 0; height: 0; position: absolute; }
+.status-swatch {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+    border-radius: 20px; border: 2px solid var(--border-color);
+    transition: all 0.2s ease-in-out; font-size: 0.95rem;
 }
-.accordion-button:hover, .accordion-button.active {
-    background-color: var(--card-active-bg); color: var(--card-active-text);
+.status-swatch:hover { border-color: var(--accent-hover); background-color: var(--bg-main); }
+.status-label input[type="radio"]:checked + .status-swatch {
+    transform: scale(1.05); border-color: var(--accent-color);
+    background-color: var(--card-active-bg); color: var(--card-active-text); font-weight: 500;
 }
-.accordion-content {
-    padding: 0; max-height: 0; overflow: hidden;
-    transition: max-height 0.3s ease-out; background-color: transparent;
-}
-.add-icon {
-    font-size: 1.5rem; font-weight: bold; color: var(--accent-color);
-    width: 32px; height: 32px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid var(--accent-color); transition: transform 0.3s;
-}
-.accordion-button.active .add-icon { transform: rotate(45deg); }
+
+/* Form Grid Layout */
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.form-grid-2 .form-group, .form-grid-3 .form-group { margin: 0; }

@@ -156,3 +156,20 @@ footer {
 .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
 .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .form-grid-2 .form-group, .form-grid-3 .form-group { margin: 0; }
+
+/* Styling für die Warn-Box */
+.warning-box {
+    background-color: #fff3cd; /* Helles Gelb */
+    color: #664d03; /* Dunkler Text */
+    border: 1px solid #ffecb5;
+    border-left: 5px solid #ffc107; /* Gelber Rand links */
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+html[data-theme='dark'] .warning-box {
+    background-color: #3e3824;
+    color: #ffda6a;
+    border-color: #5a4f2c;
+    border-left-color: #ffc107;
+}

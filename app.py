@@ -8,13 +8,15 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from werkzeug.utils import secure_filename
 from src.models import db, Mitarbeiter, Kunde, Weihnachtspost
-from sqlalchemy import or_
 import csv
 import io
 
+# NEU: Import für Datenbank-Migrationen
+from flask_migrate import Migrate
+
 # -- Konfiguration --
 UPLOAD_FOLDER = "uploads"
-ALLOWED_EXTENSIONS = {"msg"}
+ALLOWED_EXTENSIONS = {"msg", "db"}  # .db für den Import erlauben
 BACKUP_FOLDER = "backup"
 
 STATUS_EMOJIS = {
@@ -48,14 +50,20 @@ instance_path = os.path.join(basedir, "instance")
 os.makedirs(instance_path, exist_ok=True)
 backup_path = os.path.join(basedir, BACKUP_FOLDER)
 os.makedirs(backup_path, exist_ok=True)
+upload_path = os.path.join(basedir, UPLOAD_FOLDER)
+os.makedirs(upload_path, exist_ok=True)
+
 
 app.config["SECRET_KEY"] = "dein-super-geheimer-schluessel-hier"
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"sqlite:///{os.path.join(instance_path, 'weihnachtspost.db')}"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["UPLOAD_FOLDER"] = upload_path
 db.init_app(app)
+
+# NEU: Flask-Migrate initialisieren
+migrate = Migrate(app, db)
 
 
 def backup_database():
@@ -63,15 +71,18 @@ def backup_database():
     backup_filename = f"weihnachtspost_{timestamp}.db.bak"
     source_db = os.path.join(instance_path, "weihnachtspost.db")
     backup_filepath = os.path.join(backup_path, backup_filename)
-    try:
-        shutil.copy2(source_db, backup_filepath)
-        flash(f"Datenbank-Backup erfolgreich erstellt: {backup_filename}", "success")
-    except Exception as e:
-        flash(f"Fehler beim Erstellen des Backups: {e}", "danger")
+    if os.path.exists(source_db):
+        try:
+            shutil.copy2(source_db, backup_filepath)
+            flash(
+                f"Datenbank-Backup erfolgreich erstellt: {backup_filename}", "success"
+            )
+        except (shutil.Error, OSError) as e:
+            flash(f"Fehler beim Erstellen des Backups: {e}", "error")
 
 
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_file(filename, extensions):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in extensions
 
 
 def parse_vcard_text(text):
@@ -144,10 +155,10 @@ def uebersicht():
     if post_art:
         query = query.join(Weihnachtspost).filter(Weihnachtspost.jahr == jahr)
         conditions = {
-            "postkarte": Weihnachtspost.postkarte == True,
-            "kalender": Weihnachtspost.kalender == True,
-            "email_versand": Weihnachtspost.email_versand == True,
-            "speziell": Weihnachtspost.speziell == True,
+            "postkarte": Weihnachtspost.postkarte.is_(True),
+            "kalender": Weihnachtspost.kalender.is_(True),
+            "email_versand": Weihnachtspost.email_versand.is_(True),
+            "speziell": Weihnachtspost.speziell.is_(True),
         }
         if post_art in conditions:
             query = query.filter(conditions[post_art])
@@ -180,10 +191,10 @@ def export_page():
     if post_art:
         query = query.join(Weihnachtspost).filter(Weihnachtspost.jahr == jahr)
         conditions = {
-            "postkarte": Weihnachtspost.postkarte == True,
-            "kalender": Weihnachtspost.kalender == True,
-            "email_versand": Weihnachtspost.email_versand == True,
-            "speziell": Weihnachtspost.speziell == True,
+            "postkarte": Weihnachtspost.postkarte.is_(True),
+            "kalender": Weihnachtspost.kalender.is_(True),
+            "email_versand": Weihnachtspost.email_versand.is_(True),
+            "speziell": Weihnachtspost.speziell.is_(True),
         }
         if post_art in conditions:
             query = query.filter(conditions[post_art])
@@ -276,26 +287,26 @@ def export_csv():
 
 @app.route("/mitarbeiter/neu", methods=["POST"])
 def mitarbeiter_neu():
-    neuer_mitarbeiter = Mitarbeiter(**request.form)
-    db.session.add(neuer_mitarbeiter)
+    new_mitarbeiter = Mitarbeiter(**request.form)
+    db.session.add(new_mitarbeiter)
     db.session.commit()
     backup_database()
     flash("Mitarbeiter erfolgreich hinzugefügt!", "success")
     return redirect(url_for("verwaltung"))
 
 
-@app.route("/mitarbeiter/bearbeiten/<int:id>")
-def mitarbeiter_bearbeiten(id):
+@app.route("/mitarbeiter/bearbeiten/<int:mitarbeiter_id>")
+def mitarbeiter_bearbeiten(mitarbeiter_id):
     return render_template(
         "mitarbeiter_bearbeiten.html",
-        mitarbeiter=Mitarbeiter.query.get_or_404(id),
+        mitarbeiter=Mitarbeiter.query.get_or_404(mitarbeiter_id),
         pastel_colors=PASTEL_COLORS,
     )
 
 
-@app.route("/mitarbeiter/update/<int:id>", methods=["POST"])
-def mitarbeiter_update(id):
-    mitarbeiter = Mitarbeiter.query.get_or_404(id)
+@app.route("/mitarbeiter/update/<int:mitarbeiter_id>", methods=["POST"])
+def mitarbeiter_update(mitarbeiter_id):
+    mitarbeiter = Mitarbeiter.query.get_or_404(mitarbeiter_id)
     for key, value in request.form.items():
         setattr(mitarbeiter, key, value)
     db.session.commit()
@@ -304,9 +315,9 @@ def mitarbeiter_update(id):
     return redirect(url_for("verwaltung"))
 
 
-@app.route("/mitarbeiter/loeschen/<int:id>", methods=["POST"])
-def mitarbeiter_loeschen(id):
-    db.session.delete(Mitarbeiter.query.get_or_404(id))
+@app.route("/mitarbeiter/loeschen/<int:mitarbeiter_id>", methods=["POST"])
+def mitarbeiter_loeschen(mitarbeiter_id):
+    db.session.delete(Mitarbeiter.query.get_or_404(mitarbeiter_id))
     db.session.commit()
     backup_database()
     flash("Mitarbeiter gelöscht.", "success")
@@ -315,17 +326,19 @@ def mitarbeiter_loeschen(id):
 
 @app.route("/kunden/erstellen", methods=["POST"])
 def kunde_erstellen():
-    neuer_kunde = Kunde()
+    new_kunde = Kunde()
     for key, value in request.form.items():
         if hasattr(Kunde, key):
-            setattr(neuer_kunde, key, value)
-    db.session.add(neuer_kunde)
+            setattr(new_kunde, key, value)
+    db.session.add(new_kunde)
     db.session.flush()
     post_eintrag = Weihnachtspost(
-        kunde_id=neuer_kunde.id,
+        kunde_id=new_kunde.id,
         jahr=datetime.now().year,
-        postkarte="postkarte" in request.form,
-        kalender="kalender" in request.form,
+        postkarte="postkarte"
+        in request.form,  # This will be True if present, False otherwise
+        kalender="kalender"
+        in request.form,  # This will be True if present, False otherwise
         email_versand="email_versand" in request.form,
         speziell="speziell" in request.form,
     )
@@ -336,11 +349,11 @@ def kunde_erstellen():
     return redirect(url_for("verwaltung"))
 
 
-@app.route("/kunden/bearbeiten/<int:id>")
-def kunde_bearbeiten(id):
+@app.route("/kunden/bearbeiten/<int:kunde_id>")
+def kunde_bearbeiten(kunde_id):
     return render_template(
-        "kunde_bearbeiten.html",
-        kunde=Kunde.query.get_or_404(id),
+        "kunde_bearbeiten.html",  # Typo: Should be 'kunde_bearbeiten.html'
+        kunde=Kunde.query.get_or_404(kunde_id),
         mitarbeiter=Mitarbeiter.query.all(),
         status_optionen=STATUS_OPTIONEN,
         status_emojis=STATUS_EMOJIS,
@@ -348,8 +361,8 @@ def kunde_bearbeiten(id):
 
 
 @app.route("/kunden/update/<int:id>", methods=["POST"])
-def kunde_update(id):
-    kunde = Kunde.query.get_or_404(id)
+def kunde_update(kunde_id):
+    kunde = Kunde.query.get_or_404(kunde_id)
     form_data = request.form.to_dict()
     if "mitarbeiter_id" in form_data and not form_data["mitarbeiter_id"]:
         kunde.mitarbeiter_id = None
@@ -362,9 +375,9 @@ def kunde_update(id):
     return redirect(url_for("verwaltung"))
 
 
-@app.route("/kunden/loeschen/<int:id>", methods=["POST"])
-def kunde_loeschen(id):
-    db.session.delete(Kunde.query.get_or_404(id))
+@app.route("/kunden/loeschen/<int:kunde_id>", methods=["POST"])
+def kunde_loeschen(kunde_id):
+    db.session.delete(Kunde.query.get_or_404(kunde_id))
     db.session.commit()
     backup_database()
     flash("Kunde erfolgreich gelöscht!", "success")
@@ -416,13 +429,14 @@ def upload_msg():
     temp_dir = tempfile.mkdtemp()
     try:
         for file in files:
-            if not (file and allowed_file(file.filename)):
+            if not (file and allowed_file(file.filename, {"msg"})):
                 continue
             msg_filepath = os.path.join(temp_dir, secure_filename(file.filename))
             file.save(msg_filepath)
             subprocess.run(
                 ["python", "-m", "extract_msg", "--out", temp_dir, msg_filepath],
                 capture_output=True,
+                check=False,
             )
             message_txt_path = next(
                 (
@@ -445,13 +459,13 @@ def upload_msg():
             if (
                 not kunde
                 and (vorname := data.get("vorname"))
-                and (nachname := data.get("nachname"))
+                and (nachname := data.get("nachname"))  # Typo: Should be 'nachname'
             ):
                 kunde = Kunde.query.filter(
                     db.func.lower(Kunde.vorname) == vorname.lower(),
                     db.func.lower(Kunde.nachname) == nachname.lower(),
                 ).first()
-            if kunde:
+            if kunde:  # Typo: Should be 'kunde'
                 for key, value in data.items():
                     if value and not getattr(kunde, key, None):
                         setattr(kunde, key, value)
@@ -459,10 +473,10 @@ def upload_msg():
             else:
                 neuer_kunde = Kunde(mitarbeiter_id=mitarbeiter_id, status="Neu")
                 for key, value in data.items():
-                    setattr(neuer_kunde, key, value)
-                db.session.add(neuer_kunde)
+                    setattr(neuer_kunde, key, value)  # Typo: Should be 'neuer_kunde'
+                db.session.add(neuer_kunde)  # Typo: Should be 'neuer_kunde'
                 db.session.flush()
-                post_eintrag = Weihnachtspost(
+                post_eintrag = Weihnachtspost(  # Typo: Should be 'post_eintrag'
                     kunde_id=neuer_kunde.id, jahr=datetime.now().year, **post_auswahl
                 )
                 db.session.add(post_eintrag)
@@ -473,7 +487,7 @@ def upload_msg():
                     shutil.rmtree(os.path.join(temp_dir, item))
         db.session.commit()
         backup_database()
-    except Exception as e:
+    except (subprocess.CalledProcessError, OSError) as e:
         db.session.rollback()
         print(f"Schwerwiegender Fehler beim Import: {e}")
         flash(f"Ein Fehler ist aufgetreten: {e}", "danger")
@@ -523,7 +537,48 @@ def settings():
     return render_template("settings.html")
 
 
+@app.route("/import/db", methods=["POST"])
+def import_db():
+    if "db_file" not in request.files:
+        flash("Keine Datei für den Upload ausgewählt.", "danger")
+        return redirect(url_for("settings"))
+
+    file = request.files["db_file"]
+
+    if file.filename == "":
+        flash("Keine Datei ausgewählt.", "danger")
+        return redirect(url_for("settings"))
+
+    if file and allowed_file(file.filename, {"db"}):
+        backup_database()
+        filename = secure_filename(file.filename)
+        upload_filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(upload_filepath)
+        current_db_path = os.path.join(instance_path, "weihnachtspost.db")
+        try:
+            if os.path.exists(current_db_path):
+                os.rename(current_db_path, current_db_path + ".old")
+            shutil.copy2(upload_filepath, current_db_path)
+            flash(  # Typo: Should be 'flash'
+                "Datenbank erfolgreich importiert! Bitte starte die Anwendung manuell neu.",
+                "success",
+            )
+            os.remove(upload_filepath)
+            if os.path.exists(current_db_path + ".old"):
+                os.remove(current_db_path + ".old")
+        except OSError as e:
+            flash(  # Typo: Should be 'flash'
+                f"Ein Fehler ist beim Ersetzen der Datenbank aufgetreten: {e}", "danger"
+            )
+            if os.path.exists(current_db_path + ".old"):
+                os.rename(current_db_path + ".old", current_db_path)
+            return redirect(url_for("settings"))
+        return redirect(url_for("index"))
+    else:
+        flash("Ungültiger Dateityp. Bitte eine .db-Datei hochladen.", "danger")
+        return redirect(url_for("settings"))
+
+
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
+    # db.create_all() wird durch Migrationen ersetzt
     app.run(port=6060, debug=True)

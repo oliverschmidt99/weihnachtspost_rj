@@ -5,7 +5,7 @@
 {% block content %}
 <h1>Einstellungen</h1>
 
-<div class="card config-section active" style="margin-top: 2rem;">
+<div class="card config-section active">
     <h2>Design</h2>
     <div class="theme-switcher">
         <label for="theme-toggle" style="margin-right: 1rem; font-weight: bold;">Dark Mode</label>
@@ -15,9 +15,35 @@
         </label>
     </div>
 </div>
+
+<div class="card config-section active">
+    <h2>Datenbank-Management</h2>
+    <p>
+        Hier kannst du eine bestehende Datenbank-Datei (`weihnachtspost.db`) hochladen, um Daten wiederherzustellen oder
+        zu übertragen.
+    </p>
+    <div class="warning-box">
+        <strong>Achtung:</strong> Deine aktuell verwendete Datenbank wird dabei überschrieben. Es wird aber automatisch
+        ein Backup der alten Datenbank im `backup`-Ordner angelegt.
+    </div>
+
+    <form action="{{ url_for('import_db') }}" method="post" enctype="multipart/form-data" style="margin-top: 1.5rem;">
+        <fieldset>
+            <legend>Datenbank importieren</legend>
+            <div class="form-group">
+                <label for="db_file">Wähle eine `weihnachtspost.db`-Datei aus:</label>
+                <input type="file" name="db_file" id="db_file" required accept=".db">
+            </div>
+            <button type="submit"
+                onclick="return confirm('Bist du sicher, dass du die aktuelle Datenbank überschreiben möchtest?');">
+                Datenbank jetzt importieren
+            </button>
+        </fieldset>
+    </form>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-{# Dieses Skript wird nur auf dieser Seite geladen, um den Schalter zu steuern. #}
 <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 {% endblock %}

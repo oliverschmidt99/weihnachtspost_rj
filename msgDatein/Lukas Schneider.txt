@@ -1,0 +1,19 @@
+Name:	Lukas Schneider
+Nachname:	Schneider
+Vorname:	Lukas
+Position:	Vertriebsleiter
+Firma:	Schneider Technik AG
+
+Adresse geschäftlich:	Industriestraße 5, 80333 München
+
+Geschäftlich:	+49 89 7654321
+Privat:	+49 170 7654321
+
+E-Mail:	l.schneider@schneider-technik.de
+E-Mail-Anzeigename:	Lukas S.
+
+Webseite:	www.schneider-technik.de
+
+Kategorien:	Evonik
+
+

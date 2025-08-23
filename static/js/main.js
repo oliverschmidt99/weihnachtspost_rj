@@ -3,10 +3,19 @@
 // ## GLOBALE INITIALISIERUNG ##
 document.addEventListener("DOMContentLoaded", () => {
   handleNavSlider();
-  initializeAccordion();
-});
 
-// ## GLOBALE FUNKTIONEN (auf allen Seiten verfügbar) ##
+  // Event-Listener für alle Modal-Schließ-Buttons
+  document
+    .querySelectorAll(".modal-close-btn, .modal-cancel-btn")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const modal = btn.closest(".modal-overlay");
+        if (modal) {
+          closeModal(modal);
+        }
+      });
+    });
+});
 
 /**
  * Wendet das ausgewählte Theme (hell/dunkel) an und speichert es im Browser.
@@ -18,63 +27,23 @@ function applyTheme(theme) {
 }
 
 /**
- * Steuert den animierten blauen Slider in der Hauptnavigation.
+ * Steuert den animierten Slider in der Hauptnavigation.
  */
 function handleNavSlider() {
   const nav = document.getElementById("main-nav");
   if (!nav) return;
 
   const slider = nav.querySelector(".nav-slider");
-  const activeNavItem = nav.querySelector(
-    ".nav-item > a.active"
-  )?.parentElement;
+  const activeLink = nav.querySelector("a.active");
 
-  if (activeNavItem) {
+  if (activeLink) {
+    const activeNavItem = activeLink.parentElement;
+    // Kurze Verzögerung, damit das Layout berechnet ist
     setTimeout(() => {
       slider.style.width = `${activeNavItem.offsetWidth}px`;
       slider.style.left = `${activeNavItem.offsetLeft}px`;
-    }, 10);
+    }, 50);
   }
-}
-
-/**
- * Sucht nach allen Akkordeon-Buttons und fügt die Klick-Funktionalität hinzu.
- */
-function initializeAccordion() {
-  document.querySelectorAll(".accordion-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const content = button.nextElementSibling;
-      button.classList.toggle("active");
-      if (content.style.maxHeight) {
-        content.style.maxHeight = null;
-      } else {
-        content.style.maxHeight = content.scrollHeight + "px";
-      }
-    });
-  });
-}
-
-/**
- * Steuert die Kachel-Navigation (Tabs), eine wiederverwendbare UI-Komponente.
- */
-function initializeCardNavigation(navId, sectionContainerId) {
-  const cards = document.querySelectorAll(`#${navId} .card`);
-  const sections = document.querySelectorAll(
-    `#${sectionContainerId} .config-section`
-  );
-  if (cards.length === 0) return;
-
-  cards.forEach((card) => {
-    card.addEventListener("click", () => {
-      sections.forEach((s) => s.classList.remove("active"));
-      cards.forEach((c) => c.classList.remove("active"));
-      const targetElement = document.getElementById(card.dataset.target);
-      if (targetElement) {
-        targetElement.classList.add("active");
-      }
-      card.classList.add("active");
-    });
-  });
 }
 
 // Funktionen zum Öffnen und Schließen der Modals

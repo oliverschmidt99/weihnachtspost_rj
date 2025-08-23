@@ -1,0 +1,20 @@
+{
+  "options": [
+    {
+      "name": "Anrede",
+      "values": "Herr, Frau, Divers, Familie, Firma, Team"
+    },
+    {
+      "name": "Titel (akademisch)",
+      "values": "B. A., B. Sc., B. Eng., LL. B., B. F. A., B. Mus., B. Ed., M. A., M. Sc., M. Eng., LL. M., M. F. A., M. Mus., M. Ed., MBA, M. Arch., Dipl.-Ing., Dipl.-Kfm., Dipl.-Kffr., Dipl.-Hdl., Dipl.-Päd., Mag., Lic., Dr. med., Dr. iur., Dr. rer. nat., Dr. phil., Dr. rer. pol., Dr. oec., Dr.-Ing., Ph.D., Prof., Prof. Dr."
+    },
+    {
+      "name": "Status",
+      "values": "Offen 📂, In Bearbeitung 🔧, Erledigt ✅, Abgelehnt ❌, Archiviert 📦, Aktiv 🚀, Inaktiv ⏸️"
+    },
+    {
+      "name": "Post-Art",
+      "values": "Digital 💻, Post 📬, Kalender 📅, Persönlich 🤝"
+    }
+  ]
+}

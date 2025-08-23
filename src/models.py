@@ -1,86 +1,50 @@
 # src/models.py
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 db = SQLAlchemy()
 
-class Mitarbeiter(db.Model):
-    __tablename__ = 'mitarbeiter'
+class Vorlage(db.Model):
+    __tablename__ = 'vorlage'
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    gruppen = db.relationship('Gruppe', backref='vorlage', lazy=True, cascade="all, delete-orphan")
+    kontakte = db.relationship('Kontakt', backref='vorlage', lazy=True, cascade="all, delete-orphan")
     
-    # Angepasste Felder für mehrere Einträge
-    tag = db.Column(db.Text)
-    titel = db.Column(db.Text)
-    
-    # Neue Felder
-    geburtsdatum = db.Column(db.Date)
-    notizen = db.Column(db.Text)
-    farbe = db.Column(db.String(7), default="#A0C4FF") # Farbfeld hinzugefügt
-    
-    # Personalisierung
-    anrede = db.Column(db.String(20))
-    vorname = db.Column(db.String(100))
-    nachname = db.Column(db.String(100), nullable=False)
-    
-    # Position & Kontakt
-    firma = db.Column(db.String(150))
-    position = db.Column(db.String(100))
-    email = db.Column(db.String(120))
-    telefon = db.Column(db.String(50))
-    
-    # Adresse
-    strasse = db.Column(db.String(200))
-    hausnummer = db.Column(db.String(20))
-    plz = db.Column(db.String(20))
-    ort = db.Column(db.String(100))
-    land = db.Column(db.String(100), default="Deutschland")
-    
-    kunden = db.relationship("Kunde", backref="mitarbeiter", lazy=True)
+    @property
+    def eigenschaften(self):
+        """Gibt eine flache Liste aller Eigenschaften dieser Vorlage zurück."""
+        props = []
+        for gruppe in self.gruppen:
+            props.extend(gruppe.eigenschaften)
+        return props
 
-    __table_args__ = ( db.UniqueConstraint('email', name='uq_mitarbeiter_email'), )
-
-class Kunde(db.Model):
-    __tablename__ = 'kunde'
+class Gruppe(db.Model):
+    __tablename__ = 'gruppe'
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    vorlage_id = db.Column(db.Integer, db.ForeignKey('vorlage.id'), nullable=False)
+    eigenschaften = db.relationship('Eigenschaft', backref='gruppe', lazy=True, cascade="all, delete-orphan")
 
-    # Angepasste Felder
-    tag = db.Column(db.Text)
-    titel = db.Column(db.Text)
-    status = db.Column(db.String(50), nullable=False, default="Neu") # Zustand/Status zusammengefasst
-
-    # Neue Felder
-    geburtsdatum = db.Column(db.Date)
-    notizen = db.Column(db.Text)
-    
-    # Personalisierung
-    anrede = db.Column(db.String(20))
-    vorname = db.Column(db.String(100))
-    nachname = db.Column(db.String(100), nullable=False)
-    
-    # Firma & Kontakt
-    firma = db.Column(db.String(150))
-    position = db.Column(db.String(100))
-    email = db.Column(db.String(120))
-    telefon = db.Column(db.String(50))
-    
-    # Adresse
-    strasse = db.Column(db.String(200))
-    hausnummer = db.Column(db.String(20))
-    plz = db.Column(db.String(20))
-    ort = db.Column(db.String(100))
-    land = db.Column(db.String(100), default="Deutschland")
-    
-    # Kundenspezifische Felder
-    bevorzugter_kontaktweg = db.Column(db.String(100))
-    mitarbeiter_id = db.Column(db.Integer, db.ForeignKey("mitarbeiter.id", ondelete="SET NULL"), nullable=True)
-    benachrichtigungen = db.relationship("Benachrichtigung", backref="kunde", lazy=True, cascade="all, delete-orphan")
-
-    __table_args__ = ( db.UniqueConstraint('email', name='uq_kunde_email'), )
-
-class Benachrichtigung(db.Model):
+class Eigenschaft(db.Model):
+    __tablename__ = 'eigenschaft'
     id = db.Column(db.Integer, primary_key=True)
-    jahr = db.Column(db.Integer, nullable=False)
-    brief = db.Column(db.Boolean, default=False)
-    kalender = db.Column(db.Boolean, default=False)
-    email_versand = db.Column(db.Boolean, default=False)
-    speziell = db.Column(db.Boolean, default=False)
-    kunde_id = db.Column(db.Integer, db.ForeignKey("kunde.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    datentyp = db.Column(db.String(50), nullable=False) # z.B. Text, Zahl, Datum, Boolean, Auswahl
+    optionen = db.Column(db.Text) # z.B. für Auswahl: "Option1,Option2,Option3"
+    gruppe_id = db.Column(db.Integer, db.ForeignKey('gruppe.id'), nullable=False)
+
+class Kontakt(db.Model):
+    __tablename__ = 'kontakt'
+    id = db.Column(db.Integer, primary_key=True)
+    vorlage_id = db.Column(db.Integer, db.ForeignKey('vorlage.id'), nullable=False)
+    # Speichert die dynamischen Daten als JSON-formatierter String
+    daten = db.Column(db.Text, nullable=False, default='{}')
+
+    def get_data(self):
+        """Lädt die JSON-Daten als Python-Dictionary."""
+        return json.loads(self.daten or '{}')
+
+    def set_data(self, data_dict):
+        """Speichert ein Python-Dictionary als JSON-String."""
+        self.daten = json.dumps(data_dict)

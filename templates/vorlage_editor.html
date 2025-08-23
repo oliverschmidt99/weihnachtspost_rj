@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %}Vorlagen-Editor{% endblock %}
+
+{% block content %}
+<div id="vorlage-editor-app">
+    <div class="actions-header">
+        <h1 v-text="pageTitle"></h1>
+        <div class="button-group">
+            <a href="{{ url_for('vorlagen_verwalten') }}" class="button secondary">Abbrechen</a>
+            <button @click="saveVorlage" class="button">Vorlage Speichern</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <fieldset>
+            <legend>Allgemein</legend>
+            <div class="form-group">
+                <label for="vorlage-name">Name der Vorlage</label>
+                <input type="text" id="vorlage-name" v-model="vorlage.name" placeholder="z.B. Kunde, Lieferant">
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="view-switcher">
+        <button @click="viewMode = 'tile'" :class="{ active: viewMode === 'tile' }">Kachelansicht</button>
+        <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }">Listenansicht</button>
+    </div>
+    <div class="card add-group-bar">
+        <select v-model="selectedSuggestionCategory" @change="addGroupFromSuggestion">
+            <option :value="null" disabled>Standard-Gruppe auswählen...</option>
+            <option v-for="category in suggestions.categories" :value="category" v-text="category.name"></option>
+        </select>
+        <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe erstellen</button>
+    </div>
+
+    <div v-if="viewMode === 'tile'" class="tile-view-container">
+        <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="group-tile">
+            <div class="tile-header"><strong v-text="gruppe.name || 'Unbenannte Gruppe'"></strong>
+                <div class="tile-actions">
+                    <button @click="openGroupEditModal(gruppeIndex)" class="icon-btn"
+                        title="Gruppe bearbeiten">✏️</button>
+                    <button @click="openDeleteModal('gruppe', gruppeIndex)" class="icon-btn danger"
+                        title="Gruppe löschen">❌</button>
+                </div>
+            </div>
+            <div class="tile-content"><span v-for="eigenschaft in gruppe.eigenschaften" class="tile-property-badge"
+                    v-text="eigenschaft.name"></span></div>
+        </div>
+    </div>
+
+    <div v-if="viewMode === 'list'">
+        <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="card">
+            <fieldset>
+                <legend class="flex-legend collapsible" @click="toggleGroupCollapse(gruppeIndex)">
+                    <span class="collapse-icon" :class="{ collapsed: collapsedGroups[gruppeIndex] }">▶</span>
+                    <input type="text" v-model="gruppe.name" class="legend-input">
+                    <button @click.stop="openDeleteModal('gruppe', gruppeIndex)" class="danger small-btn">× Gruppe
+                        löschen</button>
+                </legend>
+                <div v-if="!collapsedGroups[gruppeIndex]" class="property-list-container">
+                    <div v-for="(e, idx) in gruppe.eigenschaften" class="property-list-item">
+                        <span class="property-name" v-text="e.name || 'Unbenannt'"></span>
+                        <span class="property-type" v-text="e.datentyp"></span>
+                    </div>
+                    <button @click="openGroupEditModal(gruppeIndex)" class="button secondary"
+                        style="margin-top: 1rem;">Gruppe bearbeiten & Eigenschaften hinzufügen</button>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+    <div v-if="activeModal === 'groupEdit'" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+            <button @click="closeModal" class="modal-close-btn">&times;</button>
+            <h3>Gruppe bearbeiten: <span style="color: var(--accent-color);" v-text="editedGroup.name"></span></h3>
+            <div class="form-group"><label>Name der Gruppe</label><input type="text" v-model="editedGroup.name"></div>
+            <hr>
+            <h4>Eigenschaften</h4>
+            <div class="modal-property-header"><span>Name</span><span>Datentyp</span><span>Optionen</span><span></span>
+            </div>
+            <div v-for="(eigenschaft, eigenschaftIndex) in editedGroup.eigenschaften" class="modal-property-row">
+                <input type="text" v-model="eigenschaft.name" placeholder="Name der Eigenschaft">
+                <select v-model="eigenschaft.datentyp">
+                    <option>Text</option>
+                    <option>Zahl</option>
+                    <option>Datum</option>
+                    <option>Boolean</option>
+                    <option>Auswahl</option>
+                    <option>Verknüpfung</option>
+                </select>
+                <div>
+                    <select v-if="eigenschaft.datentyp === 'Auswahl'" v-model="eigenschaft.optionen">
+                        <option value="">Standard-Auswahl wählen...</option>
+                        <option v-for="opt in selectionOptions" :value="opt.values" v-text="opt.name"></option>
+                    </select>
+                    <select v-if="eigenschaft.datentyp === 'Verknüpfung'" v-model="eigenschaft.optionen">
+                        <option value="">Vorlage auswählen...</option>
+                        {% for v in all_vorlagen %}<option value="vorlage_id:{{ v.id }}">{{ v.name }}</option>{% endfor
+                        %}
+                    </select>
+                </div>
+                <button @click="removeEigenschaft(eigenschaftIndex)" class="icon-btn danger"
+                    title="Eigenschaft löschen">❌</button>
+            </div>
+            <button @click="addEigenschaft" class="button secondary" style="margin-top: 1rem;">+ Eigenschaft
+                hinzufügen</button>
+            <div class="button-group">
+                <button @click="closeModal" class="button secondary">Abbrechen</button>
+                <button @click="saveGroup" class="button">Änderungen speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="activeModal === 'delete'" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content" style="max-width: 30rem;">
+            <h3>Sind Sie sicher?</h3>
+            <p v-text="deleteMessage"></p>
+            <div class="button-group">
+                <button @click="closeModal" class="button secondary">Abbrechen</button>
+                <button @click="confirmDelete" class="button danger">Ja, endgültig löschen</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+    const { createApp, ref, onMounted, computed } = Vue
+
+    createApp({
+        setup() {
+            // --- STATE ---
+            const vorlage = ref(JSON.parse('{{ vorlage_data|safe }}'));
+            const suggestions = ref({ categories: [] });
+            const selectionOptions = ref([]);
+            const selectedSuggestionCategory = ref(null);
+            const viewMode = ref('tile');
+            const collapsedGroups = ref({});
+            const activeModal = ref(null);
+            const editedGroup = ref(null);
+            const editedGroupIndex = ref(null);
+            const deleteTarget = ref(null);
+            const deleteMessage = ref('');
+
+            onMounted(async () => {
+                try {
+                    const [suggResponse, selOptResponse] = await Promise.all([fetch('/api/attribute-suggestions'), fetch('/api/selection-options')]);
+                    suggestions.value = await suggResponse.json();
+                    selectionOptions.value = (await selOptResponse.json()).options;
+                } catch (error) { console.error("Fehler beim Laden der Daten:", error); }
+            });
+
+            const pageTitle = computed(() => vorlage.value.name ? `Vorlage: ${vorlage.value.name}` : 'Neue Vorlage erstellen');
+            const toggleGroupCollapse = (index) => { collapsedGroups.value[index] = !collapsedGroups.value[index]; };
+            const closeModal = () => { activeModal.value = null; editedGroup.value = null; editedGroupIndex.value = null; };
+            const openGroupEditModal = (index) => { editedGroupIndex.value = index; editedGroup.value = JSON.parse(JSON.stringify(vorlage.value.gruppen[index])); activeModal.value = 'groupEdit'; };
+            const openDeleteModal = (type, index1) => { deleteTarget.value = { type, index1 }; deleteMessage.value = "Möchten Sie diese Gruppe wirklich löschen?"; activeModal.value = 'delete'; };
+            const saveGroup = () => { if (editedGroupIndex.value !== null) { vorlage.value.gruppen[editedGroupIndex.value] = editedGroup.value; } closeModal(); };
+            const confirmDelete = () => { const { type, index1 } = deleteTarget.value; if (type === 'gruppe') { vorlage.value.gruppen.splice(index1, 1); } closeModal(); };
+            const addEigenschaft = () => { editedGroup.value.eigenschaften.push({ name: '', datentyp: 'Text', optionen: '' }); };
+            const removeEigenschaft = (index) => { editedGroup.value.eigenschaften.splice(index, 1); };
+
+            // KORREKTUR: Diese Funktion wird nicht mehr benötigt, da v-model die Zuweisung übernimmt.
+            // const applySelectionOption = (event, eigenschaft) => { ... };
+
+            const addGroupFromSuggestion = () => { if (!selectedSuggestionCategory.value) return; const cat = selectedSuggestionCategory.value; const g = { name: cat.name, eigenschaften: [] }; cat.attributes.forEach(attr => { let dt = 'Text'; if (attr.toLowerCase().includes('datum')) dt = 'Datum'; if (attr.toLowerCase().includes('anrede') || attr.toLowerCase().includes('status')) dt = 'Auswahl'; g.eigenschaften.push({ name: attr, datentyp: dt, optionen: '' }); }); vorlage.value.gruppen.push(g); selectedSuggestionCategory.value = null; };
+            const addEmptyGruppe = () => { vorlage.value.gruppen.push({ name: 'Neue Gruppe', eigenschaften: [] }); };
+            const saveVorlage = async () => { const url = "{{ action_url }}"; try { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(vorlage.value) }); if (!r.ok) throw new Error('Fehler'); const res = await r.json(); if (res.redirect_url) window.location.href = res.redirect_url; } catch (e) { alert('Speichern fehlgeschlagen.'); } };
+
+            return {
+                vorlage, suggestions, selectionOptions, pageTitle, selectedSuggestionCategory, viewMode, collapsedGroups,
+                toggleGroupCollapse, activeModal, editedGroup, deleteMessage, addGroupFromSuggestion, addEmptyGruppe,
+                openGroupEditModal, saveGroup, addEigenschaft, removeEigenschaft,
+                openDeleteModal, confirmDelete, closeModal, saveVorlage
+            };
+        }
+    }).mount('#vorlage-editor-app');
+</script>
+
+
+<style>
+    /* STILE FÜR KACHELANSICHT */
+    .view-switcher {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .view-switcher button {
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .view-switcher button.active {
+        background-color: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .tile-view-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .group-tile {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--card-bg);
+        padding: 1rem;
+    }
+
+    .tile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .tile-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tile-property-badge {
+        background-color: var(--bg-main);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8em;
+    }
+
+    /* STILE FÜR LISTENANSICHT */
+    .collapsible {
+        cursor: pointer;
+    }
+
+    .collapse-icon {
+        display: inline-block;
+        transition: transform 0.2s;
+        margin-right: 0.5rem;
+    }
+
+    .collapse-icon.collapsed {
+        transform: rotate(-90deg);
+    }
+
+    .property-list-container {
+        padding-left: 1.5rem;
+        border-left: 2px solid var(--border-color);
+        margin-top: 1rem;
+    }
+
+    .property-list-item {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.5rem 0;
+    }
+
+    .property-list-item:not(:last-child) {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .property-name {
+        font-weight: 500;
+    }
+
+    .property-type {
+        color: var(--text-secondary);
+        font-size: 0.9em;
+    }
+
+    /* STILE FÜR BEARBEITEN-MODAL */
+    .modal-property-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 2fr 40px;
+        gap: 1rem;
+        padding: 0 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        font-size: 0.8em;
+        color: var(--text-secondary);
+    }
+
+    .modal-property-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 2fr 40px;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-property-row input,
+    .modal-property-row select {
+        width: 100%;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.9em;
+    }
+
+    .auswahl-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    /* Allgemeine Stile */
+    .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        line-height: 1;
+    }
+
+    .icon-btn:hover {
+        background-color: var(--border-color);
+    }
+
+    .icon-btn.danger:hover {
+        background-color: #f8d7da;
+    }
+
+    .add-group-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem 1.5rem;
+    }
+
+    .add-group-bar select {
+        flex-grow: 1;
+    }
+
+    .add-group-bar select,
+    .add-group-bar option {
+        color: var(--text-primary);
+    }
+
+    .modal-overlay {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: var(--bg-container);
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 45rem;
+    }
+
+    .modal-close-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}

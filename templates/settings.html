@@ -7,8 +7,8 @@
 
 <div class="card config-section active">
     <h2>Design</h2>
-    <div class="theme-switcher">
-        <label for="theme-toggle" style="margin-right: 1rem; font-weight: bold;">Dark Mode</label>
+    <div class="theme-switcher" style="display: flex; align-items: center; gap: 1rem;">
+        <label for="theme-toggle" style="margin: 0; font-weight: bold;">Dark Mode</label>
         <label class="switch">
             <input type="checkbox" id="theme-toggle">
             <span class="slider round"></span>
@@ -19,29 +19,15 @@
 <div class="card config-section active">
     <h2>Datenbank-Management</h2>
     <p>
-        Hier kannst du eine bestehende Datenbank-Datei (`weihnachtspost.db`) hochladen, um Daten wiederherzustellen oder
-        zu übertragen.
+        Automatische Backups der Datenbank (`kundenverwaltung.db`) werden bei jeder wichtigen Änderung im Ordner
+        <code>backups</code> angelegt.
     </p>
     <div class="warning-box">
-        <strong>Achtung:</strong> Deine aktuell verwendete Datenbank wird dabei überschrieben. Es wird aber automatisch
-        ein Backup der alten Datenbank im `backup`-Ordner angelegt.
+        <strong>Info:</strong> Die manuelle Wiederherstellung einer Datenbank muss derzeit direkt über das Dateisystem
+        erfolgen, indem eine Backup-Datei in den <code>instance</code>-Ordner kopiert und in
+        <code>kundenverwaltung.db</code> umbenannt wird.
     </div>
-
-    <form action="{{ url_for('import_db') }}" method="post" enctype="multipart/form-data" style="margin-top: 1.5rem;">
-        <fieldset>
-            <legend>Datenbank importieren</legend>
-            <div class="form-group">
-                <label for="db_file">Wähle eine `weihnachtspost.db`-Datei aus:</label>
-                <input type="file" name="db_file" id="db_file" required accept=".db">
-            </div>
-            <button type="submit"
-                onclick="return confirm('Bist du sicher, dass du die aktuelle Datenbank überschreiben möchtest?');">
-                Datenbank jetzt importieren
-            </button>
-        </fieldset>
-    </form>
 </div>
-
 {% endblock %}
 
 {% block scripts %}

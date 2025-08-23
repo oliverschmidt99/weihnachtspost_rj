@@ -1,0 +1,99 @@
+{
+  "categories": [
+    {
+      "name": "Allgemeine Attribute",
+      "attributes": [
+        "Name",
+        "Kontakttyp",
+        "Notizen",
+        "Tags",
+        "Erstelldatum",
+        "Änderungsdatum"
+      ]
+    },
+    {
+      "name": "Personendaten",
+      "attributes": [
+        "Anrede",
+        "Titel",
+        "Vorname",
+        "Nachname",
+        "Spitzname",
+        "Geburtsdatum",
+        "Geschlecht",
+        "Nationalität",
+        "Familienstand"
+      ]
+    },
+    {
+      "name": "Unternehmensdaten",
+      "attributes": [
+        "Firmenname",
+        "Rechtsform",
+        "Branche",
+        "Gründungsjahr",
+        "Handelsregisternummer",
+        "Umsatzsteuer-ID",
+        "Website",
+        "Ansprechpartner"
+      ]
+    },
+    {
+      "name": "Adresse",
+      "attributes": [
+        "Straße",
+        "Hausnummer",
+        "Adresszusatz",
+        "Postleitzahl",
+        "Ort",
+        "Bundesland",
+        "Land"
+      ]
+    },
+    {
+      "name": "Kontaktinformationen",
+      "attributes": [
+        "E-Mail",
+        "Telefon (privat)",
+        "Telefon (geschäftlich)",
+        "Fax",
+        "Mobilnummer",
+        "LinkedIn Profil",
+        "Xing Profil"
+      ]
+    },
+    {
+      "name": "Beruf & Position",
+      "attributes": [
+        "Firma",
+        "Abteilung",
+        "Position",
+        "Personalnummer",
+        "Eintrittsdatum",
+        "Austrittsdatum"
+      ]
+    },
+    {
+      "name": "Kundeninformationen",
+      "attributes": [
+        "Kundennummer",
+        "Vertragsnummer",
+        "Vertragsbeginn",
+        "Vertragsende",
+        "Umsatzvolumen",
+        "Status"
+      ]
+    },
+    {
+      "name": "Sonstiges",
+      "attributes": [
+        "Bankverbindung (IBAN)",
+        "Bankverbindung (BIC)",
+        "Steuernummer",
+        "Lieferadresse",
+        "Rechnungsadresse",
+        "Notfallkontakt"
+      ]
+    }
+  ]
+}

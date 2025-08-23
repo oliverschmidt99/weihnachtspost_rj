@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %}Vorlagen verwalten{% endblock %}
+{% block content %}
+<h1>Vorlagen verwalten</h1>
+<div class="actions-header">
+    <p>Vorlagen definieren die Struktur deiner Kontakte.</p>
+    <a href="{{ url_for('vorlage_editor') }}" class="button add">➕ Vorlage erstellen</a>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Kontakte</th>
+                    <th style="text-align: right;">Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vorlage in vorlagen %}
+                <tr>
+                    <td><strong>{{ vorlage.name }}</strong></td>
+                    <td>{{ vorlage.kontakte|length }}</td>
+                    <td class="actions" style="justify-content: flex-end;">
+                        <a href="{{ url_for('vorlage_editor', vorlage_id=vorlage.id) }}" class="icon-btn edit"
+                            title="Vorlage bearbeiten">✏️</a>
+                        <form action="{{ url_for('vorlage_loeschen', vorlage_id=vorlage.id) }}" method="post"
+                            onsubmit="return confirm('Sicher?');">
+                            <button type="submit" class="icon-btn delete" title="Vorlage löschen">❌</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">Noch keine Vorlagen erstellt.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

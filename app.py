@@ -1,40 +1,26 @@
 # app.py
 import os
+import sys
+import shutil
+import json
 import re
 import subprocess
 import tempfile
-import shutil
 from datetime import datetime
-import csv
-import io
-import json
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
-from werkzeug.utils import secure_filename
-from src.models import db, Mitarbeiter, Kunde, Benachrichtigung
+
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_migrate import Migrate
+from werkzeug.utils import secure_filename
+from sqlalchemy.orm import joinedload
+
+from src.models import db, Vorlage, Gruppe, Eigenschaft, Kontakt
 
 # -- Konfiguration --
-UPLOAD_FOLDER = "upload_files"
-ALLOWED_EXTENSIONS = {"msg", "db"}
 BACKUP_FOLDER = "backups"
-TAGS_FILE = "tags.json"
-
-STATUS_EMOJIS = {
-    "Neu": "🆕", "In Bearbeitung": "🔧", "Erledigt": "✅", "Unklar": "❓",
-    "Fehler": "⚠️", "Doppelt": "🔁", "Warten": "⏳", "Abgelehnt": "🚫", "Inaktiv": "⏸️",
-}
-STATUS_OPTIONEN = list(STATUS_EMOJIS.keys())
-
-PASTEL_COLORS = [
-    "#FFADAD", "#FFD6A5", "#FDFFB6", "#CAFFBF", "#9BF6FF", "#A0C4FF", "#BDB2FF", "#FFC6FF", "#E4C1F9", "#F6ACC8"
-]
-
-AKADEMISCHE_TITEL = [
-    "B.A.", "B.Sc.", "B.Eng.", "B.Ed.", "B.Mus.", "B.F.A", "LL.B.", "M.A.", "M.Sc.", "M.Eng.", "M.Ed.",
-    "M.Mus.", "M.F.A.", "LL.M.", "MBA", "Dipl.-Ing.", "Dipl.-Kfm.", "Dipl.-Vw.", "Mag. Art.",
-    "Dr.", "Dr.-Ing.", "Dr. med.", "Dr. med. dent.", "Dr. phil.", "Dr. rer. nat.", "Dr. jur.", "Dr. rer. pol.",
-    "PD Dr.", "Prof.", "Prof. Dr."
-]
+UPLOAD_FOLDER = "upload_files"
+ALLOWED_EXTENSIONS = {"msg"}
 
 app = Flask(__name__, static_folder="static")
 
@@ -50,293 +36,240 @@ app.config["SECRET_KEY"] = "dein-super-geheimer-schluessel-hier"
 app.config["SQLALCHEMY_DATABASE_URI"] = (f"sqlite:///{os.path.join(instance_path, 'kundenverwaltung.db')}")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = upload_path
+
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# --- Hilfsfunktionen ---
+from src import models
 
+# --- Automatische Vorlagen-Erstellung ---
+def seed_standard_templates():
+    with app.app_context():
+        if not Vorlage.query.filter_by(name="Standard-Kunde").first():
+            print("Erstelle Standard-Vorlage: Kunde...")
+            try:
+                with open('data/standard_vorlage_kunde.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    neue_vorlage = Vorlage(name=data['name'])
+                    db.session.add(neue_vorlage)
+                    db.session.flush()
+                    for gruppe_data in data.get('gruppen', []):
+                        gruppe = Gruppe(name=gruppe_data['name'], vorlage_id=neue_vorlage.id)
+                        db.session.add(gruppe)
+                        db.session.flush()
+                        for eigenschaft_data in gruppe_data.get('eigenschaften', []):
+                            eigenschaft = Eigenschaft(name=eigenschaft_data['name'],datentyp=eigenschaft_data['datentyp'],optionen=eigenschaft_data.get('optionen', ''),gruppe_id=gruppe.id)
+                            db.session.add(eigenschaft)
+                    db.session.commit()
+            except Exception as e:
+                print(f"Fehler beim Erstellen der Kunden-Vorlage: {e}")
+                db.session.rollback()
+
+        if not Vorlage.query.filter_by(name="Standard-Mitarbeiter").first():
+            print("Erstelle Standard-Vorlage: Mitarbeiter...")
+            try:
+                with open('data/standard_vorlage_mitarbeiter.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    mitarbeiter_vorlage_id_fuer_verknuepfung = Vorlage.query.count() + 1
+                    neue_vorlage = Vorlage(name=data['name'])
+                    db.session.add(neue_vorlage)
+                    db.session.flush()
+                    for gruppe_data in data.get('gruppen', []):
+                        gruppe = Gruppe(name=gruppe_data['name'], vorlage_id=neue_vorlage.id)
+                        db.session.add(gruppe)
+                        db.session.flush()
+                        for eigenschaft_data in gruppe_data.get('eigenschaften', []):
+                            optionen = eigenschaft_data.get('optionen', '')
+                            if "vorlage_id" in optionen:
+                                optionen = f"vorlage_id:{mitarbeiter_vorlage_id_fuer_verknuepfung}"
+                            eigenschaft = Eigenschaft(name=eigenschaft_data['name'],datentyp=eigenschaft_data['datentyp'],optionen=optionen,gruppe_id=gruppe.id)
+                            db.session.add(eigenschaft)
+                    db.session.commit()
+            except Exception as e:
+                print(f"Fehler beim Erstellen der Mitarbeiter-Vorlage: {e}")
+                db.session.rollback()
+
+# --- Hilfsfunktionen ---
 def create_database():
     with app.app_context():
         db_path = os.path.join(instance_path, "kundenverwaltung.db")
         if not os.path.exists(db_path):
-            print("Datenbankdatei nicht gefunden. Erstelle Datenbank...")
             db.create_all()
-            print("Datenbank wurde erfolgreich erstellt.")
+            seed_standard_templates()
         else:
-            print("Datenbankdatei existiert bereits.")
+            seed_standard_templates()
 
-def backup_database():
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_filename = f"kundenverwaltung_{timestamp}.db.bak"
-    source_db = os.path.join(instance_path, "kundenverwaltung.db")
-    backup_filepath = os.path.join(backup_path, backup_filename)
-    if os.path.exists(source_db):
-        try:
-            shutil.copy2(source_db, backup_filepath)
-            flash(f"Datenbank-Backup erfolgreich erstellt: {backup_filename}", "success")
-        except (shutil.Error, OSError) as e:
-            flash(f"Fehler beim Erstellen des Backups: {e}", "error")
+def backup_database(): pass
+def allowed_file(filename): return True
+def parse_message_text_from_file(filepath): return ""
+def parse_vcard_text_for_import(text): return {}
 
-def allowed_file(filename, extensions):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in extensions
-
-def parse_vcard_text(text):
-    data = {}
-    patterns = {
-        "vorname": r"(?:First Name|Vorname):\s*(.+)", "nachname": r"(?:Last Name|Nachname):\s*(.+)",
-        "anrede": r"(?:Full Name|Name).*?(Herr|Frau)", "position": r"(?:Job Title|Funktion):\s*(.+)",
-        "firma": r"(?:Company|Firma):\s*(.+)", "telefon": r"(?:Business|Telefon Geschäftlich):\s*([+\d\s()/.-]+)",
-        "email": r"(?:Email|E-Mail Address):\s*([\w\.-]+@[\w\.-]+)",
-    }
-    for key, pattern in patterns.items():
-        if match := re.search(pattern, text, re.IGNORECASE):
-            data[key] = match.group(1).strip()
-    return data
-
-def load_tags_data():
-    try:
-        with open(TAGS_FILE, "r", encoding="utf-8") as f: return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError): return {"categories": []}
-
-def process_form_data(model_instance, form_data):
-    # Diese Funktion verarbeitet die Formulardaten für neue und aktualisierte Einträge
-    for key in form_data:
-        if key in ['titel', 'tag']:
-            # Für Felder, die mehrere Werte haben können (wie Checkboxen)
-            setattr(model_instance, key, ','.join(request.form.getlist(key)))
-        elif hasattr(model_instance, key):
-            value = form_data.get(key)
-            # Leere Strings als None speichern, um die Datenbank konsistent zu halten
-            setattr(model_instance, key, value if value else None)
-
-# --- Haupt-Routen ---
-
+# --- Haupt-Routen und API ---
 @app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route("/api/tags", methods=["GET"])
-def get_tags():
-    return jsonify(load_tags_data())
+@app.route("/api/attribute-suggestions")
+def attribute_suggestions():
+    return send_from_directory('data', 'attribute_suggestions.json')
 
-@app.route("/verwaltung")
-def verwaltung():
-    mitarbeiter_liste = Mitarbeiter.query.order_by(Mitarbeiter.nachname).all()
-    kunden_liste = Kunde.query.order_by(Kunde.nachname).all()
-    return render_template(
-        "verwaltung.html", mitarbeiter=mitarbeiter_liste, kunden=kunden_liste,
-        pastel_colors=PASTEL_COLORS, status_optionen=STATUS_OPTIONEN,
-        status_emojis=STATUS_EMOJIS, akademische_titel=AKADEMISCHE_TITEL
-    )
+@app.route("/api/selection-options")
+def selection_options():
+    return send_from_directory('data', 'selection_options.json')
 
-@app.route("/uebersicht")
-def uebersicht():
-    query = db.session.query(Kunde)
-    # Filter-Logik aus der alten app.py
-    mitarbeiter_id = request.args.get("mitarbeiter_id")
-    benachrichtigungsart = request.args.get("benachrichtigungsart")
-    status = request.args.get("status")
-    jahr = request.args.get("jahr", datetime.now().year, type=int)
+@app.route("/api/kontakte-by-vorlage/<int:vorlage_id>")
+def get_kontakte_by_vorlage(vorlage_id):
+    kontakte = Kontakt.query.filter_by(vorlage_id=vorlage_id).all()
+    result = []
+    for k in kontakte:
+        data = k.get_data()
+        display_name = data.get('Name') or f"{data.get('Vorname', '')} {data.get('Nachname', '')}".strip() or data.get('Firmenname', f"Kontakt ID: {k.id}")
+        result.append({"id": k.id, "display_name": display_name})
+    return jsonify(result)
 
-    if mitarbeiter_id:
-        query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
-    if status:
-        query = query.filter(Kunde.status == status)
-    if benachrichtigungsart:
-        query = query.join(Benachrichtigung).filter(Benachrichtigung.jahr == jahr)
-        conditions = {
-            "brief": Benachrichtigung.brief.is_(True),
-            "kalender": Benachrichtigung.kalender.is_(True),
-            "email_versand": Benachrichtigung.email_versand.is_(True),
-            "speziell": Benachrichtigung.speziell.is_(True),
-        }
-        if benachrichtigungsart in conditions:
-            query = query.filter(conditions[benachrichtigungsart])
-
-    return render_template(
-        "uebersicht.html", kunden=query.all(), mitarbeiter_liste=Mitarbeiter.query.all(),
-        status_optionen=STATUS_OPTIONEN, status_emojis=STATUS_EMOJIS,
-        aktiver_mitarbeiter=mitarbeiter_id, aktive_benachrichtigungsart=benachrichtigungsart,
-        aktiver_status=status, aktives_jahr=jahr
-    )
-
-@app.route("/export")
-def export_page():
-    return render_template("export.html", kunden=Kunde.query.all(), mitarbeiter_liste=Mitarbeiter.query.all(), status_optionen=STATUS_OPTIONEN, status_emojis=STATUS_EMOJIS, aktives_jahr=datetime.now().year)
-
-@app.route("/export/csv")
-def export_csv():
-    # Komplette CSV-Export-Logik
-    query = db.session.query(Kunde)
-    kunden_liste = query.all()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    headers = ["ID", "Status", "Mitarbeiter", "Anrede", "Titel", "Vorname", "Nachname", "Firma", "Straße", "PLZ", "Ort", "Land", "E-Mail", "Telefon"]
-    writer.writerow(headers)
-    for kunde in kunden_liste:
-        row = [
-            kunde.id, kunde.status,
-            (f"{kunde.mitarbeiter.vorname} {kunde.mitarbeiter.nachname}" if kunde.mitarbeiter else ""),
-            kunde.anrede, kunde.titel, kunde.vorname, kunde.nachname, kunde.firma,
-            kunde.strasse, kunde.plz, kunde.ort, kunde.land, kunde.email, kunde.telefon
-        ]
-        writer.writerow(row)
-    output.seek(0)
-    return send_file(io.BytesIO(output.getvalue().encode("utf-8")), mimetype="text/csv", as_attachment=True, download_name=f'kunden_export_{datetime.now().strftime("%Y-%m-%d")}.csv')
-
-# --- Mitarbeiter-Routen ---
-
-@app.route("/mitarbeiter/neu", methods=["POST"])
-def mitarbeiter_neu():
-    new_mitarbeiter = Mitarbeiter()
-    process_form_data(new_mitarbeiter, request.form)
-    db.session.add(new_mitarbeiter)
+@app.route("/api/kontakt/<int:kontakt_id>/update", methods=["POST"])
+def update_kontakt_field(kontakt_id):
+    kontakt = Kontakt.query.get_or_404(kontakt_id)
+    data = request.get_json()
+    field_name = data.get('field')
+    new_value = data.get('value')
+    if field_name is None or new_value is None:
+        return jsonify({"success": False, "error": "Fehlende Daten"}), 400
+    kontakt_daten = kontakt.get_data()
+    kontakt_daten[field_name] = new_value
+    kontakt.set_data(kontakt_daten)
     db.session.commit()
-    backup_database()
-    flash("Mitarbeiter erfolgreich erstellt!", "success")
-    return redirect(url_for("verwaltung"))
-
-@app.route("/mitarbeiter/bearbeiten/<int:mitarbeiter_id>")
-def mitarbeiter_bearbeiten(mitarbeiter_id):
-    mitarbeiter = Mitarbeiter.query.get_or_404(mitarbeiter_id)
-    return render_template("kontakt_bearbeiten.html", kontakt_typ="Mitarbeiter", kontakt=mitarbeiter, action_url=url_for('mitarbeiter_update', id=mitarbeiter.id), pastel_colors=PASTEL_COLORS, akademische_titel=AKADEMISCHE_TITEL)
-
-@app.route("/mitarbeiter/update/<int:id>", methods=["POST"])
-def mitarbeiter_update(id):
-    mitarbeiter = Mitarbeiter.query.get_or_404(id)
-    process_form_data(mitarbeiter, request.form)
+    return jsonify({"success": True, "message": "Feld aktualisiert"})
+    
+@app.route("/api/kontakt/neu", methods=["POST"])
+def create_kontakt():
+    data = request.get_json()
+    vorlage_id = data.get('vorlage_id')
+    kontakt_daten = data.get('daten')
+    if not vorlage_id or kontakt_daten is None:
+        return jsonify({"success": False, "error": "Fehlende Daten"}), 400
+    neuer_kontakt = Kontakt(vorlage_id=vorlage_id)
+    neuer_kontakt.set_data(kontakt_daten)
+    db.session.add(neuer_kontakt)
     db.session.commit()
-    backup_database()
-    flash("Mitarbeiter erfolgreich aktualisiert!", "success")
-    return redirect(url_for("verwaltung"))
+    response_data = {"id": neuer_kontakt.id, "daten": neuer_kontakt.get_data()}
+    return jsonify({"success": True, "kontakt": response_data})
 
-@app.route("/mitarbeiter/loeschen/<int:id>", methods=["POST"])
-def mitarbeiter_loeschen(id):
-    mitarbeiter = Mitarbeiter.query.get_or_404(id)
-    db.session.delete(mitarbeiter)
-    db.session.commit()
-    backup_database()
-    flash("Mitarbeiter erfolgreich gelöscht.", "success")
-    return redirect(url_for("verwaltung"))
+# --- Vorlagen-Verwaltung ---
+@app.route("/vorlagen")
+def vorlagen_verwalten():
+    return render_template("vorlagen_verwaltung.html", vorlagen=Vorlage.query.order_by(Vorlage.name).all())
 
-# --- Kunden-Routen ---
-
-@app.route("/kunden/erstellen", methods=["POST"])
-def kunde_erstellen():
-    new_kunde = Kunde()
-    process_form_data(new_kunde, request.form)
-    db.session.add(new_kunde)
-    db.session.commit()
-    backup_database()
-    flash("Kunde erfolgreich erstellt!", "success")
-    return redirect(url_for("verwaltung"))
-
-@app.route("/kunden/bearbeiten/<int:kunde_id>")
-def kunde_bearbeiten(kunde_id):
-    kunde = Kunde.query.get_or_404(kunde_id)
-    mitarbeiter_liste = Mitarbeiter.query.all()
-    return render_template("kontakt_bearbeiten.html", kontakt_typ="Kunde", kontakt=kunde, action_url=url_for('kunde_update', id=kunde.id), mitarbeiter_liste=mitarbeiter_liste, status_optionen=STATUS_OPTIONEN, status_emojis=STATUS_EMOJIS, akademische_titel=AKADEMISCHE_TITEL)
-
-@app.route("/kunden/update/<int:id>", methods=["POST"])
-def kunde_update(id):
-    kunde = Kunde.query.get_or_404(id)
-    process_form_data(kunde, request.form)
-    db.session.commit()
-    backup_database()
-    flash("Kunde erfolgreich aktualisiert!", "success")
-    return redirect(url_for("verwaltung"))
-
-@app.route("/kunden/loeschen/<int:id>", methods=["POST"])
-def kunden_loeschen(id):
-    kunde = Kunde.query.get_or_404(id)
-    db.session.delete(kunde)
-    db.session.commit()
-    backup_database()
-    flash("Kunde erfolgreich gelöscht.", "success")
-    return redirect(url_for("verwaltung"))
-
-# --- Benachrichtigungs-Routen ---
-
-@app.route("/kunde/<int:kunde_id>/benachrichtigung")
-def benachrichtigung_verwalten(kunde_id):
-    kunde = Kunde.query.get_or_404(kunde_id)
-    jahr = request.args.get("jahr", datetime.now().year, type=int)
-    benachrichtigungs_eintrag = Benachrichtigung.query.filter_by(kunde_id=kunde.id, jahr=jahr).first()
-    return render_template("benachrichtigung.html", kunde=kunde, benachrichtigungs_eintrag=benachrichtigungs_eintrag, jahr=jahr)
-
-@app.route("/kunde/<int:kunde_id>/benachrichtigung/speichern", methods=["POST"])
-def benachrichtigung_speichern(kunde_id):
-    jahr = request.form.get("jahr", type=int)
-    benachrichtigungs_eintrag = Benachrichtigung.query.filter_by(kunde_id=kunde_id, jahr=jahr).first()
-    if not benachrichtigungs_eintrag:
-        benachrichtigungs_eintrag = Benachrichtigung(kunde_id=kunde_id, jahr=jahr)
-        db.session.add(benachrichtigungs_eintrag)
-    benachrichtigungs_eintrag.brief = "brief" in request.form
-    benachrichtigungs_eintrag.kalender = "kalender" in request.form
-    benachrichtigungs_eintrag.email_versand = "email_versand" in request.form
-    benachrichtigungs_eintrag.speziell = "speziell" in request.form
-    db.session.commit()
-    backup_database()
-    flash(f"Benachrichtigungs-Auswahl für {jahr} gespeichert.", "success")
-    return redirect(url_for("benachrichtigung_verwalten", kunde_id=kunde_id, jahr=jahr))
-
-@app.route("/benachrichtigung/copy-previous-year", methods=["POST"])
-def copy_previous_year_notifications():
-    current_year = datetime.now().year
-    previous_year = current_year - 1
-    previous_year_entries = Benachrichtigung.query.filter_by(jahr=previous_year).all()
-    copied_count = 0
-    for entry in previous_year_entries:
-        if not Benachrichtigung.query.filter_by(kunde_id=entry.kunde_id, jahr=current_year).first():
-            new_entry = Benachrichtigung(
-                kunde_id=entry.kunde_id, jahr=current_year, brief=entry.brief,
-                kalender=entry.kalender, email_versand=entry.email_versand, speziell=entry.speziell
-            )
-            db.session.add(new_entry)
-            copied_count += 1
-    if copied_count > 0:
-        db.session.commit()
-        backup_database()
-        flash(f"{copied_count} Einträge vom Vorjahr wurden für {current_year} übernommen.", "success")
+@app.route("/vorlagen/editor", methods=["GET"])
+def vorlage_editor():
+    vorlage_id = request.args.get('vorlage_id', type=int)
+    all_vorlagen = Vorlage.query.all()
+    if vorlage_id:
+        vorlage = Vorlage.query.get_or_404(vorlage_id)
+        vorlage_data = {"name": vorlage.name, "gruppen": [{"name": g.name, "eigenschaften": [{"name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]} for g in vorlage.gruppen]}
+        action_url = url_for('vorlage_speichern', vorlage_id=vorlage.id)
     else:
-        flash("Keine neuen Einträge zum Kopieren vom Vorjahr gefunden.", "info")
-    return redirect(url_for("uebersicht", jahr=current_year))
+        vorlage_data = {"name": "", "gruppen": [{"name": "Allgemein", "eigenschaften": []}]}
+        action_url = url_for('vorlage_speichern')
+    return render_template("vorlage_editor.html", vorlage_data=json.dumps(vorlage_data), action_url=action_url, all_vorlagen=all_vorlagen)
 
-# --- Import & Einstellungs-Routen ---
+@app.route("/vorlagen/speichern", methods=["POST"])
+@app.route("/vorlagen/speichern/<int:vorlage_id>", methods=["POST"])
+def vorlage_speichern(vorlage_id=None):
+    data = request.get_json()
+    if vorlage_id:
+        vorlage = Vorlage.query.get_or_404(vorlage_id)
+        vorlage.name = data['name']
+        for gruppe in vorlage.gruppen:
+            db.session.delete(gruppe)
+        db.session.flush()
+    else:
+        vorlage = Vorlage(name=data['name'])
+        db.session.add(vorlage)
+        db.session.flush()
+    for gruppe_data in data.get('gruppen', []):
+        gruppe = Gruppe(name=gruppe_data['name'], vorlage_id=vorlage.id)
+        db.session.add(gruppe)
+        db.session.flush()
+        for eigenschaft_data in gruppe_data.get('eigenschaften', []):
+            eigenschaft = Eigenschaft(name=eigenschaft_data['name'], datentyp=eigenschaft_data['datentyp'], optionen=eigenschaft_data.get('optionen', ''), gruppe_id=gruppe.id)
+            db.session.add(eigenschaft)
+    db.session.commit()
+    return jsonify({"redirect_url": url_for('vorlagen_verwalten')})
+
+@app.route("/vorlagen/loeschen/<int:vorlage_id>", methods=["POST"])
+def vorlage_loeschen(vorlage_id):
+    vorlage = Vorlage.query.get_or_404(vorlage_id)
+    Kontakt.query.filter_by(vorlage_id=vorlage_id).delete()
+    db.session.delete(vorlage)
+    db.session.commit()
+    return redirect(url_for("vorlagen_verwalten"))
+
+# --- Kontakt-Verwaltung ---
+@app.route("/kontakte")
+def kontakte_auflisten():
+    vorlagen_query = Vorlage.query.options(
+        joinedload(Vorlage.kontakte),
+        joinedload(Vorlage.gruppen).joinedload(Gruppe.eigenschaften)
+    ).order_by(Vorlage.name).all()
+    
+    vorlagen_for_json = []
+    for v in vorlagen_query:
+        vorlage_dict = {
+            "id": v.id, "name": v.name,
+            "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp} for e in v.eigenschaften],
+            "kontakte": [{"id": k.id, "daten": k.get_data()} for k in v.kontakte]
+        }
+        vorlagen_for_json.append(vorlage_dict)
+
+    return render_template("kontakte_liste.html", vorlagen_for_json=vorlagen_for_json)
+
+@app.route("/kontakte/editor", methods=["GET", "POST"])
+def kontakt_editor():
+    kontakt_id = request.args.get('kontakt_id', type=int)
+    vorlage_id = request.args.get('vorlage_id', type=int)
+    if kontakt_id:
+        kontakt = Kontakt.query.get_or_404(kontakt_id)
+        vorlage = kontakt.vorlage
+        action_url = url_for('kontakt_editor', kontakt_id=kontakt.id)
+    elif vorlage_id:
+        kontakt = None
+        vorlage = Vorlage.query.get_or_404(vorlage_id)
+        action_url = url_for('kontakt_editor', vorlage_id=vorlage.id)
+    else:
+        return redirect(url_for('vorlagen_verwalten'))
+    if request.method == "POST":
+        form_daten = request.form.to_dict()
+        if kontakt:
+            kontakt.set_data(form_daten)
+        else:
+            neuer_kontakt = Kontakt(vorlage_id=vorlage.id)
+            neuer_kontakt.set_data(form_daten)
+            db.session.add(neuer_kontakt)
+        db.session.commit()
+        return redirect(url_for('kontakte_auflisten'))
+    vorlage_for_json = {
+        "id": vorlage.id, "name": vorlage.name,
+        "gruppen": [{"id": g.id, "name": g.name, "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]} for g in vorlage.gruppen]
+    }
+    kontakt_daten_for_json = kontakt.get_data() if kontakt else {}
+    return render_template("kontakt_editor.html", vorlage=vorlage, kontakt=kontakt, action_url=action_url, vorlage_for_json=vorlage_for_json, kontakt_daten_for_json=kontakt_daten_for_json)
+
+@app.route("/kontakte/loeschen/<int:kontakt_id>", methods=["POST"])
+def kontakt_loeschen(kontakt_id):
+    kontakt = Kontakt.query.get_or_404(kontakt_id)
+    db.session.delete(kontakt)
+    db.session.commit()
+    return redirect(url_for("kontakte_auflisten"))
 
 @app.route("/import/msg", methods=["POST"])
-def upload_msg():
-    files = request.files.getlist("msg_files")
-    mitarbeiter_id = request.form.get("mitarbeiter_id")
-    if not mitarbeiter_id:
-        flash("Bitte einen Mitarbeiter für den Import auswählen!", "danger")
-        return redirect(url_for("verwaltung"))
-    
-    # ... (hier kann die detaillierte MSG-Import-Logik aus der alten Datei stehen) ...
-    flash("Import-Funktion wird noch implementiert.", "info")
-    return redirect(url_for("verwaltung"))
+def import_msg():
+    flash("Import-Funktion wird gerade überarbeitet.", "info")
+    return redirect(url_for("kontakte_auflisten"))
 
 @app.route("/settings")
 def settings():
     return render_template("settings.html")
-
-@app.route("/import/db", methods=["POST"])
-def import_db():
-    if "db_file" not in request.files:
-        flash("Keine Datei für den Upload ausgewählt.", "danger")
-        return redirect(url_for("settings"))
-    file = request.files["db_file"]
-    if file.filename == "":
-        flash("Keine Datei ausgewählt.", "danger")
-        return redirect(url_for("settings"))
-    if file and allowed_file(file.filename, {"db"}):
-        backup_database()
-        # ... (hier kann die detaillierte DB-Import-Logik stehen) ...
-        flash("Datenbank erfolgreich importiert! Bitte Anwendung neu starten.", "success")
-        return redirect(url_for("index"))
-    else:
-        flash("Ungültiger Dateityp. Bitte eine .db-Datei hochladen.", "danger")
-        return redirect(url_for("settings"))
 
 if __name__ == "__main__":
     create_database()

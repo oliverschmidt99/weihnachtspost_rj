@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
-{% block title %}Startseite - Weihnachtspost RJ{% endblock %}
+{% block title %}Startseite - Kontakt-Verwaltung{% endblock %}
 
 {% block content %}
-<h1>Willkommen zur Weihnachtspost-Verwaltung</h1>
+<h1>Willkommen zur dynamischen Kontakt-Verwaltung</h1>
 <p>
-    Wähle einen Bereich aus der Navigation, um Mitarbeiter oder Kunden zu verwalten.
-    Die <strong>Übersicht</strong> bietet leistungsstarke Filter- und Anzeigemöglichkeiten.
+    Dies ist deine zentrale Anwendung, um jegliche Art von Kontakten flexibel zu verwalten. Das System basiert auf zwei
+    einfachen Konzepten:
 </p>
+
+<div class="card-container" style="margin-top: 2rem; text-align: left;">
+    <div class="card">
+        <h3>1. Vorlagen 📝</h3>
+        <p>
+            Unter dem Menüpunkt <a href="{{ url_for('vorlagen_verwalten') }}"><strong>Vorlagen</strong></a> definierst
+            du die Struktur deiner Kontakte. Lege hier fest, welche Informationen du für einen bestimmten Kontakttyp
+            (z.B. "Kunde", "Lieferant" oder "Privat") speichern möchtest.
+        </p>
+    </div>
+    <div class="card">
+        <h3>2. Kontakte 📇</h3>
+        <p>
+            Unter <a href="{{ url_for('kontakte_auflisten') }}"><strong>Kontakte</strong></a> füllst du deine Vorlagen
+            mit Leben. Erstelle neue Einträge, importiere Daten aus MSG-Dateien oder bearbeite bestehende Kontakte.
+            Jeder Kontakt basiert immer auf einer deiner Vorlagen.
+        </p>
+    </div>
+</div>
+
+<div style="margin-top: 2rem; text-align: center;">
+    <p><strong>Starte jetzt, indem du deine erste Vorlage erstellst!</strong></p>
+</div>
 {% endblock %}

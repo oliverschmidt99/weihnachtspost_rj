@@ -1,0 +1,49 @@
+/* static/css/kontakte.css */
+
+.view-switcher {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.table-container table {
+    font-size: 0.85em;
+}
+
+.table-container th,
+.table-container td {
+    padding: 0.2rem 0.5rem;
+    white-space: nowrap;
+}
+
+.inline-edit-input {
+    font-size: 1em;
+    padding: 0.2rem 0.4rem;
+    height: 28px;
+    width: 100%;
+    border: 1px solid transparent;
+    background-color: transparent;
+    border-radius: 4px;
+}
+
+.inline-edit-input:focus {
+    border-color: var(--accent-color);
+    background-color: var(--bg-main);
+    outline: none;
+}
+
+.group-box {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.group-box h4 {
+    margin-top: 0;
+    font-size: 1em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}

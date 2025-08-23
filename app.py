@@ -171,7 +171,13 @@ def vorlage_editor():
     else:
         vorlage_data = {"name": "", "gruppen": [{"name": "Allgemein", "eigenschaften": []}]}
         action_url = url_for('vorlage_speichern')
-    return render_template("vorlage_editor.html", vorlage_data=json.dumps(vorlage_data), action_url=action_url, all_vorlagen=all_vorlagen)
+    
+    # KORREKTUR: Daten immer als JSON-String übergeben
+    return render_template("vorlage_editor.html", 
+                           vorlage_data=json.dumps(vorlage_data), 
+                           action_url=action_url, 
+                           all_vorlagen=all_vorlagen)
+
 
 @app.route("/vorlagen/speichern", methods=["POST"])
 @app.route("/vorlagen/speichern/<int:vorlage_id>", methods=["POST"])
@@ -213,21 +219,31 @@ def kontakte_auflisten():
         joinedload(Vorlage.gruppen).joinedload(Gruppe.eigenschaften)
     ).order_by(Vorlage.name).all()
     
-    vorlagen_for_json = []
+    vorlagen_data = []
     for v in vorlagen_query:
         vorlage_dict = {
-            "id": v.id, "name": v.name,
+            "id": v.id,
+            "name": v.name,
             "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp} for e in v.eigenschaften],
-            "kontakte": [{"id": k.id, "daten": k.get_data()} for k in v.kontakte]
+            "kontakte": [{"id": k.id, "daten": k.get_data()} for k in v.kontakte],
+            "gruppen": [
+                {
+                    "id": g.id, "name": g.name,
+                    "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]
+                } for g in v.gruppen
+            ]
         }
-        vorlagen_for_json.append(vorlage_dict)
+        vorlagen_data.append(vorlage_dict)
 
-    return render_template("kontakte_liste.html", vorlagen_for_json=vorlagen_for_json)
+    vorlagen_json_string = json.dumps(vorlagen_data)
+    return render_template("kontakte_liste.html", vorlagen_for_json=vorlagen_json_string)
+
 
 @app.route("/kontakte/editor", methods=["GET", "POST"])
 def kontakt_editor():
     kontakt_id = request.args.get('kontakt_id', type=int)
     vorlage_id = request.args.get('vorlage_id', type=int)
+    
     if kontakt_id:
         kontakt = Kontakt.query.get_or_404(kontakt_id)
         vorlage = kontakt.vorlage
@@ -237,7 +253,9 @@ def kontakt_editor():
         vorlage = Vorlage.query.get_or_404(vorlage_id)
         action_url = url_for('kontakt_editor', vorlage_id=vorlage.id)
     else:
+        # Wenn keine ID gegeben ist, zur Auswahlseite umleiten
         return redirect(url_for('vorlagen_verwalten'))
+
     if request.method == "POST":
         form_daten = request.form.to_dict()
         if kontakt:
@@ -248,12 +266,20 @@ def kontakt_editor():
             db.session.add(neuer_kontakt)
         db.session.commit()
         return redirect(url_for('kontakte_auflisten'))
+        
+    # KORREKTUR: Daten für Vue vorbereiten und als JSON-String übergeben
     vorlage_for_json = {
         "id": vorlage.id, "name": vorlage.name,
         "gruppen": [{"id": g.id, "name": g.name, "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]} for g in vorlage.gruppen]
     }
     kontakt_daten_for_json = kontakt.get_data() if kontakt else {}
-    return render_template("kontakt_editor.html", vorlage=vorlage, kontakt=kontakt, action_url=action_url, vorlage_for_json=vorlage_for_json, kontakt_daten_for_json=kontakt_daten_for_json)
+    
+    return render_template("kontakt_editor.html", 
+                           action_url=action_url,
+                           kontakt=kontakt, # Wird nur für den Titel-Block oben benötigt
+                           vorlage_for_json=json.dumps(vorlage_for_json), 
+                           kontakt_daten_for_json=json.dumps(kontakt_daten_for_json))
+
 
 @app.route("/kontakte/loeschen/<int:kontakt_id>", methods=["POST"])
 def kontakt_loeschen(kontakt_id):

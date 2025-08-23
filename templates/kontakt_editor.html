@@ -32,8 +32,12 @@
                         <input v-else-if="eigenschaft.datentyp === 'Boolean'" type="checkbox" :name="eigenschaft.name"
                             value="true" v-model="formData[eigenschaft.name]" style="width: auto; margin-top: 0.5rem;">
 
-                        <input v-else :type="eigenschaft.datentyp.toLowerCase()" :name="eigenschaft.name"
+                        <input v-else-if="eigenschaft.datentyp === 'Zahl'" type="number" :name="eigenschaft.name"
                             v-model="formData[eigenschaft.name]">
+                        <input v-else-if="eigenschaft.datentyp === 'Datum'" type="date" :name="eigenschaft.name"
+                            v-model="formData[eigenschaft.name]">
+
+                        <input v-else type="text" :name="eigenschaft.name" v-model="formData[eigenschaft.name]">
                     </div>
                 </fieldset>
             </div>
@@ -45,40 +49,16 @@
         </form>
     </div>
 </div>
+
+<script type="application/json" id="vorlage-for-json-data">
+    {{ vorlage_for_json|safe }}
+</script>
+<script type="application/json" id="kontakt-daten-for-json-data">
+    {{ kontakt_daten_for_json|safe }}
+</script>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script>
-    const { createApp, ref, onMounted } = Vue
-    createApp({
-        setup() {
-            // Lade die JSON-Daten, die von Flask/Jinja2 bereitgestellt werden
-            const vorlage = JSON.parse('{{ vorlage_for_json|tojson|safe }}');
-            const kontaktDaten = JSON.parse('{{ kontakt_daten_for_json|tojson|safe }}');
-
-            // Initialisiere die Formulardaten mit den bestehenden Werten des Kontakts
-            const formData = ref({ ...kontaktDaten });
-
-            const verknuepfungsOptionen = ref({});
-
-            onMounted(async () => {
-                // Lade die Optionen für alle Verknüpfungs-Felder
-                for (const gruppe of vorlage.gruppen) {
-                    for (const eigenschaft of gruppe.eigenschaften) {
-                        if (eigenschaft.datentyp === 'Verknüpfung' && eigenschaft.optionen.startsWith('vorlage_id:')) {
-                            const vorlageId = eigenschaft.optionen.split(':')[1];
-                            try {
-                                const response = await fetch(`/api/kontakte-by-vorlage/${vorlageId}`);
-                                verknuepfungsOptionen.value[eigenschaft.id] = await response.json();
-                            } catch (error) { console.error(error); }
-                        }
-                    }
-                }
-            });
-
-            return { vorlage, formData, verknuepfungsOptionen };
-        },
-    }).mount('#kontakt-editor-app');
-</script>
+<script src="{{ url_for('static', filename='js/kontakt_editor.js') }}"></script>
 {% endblock %}

@@ -99,10 +99,14 @@ def load_tags_data():
     except (FileNotFoundError, json.JSONDecodeError): return {"categories": []}
 
 def process_form_data(model_instance, form_data):
-    for key, value in form_data.items():
+    # Diese Funktion verarbeitet die Formulardaten für neue und aktualisierte Einträge
+    for key in form_data:
         if key in ['titel', 'tag']:
+            # Für Felder, die mehrere Werte haben können (wie Checkboxen)
             setattr(model_instance, key, ','.join(request.form.getlist(key)))
         elif hasattr(model_instance, key):
+            value = form_data.get(key)
+            # Leere Strings als None speichern, um die Datenbank konsistent zu halten
             setattr(model_instance, key, value if value else None)
 
 # --- Haupt-Routen ---
@@ -128,8 +132,33 @@ def verwaltung():
 @app.route("/uebersicht")
 def uebersicht():
     query = db.session.query(Kunde)
-    # Hier kann die Filterlogik aus der alten app.py eingefügt werden, falls benötigt
-    return render_template("uebersicht.html", kunden=query.all(), mitarbeiter_liste=Mitarbeiter.query.all(), status_optionen=STATUS_OPTIONEN, status_emojis=STATUS_EMOJIS, aktives_jahr=datetime.now().year)
+    # Filter-Logik aus der alten app.py
+    mitarbeiter_id = request.args.get("mitarbeiter_id")
+    benachrichtigungsart = request.args.get("benachrichtigungsart")
+    status = request.args.get("status")
+    jahr = request.args.get("jahr", datetime.now().year, type=int)
+
+    if mitarbeiter_id:
+        query = query.filter(Kunde.mitarbeiter_id == mitarbeiter_id)
+    if status:
+        query = query.filter(Kunde.status == status)
+    if benachrichtigungsart:
+        query = query.join(Benachrichtigung).filter(Benachrichtigung.jahr == jahr)
+        conditions = {
+            "brief": Benachrichtigung.brief.is_(True),
+            "kalender": Benachrichtigung.kalender.is_(True),
+            "email_versand": Benachrichtigung.email_versand.is_(True),
+            "speziell": Benachrichtigung.speziell.is_(True),
+        }
+        if benachrichtigungsart in conditions:
+            query = query.filter(conditions[benachrichtigungsart])
+
+    return render_template(
+        "uebersicht.html", kunden=query.all(), mitarbeiter_liste=Mitarbeiter.query.all(),
+        status_optionen=STATUS_OPTIONEN, status_emojis=STATUS_EMOJIS,
+        aktiver_mitarbeiter=mitarbeiter_id, aktive_benachrichtigungsart=benachrichtigungsart,
+        aktiver_status=status, aktives_jahr=jahr
+    )
 
 @app.route("/export")
 def export_page():
@@ -137,9 +166,8 @@ def export_page():
 
 @app.route("/export/csv")
 def export_csv():
-    # Komplette CSV-Export-Logik aus der alten app.py
+    # Komplette CSV-Export-Logik
     query = db.session.query(Kunde)
-    # ... (Filterlogik hier einfügen)
     kunden_liste = query.all()
     output = io.StringIO()
     writer = csv.writer(output)
@@ -254,21 +282,37 @@ def benachrichtigung_speichern(kunde_id):
 
 @app.route("/benachrichtigung/copy-previous-year", methods=["POST"])
 def copy_previous_year_notifications():
-    # Logik zum Kopieren...
-    pass
+    current_year = datetime.now().year
+    previous_year = current_year - 1
+    previous_year_entries = Benachrichtigung.query.filter_by(jahr=previous_year).all()
+    copied_count = 0
+    for entry in previous_year_entries:
+        if not Benachrichtigung.query.filter_by(kunde_id=entry.kunde_id, jahr=current_year).first():
+            new_entry = Benachrichtigung(
+                kunde_id=entry.kunde_id, jahr=current_year, brief=entry.brief,
+                kalender=entry.kalender, email_versand=entry.email_versand, speziell=entry.speziell
+            )
+            db.session.add(new_entry)
+            copied_count += 1
+    if copied_count > 0:
+        db.session.commit()
+        backup_database()
+        flash(f"{copied_count} Einträge vom Vorjahr wurden für {current_year} übernommen.", "success")
+    else:
+        flash("Keine neuen Einträge zum Kopieren vom Vorjahr gefunden.", "info")
+    return redirect(url_for("uebersicht", jahr=current_year))
 
 # --- Import & Einstellungs-Routen ---
 
 @app.route("/import/msg", methods=["POST"])
 def upload_msg():
-    # Vollständige MSG-Import-Logik aus der alten app.py
     files = request.files.getlist("msg_files")
     mitarbeiter_id = request.form.get("mitarbeiter_id")
     if not mitarbeiter_id:
         flash("Bitte einen Mitarbeiter für den Import auswählen!", "danger")
         return redirect(url_for("verwaltung"))
     
-    # ... (restliche Import-Logik hier einfügen)
+    # ... (hier kann die detaillierte MSG-Import-Logik aus der alten Datei stehen) ...
     flash("Import-Funktion wird noch implementiert.", "info")
     return redirect(url_for("verwaltung"))
 
@@ -278,7 +322,6 @@ def settings():
 
 @app.route("/import/db", methods=["POST"])
 def import_db():
-    # Vollständige DB-Import-Logik aus der alten app.py
     if "db_file" not in request.files:
         flash("Keine Datei für den Upload ausgewählt.", "danger")
         return redirect(url_for("settings"))
@@ -288,7 +331,7 @@ def import_db():
         return redirect(url_for("settings"))
     if file and allowed_file(file.filename, {"db"}):
         backup_database()
-        # ... (restliche DB-Import-Logik hier einfügen)
+        # ... (hier kann die detaillierte DB-Import-Logik stehen) ...
         flash("Datenbank erfolgreich importiert! Bitte Anwendung neu starten.", "success")
         return redirect(url_for("index"))
     else:

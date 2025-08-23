@@ -18,7 +18,6 @@ function initializeTitleSelection(container) {
   const initialTitles = (container.dataset.selectedTitles || "")
     .split(",")
     .filter(Boolean);
-
   let selectedTitles = [...initialTitles];
 
   function updateDisplay() {
@@ -61,13 +60,11 @@ function initializeTitleSelection(container) {
   searchInput.addEventListener("input", () => {
     const filter = searchInput.value.toLowerCase();
     checkboxes.forEach((cb) => {
-      const label = cb.parentElement;
-      label.style.display = cb.value.toLowerCase().includes(filter)
+      cb.parentElement.style.display = cb.value.toLowerCase().includes(filter)
         ? ""
         : "none";
     });
   });
-
   updateCheckboxes();
   updateDisplay();
 }
@@ -79,12 +76,17 @@ function initializeTagSelection(container) {
   const initialTags = (container.dataset.selectedTags || "")
     .split(",")
     .filter(Boolean);
-
   let currentSelectedTags = [...initialTags];
 
   function updateDisplay() {
     displayContainer.innerHTML = "";
     currentSelectedTags.forEach((tag) => {
+      // Hidden input to send data with the form
+      const hiddenInput = document.createElement("input");
+      hiddenInput.type = "hidden";
+      hiddenInput.name = "tag";
+      hiddenInput.value = tag;
+      displayContainer.appendChild(hiddenInput);
       displayContainer.innerHTML += getTagBadge(tag, true);
     });
   }
@@ -103,7 +105,6 @@ function initializeTagSelection(container) {
       updateDisplay();
     });
   });
-
   updateDisplay();
 }
 
@@ -112,8 +113,9 @@ async function openTagModal(selectedTags, onSave) {
   const modal = document.getElementById("tag-modal");
   const listContainer = modal.querySelector("#modal-tag-list");
   const saveBtn = modal.querySelector("#modal-save-btn");
-  const cancelBtn = modal.querySelector(".modal-cancel-btn, .modal-close-btn");
-
+  const cancelAndCloseBtns = modal.querySelectorAll(
+    ".modal-cancel-btn, .modal-close-btn"
+  );
   let tempSelectedTags = [...selectedTags];
 
   listContainer.innerHTML = "";
@@ -128,9 +130,7 @@ async function openTagModal(selectedTags, onSave) {
       badge.textContent = tag.name;
       badge.style.backgroundColor = tag.color;
       badge.style.color = getTextColor(tag.color);
-      if (tempSelectedTags.includes(tag.name)) {
-        badge.classList.add("selected");
-      }
+      if (tempSelectedTags.includes(tag.name)) badge.classList.add("selected");
       badge.addEventListener("click", () => {
         badge.classList.toggle("selected");
         if (tempSelectedTags.includes(tag.name)) {
@@ -150,19 +150,20 @@ async function openTagModal(selectedTags, onSave) {
     closeModal(modal);
     cleanup();
   };
-
   const onCancelClick = () => {
     closeModal(modal);
     cleanup();
   };
-
   const cleanup = () => {
     saveBtn.removeEventListener("click", onSaveClick);
-    cancelBtn.removeEventListener("click", onCancelClick);
+    cancelAndCloseBtns.forEach((btn) =>
+      btn.removeEventListener("click", onCancelClick)
+    );
   };
 
   saveBtn.addEventListener("click", onSaveClick);
-  cancelBtn.addEventListener("click", onCancelClick);
-
+  cancelAndCloseBtns.forEach((btn) =>
+    btn.addEventListener("click", onCancelClick)
+  );
   openModal(modal);
 }

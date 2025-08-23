@@ -15,21 +15,54 @@
 
 <body>
     <header>
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='img/logo_rolf-janssen_2024.svg') }}" alt="Rolf Janssen GmbH Logo"
+                id="header-logo">
+        </div>
+        <nav id="main-nav">
+            <div class="nav-item">
+                <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">Start</a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ url_for('verwaltung') }}"
+                    class="{{ 'active' if request.endpoint in ['verwaltung', 'mitarbeiter_bearbeiten', 'kunde_bearbeiten'] else '' }}">Verwaltung</a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ url_for('uebersicht') }}"
+                    class="{{ 'active' if request.endpoint == 'uebersicht' else '' }}">Übersicht</a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ url_for('export_page') }}"
+                    class="{{ 'active' if request.endpoint == 'export_page' else '' }}">Export</a>
+            </div>
+            <div class="nav-item">
+                <a href="{{ url_for('settings') }}"
+                    class="{{ 'active' if request.endpoint == 'settings' else '' }}">Einstellungen</a>
+            </div>
+            <div class="nav-slider"></div>
+        </nav>
+        <div class="header-right"></div>
     </header>
+
     <main>
         <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
             {% block content %}{% endblock %}
         </div>
     </main>
+
     <footer>
         <p>&copy; Oliver Schmidt</p>
     </footer>
 
-    {# Globale Skripte #}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
-
-    {# Seiten-spezifische Skripte #}
     {% block scripts %}{% endblock %}
 </body>
 

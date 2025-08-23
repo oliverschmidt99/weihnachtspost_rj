@@ -6,42 +6,35 @@
 <div id="kontakt-editor-app">
     <h1><span v-text="vorlage.name"></span>: {% if kontakt %}Kontakt bearbeiten{% else %}Neuen Kontakt anlegen{% endif
         %}</h1>
-
     <div class="card config-section active">
-        <form action="{{ action_url }}" method="post">
+        <form :action="actionUrl" method="post">
             <div v-for="gruppe in vorlage.gruppen" :key="gruppe.id">
                 <fieldset>
                     <legend v-text="gruppe.name"></legend>
                     <div v-for="eigenschaft in gruppe.eigenschaften" :key="eigenschaft.id" class="form-group">
                         <label :for="eigenschaft.name" v-text="eigenschaft.name"></label>
-
                         <select v-if="eigenschaft.datentyp === 'Verknüpfung'" :name="eigenschaft.name"
                             v-model="formData[eigenschaft.name]">
                             <option value="">-- Bitte wählen --</option>
                             <option v-for="k in verknuepfungsOptionen[eigenschaft.id]" :value="k.id"
                                 v-text="k.display_name"></option>
                         </select>
-
                         <select v-else-if="eigenschaft.datentyp === 'Auswahl'" :name="eigenschaft.name"
                             v-model="formData[eigenschaft.name]">
                             <option value="">-- Bitte wählen --</option>
                             <option v-for="option in eigenschaft.optionen.split(',')" :value="option.trim()"
                                 v-text="option.trim()"></option>
                         </select>
-
                         <input v-else-if="eigenschaft.datentyp === 'Boolean'" type="checkbox" :name="eigenschaft.name"
                             value="true" v-model="formData[eigenschaft.name]" style="width: auto; margin-top: 0.5rem;">
-
                         <input v-else-if="eigenschaft.datentyp === 'Zahl'" type="number" :name="eigenschaft.name"
                             v-model="formData[eigenschaft.name]">
                         <input v-else-if="eigenschaft.datentyp === 'Datum'" type="date" :name="eigenschaft.name"
                             v-model="formData[eigenschaft.name]">
-
                         <input v-else type="text" :name="eigenschaft.name" v-model="formData[eigenschaft.name]">
                     </div>
                 </fieldset>
             </div>
-
             <div class="button-group">
                 <a href="{{ url_for('kontakte_auflisten') }}" class="button secondary">Abbrechen</a>
                 <button type="submit">Speichern</button>
@@ -49,13 +42,9 @@
         </form>
     </div>
 </div>
-
-<script type="application/json" id="vorlage-for-json-data">
-    {{ vorlage_for_json|safe }}
-</script>
-<script type="application/json" id="kontakt-daten-for-json-data">
-    {{ kontakt_daten_for_json|safe }}
-</script>
+<script type="application/json" id="vorlage-for-json-data">{{ vorlage_for_json|safe }}</script>
+<script type="application/json" id="kontakt-daten-for-json-data">{{ kontakt_daten_for_json|safe }}</script>
+<script type="application/json" id="action-url-data">{{ action_url|tojson|safe }}</script>
 {% endblock %}
 
 {% block scripts %}

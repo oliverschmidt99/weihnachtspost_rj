@@ -1,7 +1,6 @@
 // static/js/kontakt_editor.js
 document.addEventListener("DOMContentLoaded", () => {
   const { createApp, ref, onMounted } = Vue;
-
   createApp({
     setup() {
       const vorlage = JSON.parse(
@@ -10,10 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const kontaktDaten = JSON.parse(
         document.getElementById("kontakt-daten-for-json-data").textContent
       );
-
       const formData = ref({ ...kontaktDaten });
       const verknuepfungsOptionen = ref({});
-
       onMounted(async () => {
         for (const gruppe of vorlage.gruppen) {
           for (const eigenschaft of gruppe.eigenschaften) {
@@ -35,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       });
-
       return { vorlage, formData, verknuepfungsOptionen };
     },
   }).mount("#kontakt-editor-app");

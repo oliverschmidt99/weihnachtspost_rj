@@ -8,6 +8,49 @@
 
 {% block content %}
 <div id="vorlage-editor-app">
+    <div class="actions-header">
+        <h1 v-text="pageTitle"></h1>
+        <div class="button-group">
+            <a href="{{ url_for('vorlagen_verwalten') }}" class="button secondary">Abbrechen</a>
+            <button @click="saveVorlage" class="button">Vorlage Speichern</button>
+        </div>
+    </div>
+    <div class="card">
+        <fieldset>
+            <legend>Allgemein</legend>
+            <div class="form-group">
+                <label for="vorlage-name">Name der Vorlage</label>
+                <input type="text" id="vorlage-name" v-model="vorlage.name" placeholder="z.B. Kunde, Lieferant">
+            </div>
+        </fieldset>
+    </div>
+    <div class="view-switcher">
+        <button @click="viewMode = 'tile'" :class="{ active: viewMode === 'tile' }">Kachelansicht</button>
+        <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }">Listenansicht</button>
+    </div>
+    <div class="card add-group-bar">
+        <select v-model="selectedSuggestionCategory" @change="addGroupFromSuggestion">
+            <option :value="null" disabled>Standard-Gruppe auswählen...</option>
+            <option v-for="category in suggestions.categories" :value="category" v-text="category.name"></option>
+        </select>
+        <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe erstellen</button>
+    </div>
+    <div v-if="viewMode === 'tile'" class="tile-view-container">
+        <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="group-tile">
+            <div class="tile-header"><strong v-text="gruppe.name || 'Unbenannte Gruppe'"></strong>
+                <div class="tile-actions">
+                    <button @click="openGroupEditModal(gruppeIndex)" class="icon-btn"
+                        title="Gruppe bearbeiten">✏️</button>
+                    <button @click="openDeleteModal('gruppe', gruppeIndex)" class="icon-btn danger"
+                        title="Gruppe löschen">❌</button>
+                </div>
+            </div>
+            <div class="tile-content"><span v-for="eigenschaft in gruppe.eigenschaften" class="tile-property-badge"
+                    v-text="eigenschaft.name"></span></div>
+        </div>
+    </div>
+    <div v-if="viewMode === 'list'">
+    </div>
     <div v-if="activeModal === 'groupEdit'" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
             <button @click="closeModal" class="modal-close-btn">&times;</button>
@@ -48,20 +91,20 @@
             </div>
         </div>
     </div>
-
     <div v-if="activeModal === 'delete'" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content" style="max-width: 30rem;">
+            <h3>Sind Sie sicher?</h3>
+            <p v-text="deleteMessage"></p>
+            <div class="button-group">
+                <button @click="closeModal" class="button secondary">Abbrechen</button>
+                <button @click="confirmDelete" class="button danger">Ja, endgültig löschen</button>
+            </div>
+        </div>
     </div>
 </div>
-
-<script type="application/json" id="vorlage-data">
-    {{ vorlage_data|safe }}
-</script>
-<script type="application/json" id="action-url-data">
-    {{ action_url|tojson|safe }}
-</script>
-<script type="application/json" id="all-vorlagen-data">
-    {{ all_vorlagen|map(attribute='id')|zip(all_vorlagen|map(attribute='name'))|map('list')|list|tojson|safe }}
-</script>
+<script type="application/json" id="vorlage-data">{{ vorlage_data|safe }}</script>
+<script type="application/json" id="action-url-data">{{ action_url|tojson|safe }}</script>
+<script type="application/json" id="all-vorlagen-data">{{ all_vorlagen_data|safe }}</script>
 {% endblock %}
 
 {% block scripts %}

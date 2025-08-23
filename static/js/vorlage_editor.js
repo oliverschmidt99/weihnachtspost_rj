@@ -1,18 +1,15 @@
 // static/js/vorlage_editor.js
 document.addEventListener("DOMContentLoaded", () => {
   const { createApp, ref, onMounted, computed } = Vue;
-
   createApp({
     setup() {
       const vorlage = ref(
         JSON.parse(document.getElementById("vorlage-data").textContent)
       );
-      const allVorlagenRaw = JSON.parse(
-        document.getElementById("all-vorlagen-data").textContent
+      const allVorlagen = ref(
+        JSON.parse(document.getElementById("all-vorlagen-data").textContent)
       );
       const actionUrl = document.getElementById("action-url-data").textContent;
-
-      const allVorlagen = ref(allVorlagenRaw);
       const suggestions = ref({ categories: [] });
       const selectionOptions = ref([]);
       const selectedSuggestionCategory = ref(null);

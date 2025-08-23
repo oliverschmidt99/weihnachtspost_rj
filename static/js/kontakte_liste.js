@@ -1,7 +1,6 @@
 // static/js/kontakte_liste.js
 document.addEventListener("DOMContentLoaded", () => {
   const { createApp, ref, computed, watch } = Vue;
-
   createApp({
     setup() {
       const vorlagen = ref(
@@ -16,18 +15,15 @@ document.addEventListener("DOMContentLoaded", () => {
         vorlagen.value.length > 0 ? vorlagen.value[0].id : null
       );
       const addModalVorlageId = ref(activeVorlageId.value);
-
       const activeVorlage = computed(() =>
         vorlagen.value.find((v) => v.id === activeVorlageId.value)
       );
       const addModalVorlage = computed(() =>
         vorlagen.value.find((v) => v.id === addModalVorlageId.value)
       );
-
       watch(addModalVorlageId, () => {
         newContactData.value = {};
       });
-
       const openAddModal = () => {
         isAddModalOpen.value = true;
       };
@@ -40,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const closeImportModal = () => {
         isImportModalOpen.value = false;
       };
-
       const updateField = async (kontakt, fieldName, newValue) => {
         if (kontakt.daten[fieldName] === newValue) return;
         try {
@@ -91,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Speichern fehlgeschlagen.");
         }
       };
-
       return {
         vorlagen,
         activeVorlageId,

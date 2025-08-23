@@ -172,12 +172,12 @@ def vorlage_editor():
         vorlage_data = {"name": "", "gruppen": [{"name": "Allgemein", "eigenschaften": []}]}
         action_url = url_for('vorlage_speichern')
     
-    # KORREKTUR: Daten immer als JSON-String übergeben
+    all_vorlagen_data = [{"id": v.id, "name": v.name} for v in all_vorlagen]
+    
     return render_template("vorlage_editor.html", 
                            vorlage_data=json.dumps(vorlage_data), 
                            action_url=action_url, 
-                           all_vorlagen=all_vorlagen)
-
+                           all_vorlagen_data=json.dumps(all_vorlagen_data))
 
 @app.route("/vorlagen/speichern", methods=["POST"])
 @app.route("/vorlagen/speichern/<int:vorlage_id>", methods=["POST"])
@@ -238,7 +238,6 @@ def kontakte_auflisten():
     vorlagen_json_string = json.dumps(vorlagen_data)
     return render_template("kontakte_liste.html", vorlagen_for_json=vorlagen_json_string)
 
-
 @app.route("/kontakte/editor", methods=["GET", "POST"])
 def kontakt_editor():
     kontakt_id = request.args.get('kontakt_id', type=int)
@@ -253,7 +252,6 @@ def kontakt_editor():
         vorlage = Vorlage.query.get_or_404(vorlage_id)
         action_url = url_for('kontakt_editor', vorlage_id=vorlage.id)
     else:
-        # Wenn keine ID gegeben ist, zur Auswahlseite umleiten
         return redirect(url_for('vorlagen_verwalten'))
 
     if request.method == "POST":
@@ -267,7 +265,6 @@ def kontakt_editor():
         db.session.commit()
         return redirect(url_for('kontakte_auflisten'))
         
-    # KORREKTUR: Daten für Vue vorbereiten und als JSON-String übergeben
     vorlage_for_json = {
         "id": vorlage.id, "name": vorlage.name,
         "gruppen": [{"id": g.id, "name": g.name, "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]} for g in vorlage.gruppen]
@@ -276,10 +273,9 @@ def kontakt_editor():
     
     return render_template("kontakt_editor.html", 
                            action_url=action_url,
-                           kontakt=kontakt, # Wird nur für den Titel-Block oben benötigt
+                           kontakt=kontakt,
                            vorlage_for_json=json.dumps(vorlage_for_json), 
                            kontakt_daten_for_json=json.dumps(kontakt_daten_for_json))
-
 
 @app.route("/kontakte/loeschen/<int:kontakt_id>", methods=["POST"])
 def kontakt_loeschen(kontakt_id):

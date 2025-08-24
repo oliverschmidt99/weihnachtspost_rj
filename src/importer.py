@@ -7,7 +7,8 @@ from werkzeug.utils import secure_filename
 from flask import current_app
 
 def parse_vcf(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    """Liest eine .vcf-Datei und extrahiert Kontaktinformationen."""
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         vcard = vobject.readOne(f.read())
     
     data = {}
@@ -17,7 +18,7 @@ def parse_vcf(file_path):
     if hasattr(vcard, 'fn'):
         data['Name'] = vcard.fn.value
     if hasattr(vcard, 'org'):
-        data['Firma'] = vcard.org.value[0]
+        data['Firma'] = vcard.org.value[0] if vcard.org.value else ''
     if hasattr(vcard, 'title'):
         data['Position'] = vcard.title.value
     if hasattr(vcard, 'tel'):
@@ -41,14 +42,16 @@ def parse_vcf(file_path):
     return [data]
 
 def parse_csv_txt(file_path, delimiter=','):
+    """Liest CSV- oder TXT-Dateien."""
     records = []
-    with open(file_path, mode='r', encoding='utf-8') as f:
+    with open(file_path, mode='r', encoding='utf-8', errors='ignore') as f:
         reader = csv.DictReader(f, delimiter=delimiter)
         for row in reader:
             records.append(row)
     return records
 
 def parse_xlsx(file_path):
+    """Liest .xlsx-Dateien (Excel)."""
     records = []
     workbook = openpyxl.load_workbook(file_path)
     sheet = workbook.active
@@ -58,9 +61,11 @@ def parse_xlsx(file_path):
     return records
 
 def import_file(file_storage):
+    """Hauptfunktion, die den Dateityp erkennt und den passenden Parser aufruft."""
     filename = secure_filename(file_storage.filename)
     file_ext = os.path.splitext(filename)[1].lower()
     
+    # Speichere die Datei temporär
     temp_dir = current_app.config['UPLOAD_FOLDER']
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, filename)
@@ -72,12 +77,13 @@ def import_file(file_storage):
         elif file_ext == '.csv':
             return parse_csv_txt(file_path, delimiter=',')
         elif file_ext == '.txt':
-            return parse_csv_txt(file_path, delimiter='\t')
+            return parse_csv_txt(file_path, delimiter='\t') # Annahme: Tabulator als Trennzeichen
         elif file_ext == '.xlsx':
             return parse_xlsx(file_path)
+        # Hier können bei Bedarf weitere Parser für .msg, .oft, .rtf integriert werden
         else:
-            # Hier könnten MSG, OFT, RTF Parser integriert werden
-            return {"error": f"Dateityp {file_ext} wird noch nicht unterstützt."}
+            return {"error": f"Dateityp {file_ext} wird für den Import noch nicht unterstützt."}
     finally:
+        # Lösche die temporäre Datei
         if os.path.exists(file_path):
             os.remove(file_path)

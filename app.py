@@ -1,26 +1,23 @@
 # app.py
 import os
 import sys
-import shutil
 import json
-import re
-import subprocess
-import tempfile
 from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from flask import (Flask, render_template, request, redirect, url_for, 
+                   flash, jsonify, send_from_directory, Response)
 from flask_migrate import Migrate
-from werkzeug.utils import secure_filename
 from sqlalchemy.orm import joinedload
 
 from src.models import db, Vorlage, Gruppe, Eigenschaft, Kontakt
+from src import importer, exporter # NEU
 
 # -- Konfiguration --
 BACKUP_FOLDER = "backups"
 UPLOAD_FOLDER = "upload_files"
-ALLOWED_EXTENSIONS = {"msg"}
+ALLOWED_EXTENSIONS = {"csv", "msg", "oft", "rtf", "txt", "vcf", "xlsx"}
 
 app = Flask(__name__, static_folder="static")
 
@@ -42,7 +39,7 @@ migrate = Migrate(app, db)
 
 from src import models
 
-# --- Automatische Vorlagen-Erstellung ---
+# --- (Funktionen wie seed_standard_templates und create_database bleiben unverändert) ---
 def seed_standard_templates():
     with app.app_context():
         if not Vorlage.query.filter_by(name="Standard-Kunde").first():
@@ -89,7 +86,6 @@ def seed_standard_templates():
                 print(f"Fehler beim Erstellen der Mitarbeiter-Vorlage: {e}")
                 db.session.rollback()
 
-# --- Hilfsfunktionen ---
 def create_database():
     with app.app_context():
         db_path = os.path.join(instance_path, "kundenverwaltung.db")
@@ -104,6 +100,7 @@ def create_database():
 def index():
     return render_template("index.html")
 
+# --- (Bestehende API-Routen bleiben unverändert) ---
 @app.route("/api/attribute-suggestions")
 def attribute_suggestions():
     return send_from_directory('data', 'attribute_suggestions.json')
@@ -150,7 +147,95 @@ def create_kontakt():
     response_data = {"id": neuer_kontakt.id, "daten": neuer_kontakt.get_data()}
     return jsonify({"success": True, "kontakt": response_data})
 
-# --- Vorlagen-Verwaltung ---
+# --- NEUE Import/Export-Routen ---
+
+@app.route("/import/upload", methods=["POST"])
+def upload_import_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "Keine Datei im Request gefunden."}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Keine Datei ausgewählt."}), 400
+    
+    file_ext = os.path.splitext(file.filename)[1].lower().replace('.', '')
+    if file_ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"error": f"Dateityp nicht erlaubt. Erlaubt sind: {', '.join(ALLOWED_EXTENSIONS)}"}), 400
+
+    try:
+        data = importer.import_file(file)
+        if isinstance(data, dict) and "error" in data:
+             return jsonify(data), 400
+        
+        headers = list(data[0].keys()) if data else []
+        preview_data = data[:5]
+        return jsonify({"headers": headers, "preview_data": preview_data, "original_data": data})
+
+    except Exception as e:
+        return jsonify({"error": f"Fehler beim Verarbeiten der Datei: {str(e)}"}), 500
+
+@app.route("/import/finalize", methods=["POST"])
+def finalize_import():
+    data = request.get_json()
+    vorlage_id = data.get('vorlage_id')
+    mappings = data.get('mappings')
+    original_data = data.get('original_data')
+
+    if not vorlage_id or not mappings or not original_data:
+        return jsonify({"success": False, "error": "Fehlende Daten für den Import."}), 400
+    
+    vorlage = Vorlage.query.get(vorlage_id)
+    if not vorlage:
+        return jsonify({"success": False, "error": "Vorlage nicht gefunden."}), 404
+
+    count = 0
+    for row in original_data:
+        new_kontakt_data = {}
+        for import_header, vorlage_prop in mappings.items():
+            if vorlage_prop and import_header in row:
+                new_kontakt_data[vorlage_prop] = row[import_header]
+        
+        if new_kontakt_data:
+            kontakt = Kontakt(vorlage_id=vorlage_id)
+            kontakt.set_data(new_kontakt_data)
+            db.session.add(kontakt)
+            count += 1
+            
+    db.session.commit()
+    flash(f"{count} Kontakte wurden erfolgreich importiert.", "success")
+    return jsonify({"success": True, "redirect_url": url_for('kontakte_auflisten')})
+
+
+@app.route("/export/<int:vorlage_id>/<string:file_format>")
+def export_data(vorlage_id, file_format):
+    vorlage = Vorlage.query.options(joinedload(Vorlage.kontakte), joinedload(Vorlage.gruppen).joinedload(Gruppe.eigenschaften)).get_or_404(vorlage_id)
+    
+    kontakte_data = [{"id": k.id, "daten": k.get_data()} for k in vorlage.kontakte]
+    eigenschaften = [{"id": e.id, "name": e.name} for g in vorlage.gruppen for e in g.eigenschaften]
+    
+    filename = f"{vorlage.name}_export_{datetime.now().strftime('%Y-%m-%d')}"
+
+    if file_format == 'csv':
+        content = exporter.generate_csv(kontakte_data, eigenschaften)
+        mimetype = 'text/csv'
+        filename += '.csv'
+    elif file_format == 'xlsx':
+        content = exporter.generate_xlsx(kontakte_data, eigenschaften)
+        mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        filename += '.xlsx'
+    elif file_format == 'pdf':
+        content = exporter.generate_pdf(kontakte_data, eigenschaften, vorlage.name)
+        mimetype = 'application/pdf'
+        filename += '.pdf'
+    else:
+        return "Ungültiges Format", 400
+        
+    return Response(
+        content,
+        mimetype=mimetype,
+        headers={"Content-Disposition": f"attachment;filename={filename}"}
+    )
+
+# --- (Rest der app.py, Vorlagen- & Kontakt-Verwaltung, bleibt unverändert) ---
 @app.route("/vorlagen")
 def vorlagen_verwalten():
     return render_template("vorlagen_verwaltung.html", vorlagen=Vorlage.query.order_by(Vorlage.name).all())
@@ -204,7 +289,6 @@ def vorlage_loeschen(vorlage_id):
     db.session.commit()
     return redirect(url_for("vorlagen_verwalten"))
 
-# --- Kontakt-Verwaltung ---
 @app.route("/kontakte")
 def kontakte_auflisten():
     vorlagen_query = Vorlage.query.options(
@@ -217,13 +301,9 @@ def kontakte_auflisten():
         vorlage_dict = {
             "id": v.id,
             "name": v.name,
-            # KORREKTUR: 'optionen' wird jetzt immer mit übergeben
             "eigenschaften": [
                 {
-                    "id": e.id,
-                    "name": e.name,
-                    "datentyp": e.datentyp,
-                    "optionen": e.optionen
+                    "id": e.id, "name": e.name, "datentyp": e.datentyp, "optionen": e.optionen
                 } for g in v.gruppen for e in g.eigenschaften
             ],
             "kontakte": [{"id": k.id, "daten": k.get_data()} for k in v.kontakte],
@@ -284,12 +364,7 @@ def kontakt_loeschen(kontakt_id):
     db.session.delete(kontakt)
     db.session.commit()
     return redirect(url_for("kontakte_auflisten"))
-
-@app.route("/import/msg", methods=["POST"])
-def import_msg():
-    flash("Import-Funktion wird gerade überarbeitet.", "info")
-    return redirect(url_for("kontakte_auflisten"))
-
+    
 @app.route("/settings")
 def settings():
     return render_template("settings.html")

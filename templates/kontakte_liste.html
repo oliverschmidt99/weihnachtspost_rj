@@ -1,9 +1,74 @@
+<!DOCTYPE html>
 {% extends "base.html" %}
 {% block title %}Kontaktübersicht{% endblock %}
 
 {% block head_styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/kontakte.css', v='1.4') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/filter.css', v='1.5') }}">
+<style>
+    /* Zusätzliche Stile für Import/Export */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: var(--card-bg);
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px var(--shadow-color);
+        z-index: 1;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+
+    .dropdown-content a {
+        color: var(--text-primary);
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .dropdown-content a:hover {
+        background-color: var(--card-active-bg);
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .alert-danger {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        padding: .75rem 1.25rem;
+        margin-top: 1rem;
+        border: 1px solid transparent;
+        border-radius: .25rem;
+    }
+
+    .mapping-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .mapping-header {
+        font-weight: bold;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .data-preview {
+        margin-top: 1.5rem;
+    }
+
+    .data-preview table {
+        font-size: 0.8em;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -22,12 +87,19 @@
             <div class="dropdown">
                 <button class="button secondary">Exportieren</button>
                 <div class="dropdown-content">
-                    <a :href="getExportUrl('csv')">Als CSV</a>
-                    <a :href="getExportUrl('xlsx')">Als Excel (.xlsx)</a>
-                    <a :href="getExportUrl('pdf')">Als PDF (Druck)</a>
+                    <a :href="getExportUrl('csv')" download>Als CSV</a>
+                    <a :href="getExportUrl('xlsx')" download>Als Excel (.xlsx)</a>
+                    <a :href="getExportUrl('pdf')" download>Als PDF (Druck)</a>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="view-switcher">
+        <label for="vorlagen-select">Angezeigte Vorlage:</label>
+        <select v-if="vorlagen.length > 0" v-model="activeVorlageId" id="vorlagen-select">
+            <option v-for="vorlage in vorlagen" :value="vorlage.id" v-text="vorlage.name"></option>
+        </select>
     </div>
 
     <div v-if="isImportModalOpen" class="modal-overlay" @click.self="closeImportModal">
@@ -46,8 +118,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>2. Datei hochladen:</label>
-                    <input type="file" @change="handleFileUpload" accept=".csv,.txt,.xlsx,.vcf,.msg,.oft,.rtf">
+                    <label>2. Datei hochladen (csv, txt, xlsx, vcf):</label>
+                    <input type="file" @change="handleFileUpload" accept=".csv,.txt,.xlsx,.vcf">
                 </div>
                 <div v-if="importError" class="alert-danger">{[ importError ]}</div>
             </div>
@@ -72,7 +144,7 @@
                 </div>
                 <div class="data-preview">
                     <h5>Vorschau der ersten 5 Zeilen</h5>
-                    <table>
+                    <table class="table-container">
                         <thead>
                             <tr>
                                 <th v-for="h in importData.headers">{[ h ]}</th>
@@ -93,5 +165,12 @@
             </div>
         </div>
     </div>
-
 </div>
+
+<script type="application/json" id="vorlagen-for-json-data">{{ vorlagen_for_json|safe }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="{{ url_for('static', filename='js/kontakte_liste.js') }}"></script>
+{% endblock %}

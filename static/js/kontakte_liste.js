@@ -8,7 +8,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const app = createApp({
     setup() {
-      // ... (bestehende setup-Logik bleibt erhalten) ...
+      // --- Bestehender State ---
+      const vorlagen = ref(
+        JSON.parse(
+          document.getElementById("vorlagen-for-json-data").textContent
+        )
+      );
+      const activeVorlageId = ref(
+        vorlagen.value.length > 0 ? vorlagen.value[0].id : null
+      );
+      const isFilterVisible = ref(true);
+      const filterState = ref({});
+      const editOrderMode = ref(false);
+      const isAddModalOpen = ref(false);
+      const newContactData = ref({});
+      const addModalVorlageId = ref(activeVorlageId.value);
+      const verknuepfungsOptionen = ref({});
+
+      // --- NEUER State für Import/Export ---
       const isImportModalOpen = ref(false);
       const importStep = ref(1);
       const importTargetVorlageId = ref(null);
@@ -17,11 +34,54 @@ document.addEventListener("DOMContentLoaded", () => {
       const importMappings = ref({});
       const importError = ref("");
 
+      // --- Bestehende Computed Properties ---
+      const activeVorlage = computed(() => {
+        if (!activeVorlageId.value) return null;
+        return vorlagen.value.find((v) => v.id === activeVorlageId.value);
+      });
+      const addModalVorlage = computed(() =>
+        vorlagen.value.find((v) => v.id === addModalVorlageId.value)
+      );
+      const filteredEigenschaften = computed(() => {
+        if (!activeVorlage.value) return [];
+        return activeVorlage.value.gruppen
+          .flatMap((g) => g.eigenschaften)
+          .filter((e) => filterState.value[e.name]);
+      });
+
+      // --- NEUE Computed Property ---
       const importTargetVorlage = computed(() => {
         if (!importTargetVorlageId.value) return null;
         return vorlagen.value.find((v) => v.id === importTargetVorlageId.value);
       });
 
+      // --- Bestehende Watchers ---
+      watch(
+        activeVorlage,
+        (newVorlage) => {
+          if (newVorlage) {
+            const newFilterState = {};
+            newVorlage.gruppen
+              .flatMap((g) => g.eigenschaften)
+              .forEach((e) => {
+                newFilterState[e.name] = true;
+              });
+            filterState.value = newFilterState;
+          }
+        },
+        { immediate: true }
+      );
+
+      watch(addModalVorlage, async (newVorlage) => {
+        // ... (bestehende Logik)
+      });
+
+      // --- Bestehende Methoden ---
+      const openAddModal = () => (isAddModalOpen.value = true);
+      const closeAddModal = () => (isAddModalOpen.value = false);
+      // ... (restliche bestehende Methoden)
+
+      // --- NEUE Methoden für Import/Export ---
       const openImportModal = () => {
         importStep.value = 1;
         importData.value = {};
@@ -53,13 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           const result = await response.json();
           if (!response.ok) {
-            throw new Error(result.error || "Unbekannter Fehler");
+            throw new Error(
+              result.error || "Unbekannter Fehler beim Hochladen"
+            );
           }
           importData.value = result;
-          // Auto-mapping versuchen
+
+          // Automatisches Zuordnen von Spalten
           result.headers.forEach((h) => {
             const matchingProp = importTargetVorlage.value.eigenschaften.find(
-              (p) => p.name.toLowerCase() === h.toLowerCase()
+              (p) => p.name.toLowerCase().trim() === h.toLowerCase().trim()
             );
             if (matchingProp) {
               importMappings.value[h] = matchingProp.name;
@@ -88,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (result.success) {
             window.location.href = result.redirect_url;
           } else {
-            throw new Error(result.error);
+            throw new Error(result.error || "Unbekannter Fehler beim Import.");
           }
         } catch (error) {
           importError.value = `Import fehlgeschlagen: ${error.message}`;
@@ -101,7 +164,22 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       return {
-        // ... (alle bestehenden return-Werte) ...
+        // Bestehende
+        vorlagen,
+        activeVorlageId,
+        activeVorlage,
+        isFilterVisible,
+        filterState,
+        editOrderMode,
+        isAddModalOpen,
+        openAddModal,
+        closeAddModal,
+        newContactData,
+        addModalVorlageId,
+        addModalVorlage,
+        verknuepfungsOptionen,
+        filteredEigenschaften,
+        // Neue
         isImportModalOpen,
         openImportModal,
         closeImportModal,

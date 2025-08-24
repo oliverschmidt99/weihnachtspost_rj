@@ -10,26 +10,40 @@ ALLOWED_EXTENSIONS = {"csv", "msg", "oft", "txt", "vcf", "xlsx"}
 
 @bp.route("/import/upload", methods=["POST"])
 def upload_import_file():
-    if 'file' not in request.files: 
-        return jsonify({"error": "Keine Datei im Request gefunden."}), 400
-    file = request.files['file']
-    if file.filename == '': 
-        return jsonify({"error": "Keine Datei ausgewählt."}), 400
+    if 'files' not in request.files:
+        return jsonify({"error": "Keine Dateien im Request gefunden."}), 400
     
-    file_ext = os.path.splitext(file.filename)[1].lower().replace('.', '')
-    if file_ext not in ALLOWED_EXTENSIONS:
-        return jsonify({"error": "Dateityp nicht erlaubt."}), 400
+    files = request.files.getlist('files')
+    if not files or files[0].filename == '':
+        return jsonify({"error": "Keine Dateien ausgewählt."}), 400
+    
+    all_records = []
+    
+    for file in files:
+        file_ext = os.path.splitext(file.filename)[1].lower().replace('.', '')
+        if file_ext not in ALLOWED_EXTENSIONS:
+            return jsonify({"error": f"Dateityp '{file_ext}' nicht erlaubt."}), 400
 
-    try:
-        data = importer_service.import_file(file)
-        if isinstance(data, dict) and "error" in data:
-            return jsonify(data), 400
+        try:
+            # Wichtig: Dateiobjekt zurück zum Anfang setzen, falls es mehrfach gelesen wird
+            file.seek(0)
+            data = importer_service.import_file(file)
+            if isinstance(data, dict) and "error" in data:
+                return jsonify(data), 400
+            all_records.extend(data)
+        except Exception as e:
+            return jsonify({"error": f"Fehler beim Verarbeiten der Datei '{file.filename}': {str(e)}"}), 500
+
+    if not all_records:
+        return jsonify({"error": "Keine Daten in den Dateien gefunden."}), 400
+
+    # Sammle alle eindeutigen Spaltennamen aus allen Dateien
+    all_headers = set()
+    for record in all_records:
+        all_headers.update(record.keys())
         
-        headers = list(data[0].keys()) if data else []
-        preview_data = data[:5]
-        return jsonify({"headers": headers, "preview_data": preview_data, "original_data": data})
-    except Exception as e:
-        return jsonify({"error": f"Fehler beim Verarbeiten der Datei: {str(e)}"}), 500
+    preview_data = all_records[:5]
+    return jsonify({"headers": list(all_headers), "preview_data": preview_data, "original_data": all_records})
 
 @bp.route("/import/finalize", methods=["POST"])
 def finalize_import():

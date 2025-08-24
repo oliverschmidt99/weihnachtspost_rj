@@ -15,6 +15,83 @@
             <button @click="saveVorlage" class="button">Vorlage Speichern</button>
         </div>
     </div>
+
+    <div class="form-group">
+        <label for="vorlage-name">Name der Vorlage:</label>
+        <input type="text" id="vorlage-name" v-model="vorlage.name" class="input-field">
+    </div>
+
+    <div class="view-switcher">
+        <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }">Listenansicht</button>
+        <button @click="viewMode = 'tile'" :class="{ active: viewMode === 'tile' }">Kachelansicht</button>
+    </div>
+
+    <div v-if="viewMode === 'list'" id="group-list-container" class="list-view-container">
+        <div v-for="(gruppe, index) in vorlage.gruppen" :key="index" class="group-list-item">
+            <div class="list-item-header" @click="toggleGroupCollapse(index)">
+                <span class="drag-handle">☰</span>
+                <strong>{[ gruppe.name ]}</strong>
+                <div class="tile-actions">
+                    <button @click.stop="openGroupEditModal(index)" class="button edit">Bearbeiten</button>
+                </div>
+                <span :class="['toggle-icon', { collapsed: collapsedGroups[index] }]">▼</span>
+            </div>
+            <div v-show="!collapsedGroups[index]" class="property-list-container" :data-group-index="index">
+                <div v-for="(eigenschaft, pIndex) in gruppe.eigenschaften" :key="pIndex" class="property-list-item">
+                    <span class="drag-handle">☰</span>
+                    <span class="property-name">{[ eigenschaft.name ]}</span>
+                    <span class="property-type-badge">{[ eigenschaft.datentyp ]}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="viewMode === 'tile'" class="tile-view-container">
+    </div>
+
+    <div class="add-group-bar">
+        <select v-model="selectedSuggestionCategory" class="input-field">
+            <option :value="null">Gruppe aus Vorlage wählen...</option>
+            <option v-for="cat in suggestions.categories" :key="cat.name" :value="cat">{[ cat.name ]}</option>
+        </select>
+        <button @click="addGroupFromSuggestion" class="button">Hinzufügen</button>
+        <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe</button>
+    </div>
+
+    <div v-if="activeModal === 'groupEdit'" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gruppe bearbeiten</h2>
+                <button @click="closeModal" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" v-if="editedGroup">
+                <div class="form-group">
+                    <label>Gruppenname:</label>
+                    <input type="text" v-model="editedGroup.name" class="input-field">
+                </div>
+                <hr>
+                <h4>Eigenschaften:</h4>
+                <div v-for="(prop, pIndex) in editedGroup.eigenschaften" :key="pIndex" class="modal-property-row">
+                    <input type="text" v-model="prop.name" placeholder="Name" class="input-field">
+                    <select v-model="prop.datentyp" class="input-field">
+                        <option>Text</option>
+                        <option>Auswahl</option>
+                        <option>Datum</option>
+                        <option>Verknüpfung</option>
+                    </select>
+                    <input type="text" v-model="prop.optionen" placeholder="Optionen (kommagetrennt)"
+                        class="input-field">
+                    <button @click="removeEigenschaft(pIndex)" class="button danger">&times;</button>
+                </div>
+                <button @click="addEigenschaft" class="button secondary" style="margin-top: 1rem;">Eigenschaft
+                    hinzufügen</button>
+            </div>
+            <div class="modal-actions">
+                <button @click="closeModal" class="button secondary">Abbrechen</button>
+                <button @click="saveGroup" class="button">Speichern</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="application/json" id="vorlage-data">{{ vorlage_data|safe }}</script>

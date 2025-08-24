@@ -23,6 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const sortableGroupInstance = ref(null);
       const sortableItemInstances = ref({});
 
+      // --- Status für Sortierung und Auswahl ---
+      const sortColumn = ref(null);
+      const sortDirection = ref("asc");
+      const selectedKontakte = ref(new Set());
+
       const isAddModalOpen = ref(false);
       const isImportModalOpen = ref(false);
 
@@ -42,6 +47,51 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!activeVorlageId.value) return null;
         return vorlagen.value.find((v) => v.id === activeVorlageId.value);
       });
+
+      const sortedKontakte = computed(() => {
+        if (!activeVorlage.value) {
+          return [];
+        }
+        if (!sortColumn.value) {
+          return activeVorlage.value.kontakte;
+        }
+
+        const kontakteCopy = [...activeVorlage.value.kontakte];
+
+        kontakteCopy.sort((a, b) => {
+          const valA = a.daten[sortColumn.value] || "";
+          const valB = b.daten[sortColumn.value] || "";
+
+          let comparison = 0;
+          // Einfache numerische Prüfung
+          const isNumeric =
+            !isNaN(parseFloat(valA)) &&
+            isFinite(valA) &&
+            !isNaN(parseFloat(valB)) &&
+            isFinite(valB);
+
+          if (isNumeric) {
+            comparison = parseFloat(valA) - parseFloat(valB);
+          } else {
+            // String-Vergleich
+            comparison = valA.toString().localeCompare(valB.toString());
+          }
+
+          return sortDirection.value === "asc" ? comparison : -comparison;
+        });
+
+        return kontakteCopy;
+      });
+
+      const isAllSelected = computed(() => {
+        if (!activeVorlage.value || activeVorlage.value.kontakte.length === 0) {
+          return false;
+        }
+        return (
+          selectedKontakte.value.size === activeVorlage.value.kontakte.length
+        );
+      });
+
       const addModalVorlage = computed(() =>
         vorlagen.value.find((v) => v.id === addModalVorlageId.value)
       );
@@ -55,8 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!importTargetVorlageId.value) return null;
         return vorlagen.value.find((v) => v.id === importTargetVorlageId.value);
       });
+      const usedTemplateProperties = computed(() => {
+        return new Set(Object.values(importMappings.value).filter(Boolean));
+      });
 
       // --- Watchers ---
+      watch(activeVorlageId, () => {
+        selectedKontakte.value.clear(); // Auswahl zurücksetzen bei Vorlagenwechsel
+      });
+
       watch(
         activeVorlage,
         (newVorlage) => {
@@ -107,6 +164,67 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // --- Methoden ---
+      const sortBy = (columnName) => {
+        if (sortColumn.value === columnName) {
+          sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+        } else {
+          sortColumn.value = columnName;
+          sortDirection.value = "asc";
+        }
+      };
+
+      const toggleSelection = (kontaktId) => {
+        if (selectedKontakte.value.has(kontaktId)) {
+          selectedKontakte.value.delete(kontaktId);
+        } else {
+          selectedKontakte.value.add(kontaktId);
+        }
+      };
+
+      const toggleSelectAll = () => {
+        if (isAllSelected.value) {
+          selectedKontakte.value.clear();
+        } else {
+          activeVorlage.value.kontakte.forEach((k) =>
+            selectedKontakte.value.add(k.id)
+          );
+        }
+      };
+
+      const bulkDelete = async () => {
+        const idsToDelete = Array.from(selectedKontakte.value);
+        if (idsToDelete.length === 0) {
+          alert("Keine Kontakte ausgewählt.");
+          return;
+        }
+
+        if (
+          confirm(
+            `Möchtest du wirklich ${idsToDelete.length} Kontakte endgültig löschen?`
+          )
+        ) {
+          try {
+            const response = await fetch("/api/kontakte/bulk-delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ids: idsToDelete }),
+            });
+            const result = await response.json();
+            if (result.success) {
+              activeVorlage.value.kontakte =
+                activeVorlage.value.kontakte.filter(
+                  (k) => !selectedKontakte.value.has(k.id)
+                );
+              selectedKontakte.value.clear();
+            } else {
+              throw new Error(result.error);
+            }
+          } catch (error) {
+            alert(`Fehler beim Löschen: ${error.message}`);
+          }
+        }
+      };
+
       const onGroupSort = (event) => {
         const movedItem = activeVorlage.value.gruppen.splice(
           event.oldIndex,
@@ -243,15 +361,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const closeImportModal = () => (isImportModalOpen.value = false);
 
       const handleFileUpload = async (event) => {
-        importFile.value = event.target.files[0];
-        if (!importFile.value || !importTargetVorlageId.value) {
+        const files = event.target.files;
+        if (!files || files.length === 0 || !importTargetVorlageId.value) {
           importError.value =
-            "Bitte zuerst eine Vorlage auswählen und dann eine Datei hochladen.";
+            "Bitte zuerst eine Vorlage auswählen und dann eine oder mehrere Dateien hochladen.";
           return;
         }
         importError.value = "";
         const formData = new FormData();
-        formData.append("file", importFile.value);
+        for (const file of files) {
+          formData.append("files", file);
+        }
+
         try {
           const response = await fetch("/import/upload", {
             method: "POST",
@@ -325,7 +446,16 @@ document.addEventListener("DOMContentLoaded", () => {
         importData,
         importMappings,
         importError,
-
+        usedTemplateProperties,
+        sortColumn,
+        sortDirection,
+        sortedKontakte,
+        selectedKontakte,
+        isAllSelected,
+        sortBy,
+        toggleSelection,
+        toggleSelectAll,
+        bulkDelete,
         openAddModal,
         closeAddModal,
         toggleEditOrderMode,

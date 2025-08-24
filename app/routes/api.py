@@ -55,3 +55,19 @@ def create_kontakt():
     
     response_data = {"id": neuer_kontakt.id, "daten": neuer_kontakt.get_data()}
     return jsonify({"success": True, "kontakt": response_data})
+
+@bp.route("/kontakte/bulk-delete", methods=["POST"])
+def bulk_delete_kontakte():
+    data = request.get_json()
+    kontakt_ids = data.get('ids')
+
+    if not kontakt_ids:
+        return jsonify({"success": False, "error": "Keine IDs angegeben."}), 400
+
+    try:
+        Kontakt.query.filter(Kontakt.id.in_(kontakt_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        return jsonify({"success": True, "message": f"{len(kontakt_ids)} Kontakte gelöscht."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500

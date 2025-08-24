@@ -65,3 +65,30 @@
     padding-bottom: 0.5rem; 
     margin-bottom: 1rem;
 }
+.table-container th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+.table-container th.sortable:hover {
+    background-color: var(--card-active-bg);
+}
+.table-container th .sort-icon {
+    display: inline-block;
+    width: 1em;
+    text-align: center;
+}
+.checkbox-col {
+    width: 40px;
+    text-align: center;
+}
+tr.selected {
+    background-color: var(--card-active-bg);
+}
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-right: 1rem;
+    border-right: 1px solid var(--border-color);
+    margin-right: 1rem;
+}

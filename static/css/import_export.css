@@ -41,8 +41,7 @@
     grid-template-columns: 1fr 1fr; 
     gap: 1rem; 
     margin-top: 1rem; 
-    max-height: 250px;
-    overflow-y: auto;
+    /* Die feste max-height wird entfernt, damit der Bereich wachsen kann */
     padding-right: 1rem;
 }
 .mapping-header { 

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 {% extends "base.html" %}
 {% block title %}Vorlagen-Editor{% endblock %}
 
@@ -24,8 +25,8 @@
         </fieldset>
     </div>
     <div class="view-switcher">
+        <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }">Listenansicht (Sortieren)</button>
         <button @click="viewMode = 'tile'" :class="{ active: viewMode === 'tile' }">Kachelansicht</button>
-        <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }">Listenansicht</button>
     </div>
     <div class="card add-group-bar">
         <select v-model="selectedSuggestionCategory" @change="addGroupFromSuggestion">
@@ -34,6 +35,37 @@
         </select>
         <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe erstellen</button>
     </div>
+
+    <div v-if="viewMode === 'list'" class="list-view-container" id="group-list-container">
+        <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="group-list-item card"
+            :key="gruppe.name + gruppeIndex">
+            <div class="list-item-header" @click="toggleGroupCollapse(gruppeIndex)">
+                <svg class="toggle-icon" :class="{ collapsed: collapsedGroups[gruppeIndex] }"
+                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span @click.stop class="drag-handle">⠿</span>
+                <strong v-text="gruppe.name || 'Unbenannte Gruppe'"></strong>
+                <div @click.stop class="button-group">
+                    <button @click="openGroupEditModal(gruppeIndex)" class="button secondary edit">Bearbeiten</button>
+                    <button @click="openDeleteModal('gruppe', gruppeIndex)" class="button danger">Löschen</button>
+                </div>
+            </div>
+            <div v-show="!collapsedGroups[gruppeIndex]" class="property-list-container" :data-group-index="gruppeIndex">
+                <div v-for="(eigenschaft, eigenschaftIndex) in gruppe.eigenschaften" class="property-list-item"
+                    :key="eigenschaft.name + eigenschaftIndex">
+                    <span class="drag-handle">⠿</span>
+                    <span class="property-name">{[ eigenschaft.name ]}</span>
+                    <span class="property-type-badge">{[ eigenschaft.datentyp ]}</span>
+                </div>
+                <div v-if="gruppe.eigenschaften.length === 0" class="empty-properties-info">
+                    Diese Gruppe hat noch keine Eigenschaften. Klicke auf "Bearbeiten", um welche hinzuzufügen.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div v-if="viewMode === 'tile'" class="tile-view-container">
         <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="group-tile">
             <div class="tile-header"><strong v-text="gruppe.name || 'Unbenannte Gruppe'"></strong>

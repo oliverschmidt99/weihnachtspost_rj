@@ -1,5 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const { createApp, ref, onMounted, computed } = Vue;
+  const editorRoot = document.getElementById("vorlage-editor-app");
+  if (!editorRoot) {
+    return; // Stopp, wenn das Element nicht auf dieser Seite ist
+  }
+
+  const {
+    createApp,
+    ref,
+    onMounted,
+    computed,
+    watch,
+    nextTick,
+    onBeforeUnmount,
+  } = Vue;
 
   const app = createApp({
     setup() {
@@ -15,13 +28,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const suggestions = ref({ categories: [] });
       const selectionOptions = ref([]);
       const selectedSuggestionCategory = ref(null);
-      const viewMode = ref("tile");
-      const collapsedGroups = ref({});
+      const viewMode = ref("list");
       const activeModal = ref(null);
       const editedGroup = ref(null);
       const editedGroupIndex = ref(null);
       const deleteTarget = ref(null);
       const deleteMessage = ref("");
+
+      const groupSortable = ref(null);
+      const propertySortables = ref({});
+      const collapsedGroups = ref({});
+
+      const toggleGroupCollapse = (index) => {
+        collapsedGroups.value[index] = !collapsedGroups.value[index];
+      };
 
       onMounted(async () => {
         try {
@@ -34,7 +54,77 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
           console.error("Fehler:", error);
         }
+        if (viewMode.value === "list") {
+          await nextTick();
+          initSortables();
+        }
       });
+
+      const destroySortables = () => {
+        if (groupSortable.value) groupSortable.value.destroy();
+        Object.values(propertySortables.value).forEach((s) => s.destroy());
+        groupSortable.value = null;
+        propertySortables.value = {};
+      };
+
+      const initSortables = () => {
+        destroySortables();
+        const groupContainer = document.getElementById("group-list-container");
+        if (groupContainer) {
+          groupSortable.value = new Sortable(groupContainer, {
+            animation: 150,
+            handle: ".drag-handle",
+            onEnd: (event) => {
+              const movedItem = vorlage.value.gruppen.splice(
+                event.oldIndex,
+                1
+              )[0];
+              vorlage.value.gruppen.splice(event.newIndex, 0, movedItem);
+            },
+          });
+        }
+
+        vorlage.value.gruppen.forEach((gruppe, index) => {
+          const propContainer = document.querySelector(
+            `.property-list-container[data-group-index='${index}']`
+          );
+          if (propContainer) {
+            propertySortables.value[index] = new Sortable(propContainer, {
+              animation: 150,
+              handle: ".drag-handle",
+              onEnd: (event) => {
+                const movedItem = gruppe.eigenschaften.splice(
+                  event.oldIndex,
+                  1
+                )[0];
+                gruppe.eigenschaften.splice(event.newIndex, 0, movedItem);
+              },
+            });
+          }
+        });
+      };
+
+      watch(viewMode, async (newMode, oldMode) => {
+        if (newMode === "list") {
+          await nextTick();
+          initSortables();
+        } else {
+          destroySortables();
+        }
+      });
+
+      watch(
+        () => vorlage.value.gruppen,
+        async () => {
+          if (viewMode.value === "list") {
+            await nextTick();
+            initSortables();
+          }
+        },
+        { deep: true }
+      );
+
+      onBeforeUnmount(destroySortables);
 
       const pageTitle = computed(() =>
         vorlage.value.name
@@ -123,7 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
         pageTitle,
         selectedSuggestionCategory,
         viewMode,
-        collapsedGroups,
         activeModal,
         editedGroup,
         deleteMessage,
@@ -138,9 +227,11 @@ document.addEventListener("DOMContentLoaded", () => {
         closeModal,
         saveVorlage,
         allVorlagen,
+        collapsedGroups,
+        toggleGroupCollapse,
       };
     },
   });
   app.config.compilerOptions.delimiters = ["{[", "]}"];
-  app.mount("#vorlage-editor-app");
+  app.mount(editorRoot);
 });

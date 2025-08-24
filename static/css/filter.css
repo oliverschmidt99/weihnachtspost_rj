@@ -15,17 +15,22 @@
     user-select: none;
 }
 .filter-header h3 { margin: 0; }
-.filter-header .toggle-icon { transition: transform 0.2s; font-size: 1.5rem; }
-.filter-header .toggle-icon.collapsed { transform: rotate(-90deg); }
+.filter-header .toggle-icon {
+    transition: transform 0.3s ease;
+    color: var(--text-secondary);
+}
+.filter-header .toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
 
 .filter-edit-button {
-    padding: 0.4rem 0.8rem; /* Kleinere Abstände */
-    font-size: 0.85em;      /* Kleinere Schrift */
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85em;
     margin-left: auto;
     margin-right: 1rem;
 }
 .filter-edit-button img {
-    height: 14px; /* Kleinere Icons im Button */
+    height: 14px;
     width: 14px;
 }
 

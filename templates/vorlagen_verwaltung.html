@@ -2,10 +2,12 @@
 {% extends "base.html" %}
 {% block title %}Vorlagen verwalten{% endblock %}
 {% block content %}
-<h1>Vorlagen verwalten</h1>
 <div class="actions-header">
-    <p>Vorlagen definieren die Struktur deiner Kontakte.</p>
-    <a href="{{ url_for('vorlage_editor') }}" class="button add">➕ Vorlage erstellen</a>
+    <div>
+        <h1>Vorlagen verwalten</h1>
+        <p>Vorlagen definieren die Struktur und die Felder deiner Kontakte.</p>
+    </div>
+    <a href="{{ url_for('vorlage_editor') }}" class="button add">➕ Neue Vorlage erstellen</a>
 </div>
 
 <div class="card">
@@ -14,7 +16,7 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Kontakte</th>
+                    <th>Anzahl Kontakte</th>
                     <th style="text-align: right;">Aktionen</th>
                 </tr>
             </thead>
@@ -27,14 +29,14 @@
                         <a href="{{ url_for('vorlage_editor', vorlage_id=vorlage.id) }}" class="icon-btn edit"
                             title="Vorlage bearbeiten">✏️</a>
                         <form action="{{ url_for('vorlage_loeschen', vorlage_id=vorlage.id) }}" method="post"
-                            onsubmit="return confirm('Sicher?');">
+                            onsubmit="return confirm('Bist du sicher, dass du diese Vorlage und alle zugehörigen Kontakte löschen möchtest?');">
                             <button type="submit" class="icon-btn delete" title="Vorlage löschen">❌</button>
                         </form>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3">Noch keine Vorlagen erstellt.</td>
+                    <td colspan="3" style="text-align: center; padding: 2rem;">Noch keine Vorlagen erstellt.</td>
                 </tr>
                 {% endfor %}
             </tbody>

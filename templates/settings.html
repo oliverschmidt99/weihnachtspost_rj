@@ -5,10 +5,10 @@
 {% block content %}
 <h1>Einstellungen</h1>
 
-<div class="card config-section active">
+<div class="card">
     <h2>Design</h2>
-    <div class="theme-switcher" style="display: flex; align-items: center; gap: 1rem;">
-        <label for="theme-toggle" style="margin: 0; font-weight: bold;">Dark Mode</label>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <label for="theme-toggle" style="margin: 0; font-weight: 500;">Dark Mode</label>
         <label class="switch">
             <input type="checkbox" id="theme-toggle">
             <span class="slider round"></span>
@@ -16,13 +16,15 @@
     </div>
 </div>
 
-<div class="card config-section active">
+<div class="card">
     <h2>Datenbank-Management</h2>
     <p>
-        Automatische Backups der Datenbank (`kundenverwaltung.db`) werden bei jeder wichtigen Änderung im Ordner
+        Automatische Backups der Datenbank (<code>kundenverwaltung.db</code>) werden bei jeder wichtigen Änderung im
+        Ordner
         <code>backups</code> angelegt.
     </p>
-    <div class="warning-box">
+    <div class="info-box"
+        style="margin-top: 1rem; padding: 1rem; background-color: var(--card-active-bg); border-radius: 6px;">
         <strong>Info:</strong> Die manuelle Wiederherstellung einer Datenbank muss derzeit direkt über das Dateisystem
         erfolgen, indem eine Backup-Datei in den <code>instance</code>-Ordner kopiert und in
         <code>kundenverwaltung.db</code> umbenannt wird.
@@ -32,4 +34,61 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+<style>
+    /* Switch-Stile für den Dark-Mode-Toggle */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: #fff;
+        transition: .4s
+    }
+
+    input:checked+.slider {
+        background-color: var(--accent-color)
+    }
+
+    input:focus+.slider {
+        box-shadow: 0 0 1px var(--accent-color)
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(26px)
+    }
+
+    .slider.round {
+        border-radius: 34px
+    }
+
+    .slider.round:before {
+        border-radius: 50%
+    }
+</style>
 {% endblock %}

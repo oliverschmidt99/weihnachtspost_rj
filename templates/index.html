@@ -9,26 +9,42 @@
     einfachen Konzepten:
 </p>
 
-<div class="card-container" style="margin-top: 2rem; text-align: left;">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem; text-align: left;">
     <div class="card">
         <h3>1. Vorlagen 📝</h3>
         <p>
             Unter dem Menüpunkt <a href="{{ url_for('vorlagen_verwalten') }}"><strong>Vorlagen</strong></a> definierst
             du die Struktur deiner Kontakte. Lege hier fest, welche Informationen du für einen bestimmten Kontakttyp
-            (z.B. "Kunde", "Lieferant" oder "Privat") speichern möchtest.
+            speichern möchtest.
         </p>
     </div>
     <div class="card">
         <h3>2. Kontakte 📇</h3>
-        <p>
+        <div>
             Unter <a href="{{ url_for('kontakte_auflisten') }}"><strong>Kontakte</strong></a> füllst du deine Vorlagen
-            mit Leben. Erstelle neue Einträge, importiere Daten aus MSG-Dateien oder bearbeite bestehende Kontakte.
+            mit Leben. Erstelle neue Einträge, importiere Daten oder bearbeite bestehende Kontakte.
             Jeder Kontakt basiert immer auf einer deiner Vorlagen.
-        </p>
+        </div>
     </div>
 </div>
 
-<div style="margin-top: 2rem; text-align: center;">
-    <p><strong>Starte jetzt, indem du deine erste Vorlage erstellst!</strong></p>
+<div class="card" style="margin-top: 2rem;">
+    <h3>Vorschau der neuen Icons</h3>
+    <p>So werden die neuen Buttons für Aktionen wie Erstellen, Bearbeiten und Löschen aussehen:</p>
+    <div style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem;">
+
+        <button class="icon-btn add" title="Erstellen">
+            <img src="{{ url_for('static', filename='img/icon_add.svg') }}" alt="Erstellen">
+        </button>
+
+        <button class="icon-btn edit" title="Bearbeiten">
+            <img src="{{ url_for('static', filename='img/icon_edit.svg') }}" alt="Bearbeiten">
+        </button>
+
+        <button class="icon-btn delete" title="Löschen">
+            <img src="{{ url_for('static', filename='img/icon_delete.svg') }}" alt="Löschen">
+        </button>
+
+    </div>
 </div>
 {% endblock %}

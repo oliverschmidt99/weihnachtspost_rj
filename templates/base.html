@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Kontakt-Verwaltung{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     {% block head_styles %}{% endblock %}
     <link rel="icon" href="{{ url_for('static', filename='img/logo_rolf-janssen_2024.svg') }}" type="image/svg+xml">
     <script>
@@ -35,9 +36,14 @@
     <main>
         <div class="container">
             {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}{% for category, message in messages %}
-            <div class="flash-message {{ category }}">{{ message }}</div>
-            {% endfor %}{% endif %}{% endwith %}
+            {% if messages %}
+            <div class="flash-message-container">
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
             {% block content %}{% endblock %}
         </div>
     </main>

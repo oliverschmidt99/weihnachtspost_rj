@@ -15,12 +15,14 @@
             <button @click="openImportModal" class="button secondary">↑ Aus MSG importieren</button>
         </div>
     </div>
+
     <div class="view-switcher">
         <label for="vorlagen-select" style="margin-right: 0.5rem; font-weight: 500;">Angezeigte Vorlage:</label>
         <select v-if="vorlagen.length > 0" v-model="activeVorlageId" id="vorlagen-select">
             <option v-for="vorlage in vorlagen" :value="vorlage.id" v-text="vorlage.name"></option>
         </select>
     </div>
+
     <div v-if="activeVorlage" class="card table-container">
         <table>
             <thead>
@@ -44,64 +46,9 @@
     </div>
 
     <div v-if="isAddModalOpen" class="modal-overlay" @click.self="closeAddModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Neuen Kontakt erstellen</h3><button @click="closeAddModal" class="modal-close-btn">✖</button>
-            </div>
-            <form id="addContactForm" @submit.prevent="saveNewContact">
-                <div class="form-group">
-                    <label>Basierend auf Vorlage:</label>
-                    <select v-model="addModalVorlageId" style="margin-bottom: 1rem;">
-                        <option :value="null" disabled>Bitte Vorlage wählen...</option>
-                        <option v-for="v in vorlagen" :value="v.id" v-text="v.name"></option>
-                    </select>
-                </div>
-                <template v-if="addModalVorlage">
-                    <div v-for="gruppe in addModalVorlage.gruppen" class="group-box">
-                        <h4 v-text="gruppe.name"></h4>
-                        <div v-for="eigenschaft in gruppe.eigenschaften" class="form-group">
-                            <label v-text="eigenschaft.name"></label>
-                            <select v-if="eigenschaft.datentyp === 'Auswahl'"
-                                v-model="newContactData[eigenschaft.name]">
-                                <option value="">-- Bitte wählen --</option>
-                                <option v-for="option in eigenschaft.optionen.split(',')" :value="option.trim()"
-                                    v-text="option.trim()"></option>
-                            </select>
-                            <input v-else-if="eigenschaft.datentyp === 'Boolean'" type="checkbox"
-                                v-model="newContactData[eigenschaft.name]" style="width: auto; margin-top: 0.5rem;">
-                            <input v-else-if="eigenschaft.datentyp === 'Zahl'" type="number"
-                                v-model="newContactData[eigenschaft.name]">
-                            <input v-else-if="eigenschaft.datentyp === 'Datum'" type="date"
-                                v-model="newContactData[eigenschaft.name]">
-                            <input v-else type="text" v-model="newContactData[eigenschaft.name]">
-                        </div>
-                    </div>
-                </template>
-            </form>
-            <div class="actions">
-                <button type="button" @click="closeAddModal" class="button secondary">Abbrechen</button>
-                <button type="submit" form="addContactForm" class="button add">➕ Kontakt speichern</button>
-            </div>
-        </div>
     </div>
+
     <div v-if="isImportModalOpen" class="modal-overlay" @click.self="closeImportModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Kontakte aus .msg-Dateien importieren</h3><button @click="closeImportModal"
-                    class="modal-close-btn">&times;</button>
-            </div>
-            <form action="/import/msg" method="post" enctype="multipart/form-data">
-                <fieldset><label>In welche Vorlage importieren?</label><select name="vorlage_id" required>
-                        <option value="" disabled selected>-- Bitte wählen --</option>
-                        <option v-for="v in vorlagen" :value="v.id" v-text="v.name"></option>
-                    </select></fieldset>
-                <fieldset><label>.msg-Dateien auswählen:</label><input type="file" name="msg_files" multiple required
-                        accept=".msg"></fieldset>
-                <div class="actions"><button type="button" @click="closeImportModal"
-                        class="button secondary">Abbrechen</button><button type="submit" class="button">Hochladen &
-                        Importieren</button></div>
-            </form>
-        </div>
     </div>
 </div>
 <script type="application/json" id="vorlagen-for-json-data">{{ vorlagen_for_json|safe }}</script>

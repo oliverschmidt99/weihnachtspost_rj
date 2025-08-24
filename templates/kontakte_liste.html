@@ -189,48 +189,6 @@
     </div>
 
     <div v-if="isAddModalOpen" class="modal-overlay" @click.self="closeAddModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Neuen Kontakt erstellen</h2>
-                <button @click="closeAddModal" class="modal-close-btn">&times;</button>
-            </div>
-            <div class="form-group">
-                <label for="add-vorlage-select">Vorlage auswählen</label>
-                <select v-model="addModalVorlageId" id="add-vorlage-select" class="form-control">
-                    <option disabled value="">Bitte eine Vorlage wählen</option>
-                    <option v-for="vorlage in vorlagen" :value="vorlage.id">{[ vorlage.name ]}</option>
-                </select>
-            </div>
-            <div v-if="addModalVorlage">
-                <div v-for="gruppe in addModalVorlage.gruppen" class="group-box">
-                    <h4>{[ gruppe.name ]}</h4>
-                    <div v-for="eigenschaft in gruppe.eigenschaften" class="form-group">
-                        <label>{[ eigenschaft.name ]}</label>
-                        <input v-if="['Text', 'Zahl', 'Datum', 'Email', 'Tel'].includes(eigenschaft.datentyp)"
-                            :type="eigenschaft.datentyp.toLowerCase()" v-model="newContactData[eigenschaft.name]">
-                        <select v-else-if="eigenschaft.datentyp === 'Auswahl'"
-                            v-model="newContactData[eigenschaft.name]">
-                            <option disabled value="">Bitte wählen...</option>
-                            <option v-for="option in eigenschaft.optionen.split(',')" :value="option.trim()">{[
-                                option.trim() ]}</option>
-                        </select>
-                        <input v-else-if="eigenschaft.datentyp === 'Boolean'" type="checkbox"
-                            v-model="newContactData[eigenschaft.name]">
-                        <select v-else-if="eigenschaft.datentyp === 'Verknüpfung'"
-                            v-model="newContactData[eigenschaft.name]">
-                            <option disabled value="">Bitte wählen...</option>
-                            <option v-for="option in verknuepfungsOptionen[eigenschaft.id]" :value="option.id">
-                                {[ option.display_name ]}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button @click="closeAddModal" class="button secondary">Abbrechen</button>
-                <button @click="saveNewContact" class="button">Kontakt Speichern</button>
-            </div>
-        </div>
     </div>
 
     <div v-if="isImportModalOpen" class="modal-overlay" @click.self="closeImportModal">
@@ -248,44 +206,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>2. Datei hochladen (csv, txt, xlsx, vcf):</label>
-                    <input type="file" @change="handleFileUpload" accept=".csv,.txt,.xlsx,.vcf">
+                    <label>2. Datei hochladen (csv, txt, xlsx, vcf, msg, oft):</label>
+                    <input type="file" @change="handleFileUpload" accept=".csv,.txt,.xlsx,.vcf,.msg,.oft">
                 </div>
                 <div v-if="importError" class="alert-danger">{[ importError ]}</div>
             </div>
             <div v-if="importStep === 2 && importData.headers">
-                <h4>3. Spalten zuordnen</h4>
-                <p>Ordne die Spalten aus deiner Datei den Feldern der Vorlage zu.</p>
-                <div class="mapping-grid">
-                    <div class="mapping-header">Spalte aus Datei</div>
-                    <div class="mapping-header">Feld in Vorlage</div>
-                    <template v-for="header in importData.headers">
-                        <div><strong>{[ header ]}</strong></div>
-                        <div>
-                            <select v-model="importMappings[header]">
-                                <option value="">-- Ignorieren --</option>
-                                <option v-for="prop in importTargetVorlage.eigenschaften" :value="prop.name">
-                                    {[ prop.name ]}
-                                </option>
-                            </select>
-                        </div>
-                    </template>
-                </div>
-                <div class="data-preview">
-                    <h5>Vorschau der ersten 5 Zeilen</h5>
-                    <table class="table-container">
-                        <thead>
-                            <tr>
-                                <th v-for="h in importData.headers">{[ h ]}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="row in importData.preview_data">
-                                <td v-for="h in importData.headers">{[ row[h] ]}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
             <div class="modal-actions">
                 <button @click="closeImportModal" class="button secondary">Abbrechen</button>

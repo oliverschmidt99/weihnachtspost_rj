@@ -1,16 +1,17 @@
 # app/routes/kontakte.py
 import json
 from flask import Blueprint, render_template, request, redirect, url_for
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, subqueryload
 from ..models import db, Vorlage, Kontakt, Gruppe, Eigenschaft
 
 bp = Blueprint('kontakte', __name__, url_prefix='/kontakte')
 
 @bp.route("/")
 def auflisten():
+    # KORRIGIERTE UND OPTIMIERTE DATENBANKABFRAGE
     vorlagen_query = Vorlage.query.options(
-        joinedload(Vorlage.kontakte),
-        joinedload(Vorlage.gruppen).joinedload(Gruppe.eigenschaften)
+        subqueryload(Vorlage.kontakte),
+        subqueryload(Vorlage.gruppen).subqueryload(Gruppe.eigenschaften)
     ).order_by(Vorlage.name).all()
     
     vorlagen_data = []

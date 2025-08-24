@@ -1,12 +1,10 @@
 /* static/css/filter.css */
-
 .filter-container {
     padding: 1rem 1.5rem 1.5rem 1.5rem;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 1.5rem;
 }
-
 .filter-header {
     display: flex;
     justify-content: space-between;
@@ -22,7 +20,6 @@
 .filter-header .toggle-icon.collapsed {
     transform: rotate(-90deg);
 }
-
 .filter-edit-button {
     padding: 0.4rem 0.8rem;
     font-size: 0.85em;
@@ -33,14 +30,12 @@
     height: 14px;
     width: 14px;
 }
-
 .filter-body {
     margin-top: 1.5rem;
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
 }
-
 .filter-group { display: flex; flex-direction: column; }
 .filter-group-header {
     display: flex;
@@ -55,7 +50,6 @@
 .filter-group-header .group-toggle.all,
 .filter-group-header .group-toggle.some { color: var(--accent-color); }
 .filter-group-title { font-weight: 600; }
-
 .filter-items-container { display: flex; flex-direction: column; gap: 0.5rem; }
 .filter-item {
     padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.85em;
@@ -68,11 +62,9 @@
     color: white; font-weight: 500;
 }
 .filter-item:hover { border-color: var(--accent-color); }
-
 .filter-item.sortable-ghost, .filter-group.sortable-ghost {
     background-color: var(--card-active-bg); border-style: dashed;
 }
-
 .drag-handle {
     cursor: grab;
     margin-right: 0.5rem;

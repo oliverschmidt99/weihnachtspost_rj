@@ -35,8 +35,6 @@ def seed_standard_templates():
             except Exception as e:
                 print(f"Fehler beim Erstellen der Kunden-Vorlage: {e}")
                 db.session.rollback()
-        
-        # (Hier kann bei Bedarf die Logik für weitere Standard-Vorlagen eingefügt werden)
 
 def setup_database(app_instance):
     """Erstellt die Datenbank und füllt sie mit initialen Daten, falls nötig."""

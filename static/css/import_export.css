@@ -1,10 +1,8 @@
 /* static/css/import_export.css */
-
 .dropdown { 
     position: relative; 
     display: inline-block; 
 }
-
 .dropdown-content { 
     display: none; 
     position: absolute; 
@@ -16,7 +14,6 @@
     border: 1px solid var(--border-color);
     padding: 0.5rem 0;
 }
-
 .dropdown-content a { 
     color: var(--text-primary); 
     padding: 10px 16px; 
@@ -24,15 +21,12 @@
     display: block; 
     font-size: 0.9em;
 }
-
 .dropdown-content a:hover { 
     background-color: var(--card-active-bg); 
 }
-
 .dropdown:hover .dropdown-content { 
     display: block; 
 }
-
 .alert-danger { 
     color: #dc3545; 
     background-color: #f8d7da; 
@@ -42,7 +36,6 @@
     border: 1px solid transparent; 
     border-radius: .25rem; 
 }
-
 .mapping-grid { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
@@ -52,7 +45,6 @@
     overflow-y: auto;
     padding-right: 1rem;
 }
-
 .mapping-header { 
     font-weight: bold; 
     border-bottom: 1px solid var(--border-color); 
@@ -61,11 +53,9 @@
     top: 0;
     background-color: var(--bg-container);
 }
-
 .data-preview { 
     margin-top: 1.5rem; 
 }
-
 .data-preview table { 
     font-size: 0.8em; 
 }

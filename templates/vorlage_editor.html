@@ -16,6 +16,7 @@
         </div>
     </div>
 </div>
+
 <script type="application/json" id="vorlage-data">{{ vorlage_data|safe }}</script>
 <script type="application/json" id="action-url-data">{{ action_url|tojson|safe }}</script>
 <script type="application/json" id="all-vorlagen-data">{{ all_vorlagen_data|safe }}</script>
@@ -23,6 +24,5 @@
 
 {% block scripts %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="{{ url_for('static', filename='js/vorlage_editor.js') }}"></script>
 {% endblock %}

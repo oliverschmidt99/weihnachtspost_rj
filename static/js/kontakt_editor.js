@@ -1,5 +1,10 @@
+// static/js/kontakt_editor.js
 document.addEventListener("DOMContentLoaded", () => {
+  const editorRoot = document.getElementById("kontakt-editor-app");
+  if (!editorRoot) return;
+
   const { createApp, ref, onMounted } = Vue;
+
   const app = createApp({
     setup() {
       const vorlage = JSON.parse(
@@ -29,7 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 verknuepfungsOptionen.value[eigenschaft.id] =
                   await response.json();
               } catch (error) {
-                console.error(error);
+                console.error(
+                  "Fehler beim Laden der Verknüpfungs-Optionen:",
+                  error
+                );
               }
             }
           }
@@ -40,5 +48,5 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   });
   app.config.compilerOptions.delimiters = ["{[", "]}"];
-  app.mount("#kontakt-editor-app");
+  app.mount(editorRoot);
 });

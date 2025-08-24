@@ -1,19 +1,15 @@
 /* static/css/settings.css */
-
-/* Stile für den Dark-Mode-Schalter */
 .switch {
     position: relative;
     display: inline-block;
     width: 60px;
     height: 34px;
 }
-
 .switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
-
 .slider {
     position: absolute;
     cursor: pointer;
@@ -24,7 +20,6 @@
     background-color: #ccc;
     transition: .4s;
 }
-
 .slider:before {
     position: absolute;
     content: "";
@@ -35,23 +30,18 @@
     background-color: #fff;
     transition: .4s;
 }
-
 input:checked+.slider {
     background-color: var(--accent-color);
 }
-
 input:focus+.slider {
     box-shadow: 0 0 1px var(--accent-color);
 }
-
 input:checked+.slider:before {
     transform: translateX(26px);
 }
-
 .slider.round {
     border-radius: 34px;
 }
-
 .slider.round:before {
     border-radius: 50%;
 }

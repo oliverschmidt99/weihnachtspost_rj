@@ -1,8 +1,8 @@
 Flask
 Flask-SQLAlchemy
-extract-msg
-Werkzeug
 Flask-Migrate
+Werkzeug
+extract-msg
 openpyxl
 vobject
 fpdf2

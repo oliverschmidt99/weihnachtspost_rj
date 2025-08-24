@@ -72,10 +72,8 @@ def export_data(vorlage_id, file_format):
     vorlage_struktur = {
         "name": vorlage_model.name,
         "gruppen": [
-            {
-                "name": g.name,
-                "eigenschaften": [{"name": e.name} for e in g.eigenschaften]
-            } for g in vorlage_model.gruppen
+            {"name": g.name, "eigenschaften": [{"name": e.name} for e in g.eigenschaften]} 
+            for g in vorlage_model.gruppen
         ]
     }
     

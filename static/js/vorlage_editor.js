@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const editorRoot = document.getElementById("vorlage-editor-app");
   if (!editorRoot) {
-    return; // Stopp, wenn das Element nicht auf dieser Seite ist
+    return;
   }
 
   const {
@@ -34,37 +34,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const editedGroupIndex = ref(null);
       const deleteTarget = ref(null);
       const deleteMessage = ref("");
-
       const groupSortable = ref(null);
       const propertySortables = ref({});
       const collapsedGroups = ref({});
 
       const toggleGroupCollapse = (index) => {
         collapsedGroups.value[index] = !collapsedGroups.value[index];
-      };
-
-      onMounted(async () => {
-        try {
-          const [suggResponse, selOptResponse] = await Promise.all([
-            fetch("/api/attribute-suggestions"),
-            fetch("/api/selection-options"),
-          ]);
-          suggestions.value = await suggResponse.json();
-          selectionOptions.value = (await selOptResponse.json()).options;
-        } catch (error) {
-          console.error("Fehler:", error);
-        }
-        if (viewMode.value === "list") {
-          await nextTick();
-          initSortables();
-        }
-      });
-
-      const destroySortables = () => {
-        if (groupSortable.value) groupSortable.value.destroy();
-        Object.values(propertySortables.value).forEach((s) => s.destroy());
-        groupSortable.value = null;
-        propertySortables.value = {};
       };
 
       const initSortables = () => {
@@ -83,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
             },
           });
         }
-
         vorlage.value.gruppen.forEach((gruppe, index) => {
           const propContainer = document.querySelector(
             `.property-list-container[data-group-index='${index}']`
@@ -104,7 +78,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       };
 
-      watch(viewMode, async (newMode, oldMode) => {
+      const destroySortables = () => {
+        if (groupSortable.value) groupSortable.value.destroy();
+        Object.values(propertySortables.value).forEach((s) => s.destroy());
+        groupSortable.value = null;
+        propertySortables.value = {};
+      };
+
+      onMounted(async () => {
+        try {
+          const [suggResponse, selOptResponse] = await Promise.all([
+            fetch("/api/attribute-suggestions"),
+            fetch("/api/selection-options"),
+          ]);
+          suggestions.value = await suggResponse.json();
+          selectionOptions.value = (await selOptResponse.json()).options;
+        } catch (error) {
+          console.error("Fehler:", error);
+        }
+
+        if (viewMode.value === "list") {
+          await nextTick();
+          initSortables();
+        }
+      });
+
+      watch(viewMode, async (newMode) => {
         if (newMode === "list") {
           await nextTick();
           initSortables();
@@ -131,11 +130,13 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `Vorlage: ${vorlage.value.name}`
           : "Neue Vorlage erstellen"
       );
+
       const closeModal = () => {
         activeModal.value = null;
         editedGroup.value = null;
         editedGroupIndex.value = null;
       };
+
       const openGroupEditModal = (index) => {
         editedGroupIndex.value = index;
         editedGroup.value = JSON.parse(
@@ -143,24 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         activeModal.value = "groupEdit";
       };
-      const openDeleteModal = (type, index1) => {
-        deleteTarget.value = { type, index1 };
-        deleteMessage.value = "Möchten Sie diese Gruppe wirklich löschen?";
-        activeModal.value = "delete";
-      };
+
       const saveGroup = () => {
         if (editedGroupIndex.value !== null) {
           vorlage.value.gruppen[editedGroupIndex.value] = editedGroup.value;
         }
         closeModal();
       };
-      const confirmDelete = () => {
-        const { type, index1 } = deleteTarget.value;
-        if (type === "gruppe") {
-          vorlage.value.gruppen.splice(index1, 1);
-        }
-        closeModal();
-      };
+
       const addEigenschaft = () => {
         editedGroup.value.eigenschaften.push({
           name: "",
@@ -168,29 +159,30 @@ document.addEventListener("DOMContentLoaded", () => {
           optionen: "",
         });
       };
+
       const removeEigenschaft = (index) => {
         editedGroup.value.eigenschaften.splice(index, 1);
       };
+
       const addGroupFromSuggestion = () => {
         if (!selectedSuggestionCategory.value) return;
         const cat = selectedSuggestionCategory.value;
-        const g = { name: cat.name, eigenschaften: [] };
-        cat.attributes.forEach((attr) => {
-          let dt = "Text";
-          if (attr.toLowerCase().includes("datum")) dt = "Datum";
-          if (
-            attr.toLowerCase().includes("anrede") ||
-            attr.toLowerCase().includes("status")
-          )
-            dt = "Auswahl";
-          g.eigenschaften.push({ name: attr, datentyp: dt, optionen: "" });
-        });
+        const g = {
+          name: cat.name,
+          eigenschaften: cat.attributes.map((attr) => ({
+            name: attr,
+            datentyp: "Text",
+            optionen: "",
+          })),
+        };
         vorlage.value.gruppen.push(g);
         selectedSuggestionCategory.value = null;
       };
+
       const addEmptyGruppe = () => {
         vorlage.value.gruppen.push({ name: "Neue Gruppe", eigenschaften: [] });
       };
+
       const saveVorlage = async () => {
         try {
           const r = await fetch(actionUrl, {
@@ -198,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(vorlage.value),
           });
-          if (!r.ok) throw new Error("Fehler");
+          if (!r.ok) throw new Error("Speichern fehlgeschlagen");
           const res = await r.json();
           if (res.redirect_url) window.location.href = res.redirect_url;
         } catch (e) {
@@ -215,15 +207,12 @@ document.addEventListener("DOMContentLoaded", () => {
         viewMode,
         activeModal,
         editedGroup,
-        deleteMessage,
         addGroupFromSuggestion,
         addEmptyGruppe,
         openGroupEditModal,
         saveGroup,
         addEigenschaft,
         removeEigenschaft,
-        openDeleteModal,
-        confirmDelete,
         closeModal,
         saveVorlage,
         allVorlagen,

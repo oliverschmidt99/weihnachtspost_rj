@@ -10,7 +10,7 @@ def verwalten():
     vorlagen_liste = Vorlage.query.order_by(Vorlage.name).all()
     return render_template("vorlagen_verwaltung.html", vorlagen=vorlagen_liste)
 
-@bp.route("/editor", methods=["GET"])
+@bp.route("/editor")
 def editor():
     vorlage_id = request.args.get('vorlage_id', type=int)
     all_vorlagen = Vorlage.query.all()
@@ -19,10 +19,8 @@ def editor():
         vorlage_data = {
             "name": vorlage.name,
             "gruppen": [
-                {
-                    "name": g.name,
-                    "eigenschaften": [{"name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]
-                } for g in vorlage.gruppen
+                {"name": g.name, "eigenschaften": [{"name": e.name, "datentyp": e.datentyp, "optionen": e.optionen} for e in g.eigenschaften]} 
+                for g in vorlage.gruppen
             ]
         }
         action_url = url_for('vorlagen.speichern', vorlage_id=vorlage.id)
@@ -55,12 +53,7 @@ def speichern(vorlage_id=None):
         db.session.add(gruppe)
         db.session.flush()
         for eigenschaft_data in gruppe_data.get('eigenschaften', []):
-            eigenschaft = Eigenschaft(
-                name=eigenschaft_data['name'], 
-                datentyp=eigenschaft_data['datentyp'], 
-                optionen=eigenschaft_data.get('optionen', ''), 
-                gruppe_id=gruppe.id
-            )
+            eigenschaft = Eigenschaft(name=eigenschaft_data['name'], datentyp=eigenschaft_data['datentyp'], optionen=eigenschaft_data.get('optionen', ''), gruppe_id=gruppe.id)
             db.session.add(eigenschaft)
     db.session.commit()
     return jsonify({"redirect_url": url_for('vorlagen.verwalten')})

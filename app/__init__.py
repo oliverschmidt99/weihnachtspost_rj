@@ -6,8 +6,8 @@ from .models import db
 
 def create_app():
     """Erstellt und konfiguriert die Flask-Anwendung."""
-    app = Flask(__name__, 
-                static_folder="../static", 
+    app = Flask(__name__,
+                static_folder="../static",
                 template_folder="../templates",
                 instance_relative_config=True)
 

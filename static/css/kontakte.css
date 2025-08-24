@@ -1,20 +1,16 @@
 /* static/css/kontakte.css */
-
 .view-switcher { 
     display: flex; 
     align-items: center; 
     gap: 1rem; 
     margin-bottom: 1.5rem; 
 }
-
 .table-container {
     font-size: 0.9em;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     overflow: hidden;
 }
-
-/* Gitternetzlinien für die Tabelle */
 .table-container th, .table-container td { 
     padding: 0.2rem 0.8rem;
     white-space: nowrap; 
@@ -22,12 +18,9 @@
     border-bottom: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
 }
-
 .table-container th:last-child, .table-container td:last-child {
     border-right: none;
 }
-
-/* Eingabefelder und Selects im Spreadsheet-Stil */
 .inline-edit-input, .inline-select {
     font-size: 1em; 
     font-family: inherit;
@@ -39,8 +32,6 @@
     border-radius: 0;
     outline: none;
 }
-
-/* Speziell für das Select-Element, um den Pfeil anzupassen */
 .inline-select {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -49,29 +40,24 @@
     background-repeat: no-repeat;
     background-position: right 0.5rem center;
     background-size: 1em;
-    padding-right: 1.5rem; /* Platz für den Pfeil schaffen */
+    padding-right: 1.5rem;
 }
-
 .inline-edit-input:focus, .inline-select:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: -2px;
     background-color: var(--card-active-bg);
 }
-
-/* Kleinere Icon-Buttons in der Tabelle */
 .table-container .icon-btn {
     width: 28px;
     height: 28px;
     padding: 5px;
 }
-
 .group-box {
     margin-bottom: 1.5rem; 
     padding: 1rem;
     border: 1px solid var(--border-color); 
     border-radius: 6px;
 }
-
 .group-box h4 {
     margin-top: 0; 
     font-size: 1em; 

@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const app = createApp({
     setup() {
-      // --- Kompletter State (alt und neu kombiniert) ---
+      // --- Kompletter State ---
       const vorlagen = ref(
         JSON.parse(
           document.getElementById("vorlagen-for-json-data").textContent
@@ -23,16 +23,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const sortableGroupInstance = ref(null);
       const sortableItemInstances = ref({});
 
-      // Modals
       const isAddModalOpen = ref(false);
       const isImportModalOpen = ref(false);
 
-      // Add Modal
       const newContactData = ref({});
       const addModalVorlageId = ref(activeVorlageId.value);
       const verknuepfungsOptionen = ref({});
 
-      // Import Modal
       const importStep = ref(1);
       const importTargetVorlageId = ref(null);
       const importFile = ref(null);

@@ -1,7 +1,7 @@
-// static/js/vorlage_editor.js
 document.addEventListener("DOMContentLoaded", () => {
   const { createApp, ref, onMounted, computed } = Vue;
-  createApp({
+
+  const app = createApp({
     setup() {
       const vorlage = ref(
         JSON.parse(document.getElementById("vorlage-data").textContent)
@@ -9,7 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const allVorlagen = ref(
         JSON.parse(document.getElementById("all-vorlagen-data").textContent)
       );
-      const actionUrl = document.getElementById("action-url-data").textContent;
+      const actionUrl = document
+        .getElementById("action-url-data")
+        .textContent.slice(1, -1);
       const suggestions = ref({ categories: [] });
       const selectionOptions = ref([]);
       const selectedSuggestionCategory = ref(null);
@@ -30,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
           suggestions.value = await suggResponse.json();
           selectionOptions.value = (await selOptResponse.json()).options;
         } catch (error) {
-          console.error("Fehler beim Laden der Daten:", error);
+          console.error("Fehler:", error);
         }
       });
 
@@ -39,9 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `Vorlage: ${vorlage.value.name}`
           : "Neue Vorlage erstellen"
       );
-      const toggleGroupCollapse = (index) => {
-        collapsedGroups.value[index] = !collapsedGroups.value[index];
-      };
       const closeModal = () => {
         activeModal.value = null;
         editedGroup.value = null;
@@ -125,7 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedSuggestionCategory,
         viewMode,
         collapsedGroups,
-        toggleGroupCollapse,
         activeModal,
         editedGroup,
         deleteMessage,
@@ -142,5 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
         allVorlagen,
       };
     },
-  }).mount("#vorlage-editor-app");
+  });
+  app.config.compilerOptions.delimiters = ["{[", "]}"];
+  app.mount("#vorlage-editor-app");
 });

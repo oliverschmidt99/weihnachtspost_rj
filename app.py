@@ -99,11 +99,6 @@ def create_database():
         else:
             seed_standard_templates()
 
-def backup_database(): pass
-def allowed_file(filename): return True
-def parse_message_text_from_file(filepath): return ""
-def parse_vcard_text_for_import(text): return {}
-
 # --- Haupt-Routen und API ---
 @app.route("/")
 def index():
@@ -186,8 +181,7 @@ def vorlage_speichern(vorlage_id=None):
     if vorlage_id:
         vorlage = Vorlage.query.get_or_404(vorlage_id)
         vorlage.name = data['name']
-        for gruppe in vorlage.gruppen:
-            db.session.delete(gruppe)
+        Gruppe.query.filter_by(vorlage_id=vorlage_id).delete()
         db.session.flush()
     else:
         vorlage = Vorlage(name=data['name'])
@@ -206,7 +200,6 @@ def vorlage_speichern(vorlage_id=None):
 @app.route("/vorlagen/loeschen/<int:vorlage_id>", methods=["POST"])
 def vorlage_loeschen(vorlage_id):
     vorlage = Vorlage.query.get_or_404(vorlage_id)
-    Kontakt.query.filter_by(vorlage_id=vorlage_id).delete()
     db.session.delete(vorlage)
     db.session.commit()
     return redirect(url_for("vorlagen_verwalten"))
@@ -224,7 +217,15 @@ def kontakte_auflisten():
         vorlage_dict = {
             "id": v.id,
             "name": v.name,
-            "eigenschaften": [{"id": e.id, "name": e.name, "datentyp": e.datentyp} for e in v.eigenschaften],
+            # KORREKTUR: 'optionen' wird jetzt immer mit übergeben
+            "eigenschaften": [
+                {
+                    "id": e.id,
+                    "name": e.name,
+                    "datentyp": e.datentyp,
+                    "optionen": e.optionen
+                } for g in v.gruppen for e in g.eigenschaften
+            ],
             "kontakte": [{"id": k.id, "daten": k.get_data()} for k in v.kontakte],
             "gruppen": [
                 {

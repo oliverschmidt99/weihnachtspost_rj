@@ -35,15 +35,6 @@
     </header>
     <main>
         <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <div class="flash-message-container">
-                {% for category, message in messages %}
-                <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
             {% block content %}{% endblock %}
         </div>
     </main>
@@ -51,6 +42,7 @@
         <p>&copy; Oliver Schmidt</p>
     </footer>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 

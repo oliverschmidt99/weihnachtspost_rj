@@ -1,9 +1,9 @@
-<!DOCTYPE html>
 {% extends "base.html" %}
 {% block title %}Kontaktübersicht{% endblock %}
 
 {% block head_styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/kontakte.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/kontakte.css', v='1.3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/filter.css', v='1.5') }}">
 {% endblock %}
 
 {% block content %}
@@ -11,46 +11,85 @@
     <div class="actions-header">
         <h1>Kontaktübersicht</h1>
         <div class="button-group">
-            <button @click="openAddModal" class="button add">➕ Kontakt hinzufügen</button>
-            <button @click="openImportModal" class="button secondary">↑ Aus MSG importieren</button>
+            <button @click="openAddModal" class="button add">
+                <img src="{{ url_for('static', filename='img/icon_plus.svg') }}" alt="Hinzufügen">
+                Kontakt hinzufügen
+            </button>
+            <button @click="openImportModal" class="button secondary">
+                <img src="{{ url_for('static', filename='img/icon_upload.svg') }}" alt="Importieren">
+                Aus MSG importieren
+            </button>
         </div>
     </div>
 
     <div class="view-switcher">
-        <label for="vorlagen-select" style="margin-right: 0.5rem; font-weight: 500;">Angezeigte Vorlage:</label>
+        <label for="vorlagen-select">Angezeigte Vorlage:</label>
         <select v-if="vorlagen.length > 0" v-model="activeVorlageId" id="vorlagen-select">
             <option v-for="vorlage in vorlagen" :value="vorlage.id" v-text="vorlage.name"></option>
         </select>
+    </div>
+
+    <div v-if="activeVorlage" class="filter-container">
+        <div class="filter-header" @click="isFilterVisible = !isFilterVisible">
+            <h3>Spaltenfilter</h3>
+            <div style="display: flex; align-items: center;">
+                <button v-if="isFilterVisible" @click.stop="toggleEditOrderMode"
+                    class="button secondary filter-edit-button" :class="{ 'active': editOrderMode }">
+                    <img src="{{ url_for('static', filename='img/icon_edit.svg') }}" alt="Bearbeiten">
+                    {[ editOrderMode ? 'Fertig' : 'Reihenfolge ändern' ]}
+                </button>
+                <span class="toggle-icon" :class="{ collapsed: !isFilterVisible }">▼</span>
+            </div>
+        </div>
+        <div v-if="isFilterVisible" class="filter-body">
+            <div v-for="gruppe in activeVorlage.gruppen" class="filter-group" :key="gruppe.id">
+                <div class="filter-group-header" @click="!editOrderMode && toggleGroupFilter(gruppe)">
+                    <span v-if="editOrderMode" class="drag-handle">⠿</span>
+                    <img v-else :src="getToggleIcon(gruppe)" :class="getGroupToggleState(gruppe)" class="group-toggle"
+                        alt="Toggle Group">
+                    <span class="filter-group-title">{[ gruppe.name ]}</span>
+                </div>
+                <div class="filter-items-container" :id="'filter-group-' + gruppe.id">
+                    <div v-for="eigenschaft in gruppe.eigenschaften" class="filter-item"
+                        :class="{ active: filterState[eigenschaft.name] }"
+                        @click="!editOrderMode && (filterState[eigenschaft.name] = !filterState[eigenschaft.name])">
+                        <span v-if="editOrderMode" class="drag-handle">⠿</span>
+                        {[ eigenschaft.name ]}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div v-if="activeVorlage" class="card table-container">
         <table>
             <thead>
                 <tr>
-                    <th v-for="e in activeVorlage.eigenschaften" v-text="e.name"></th>
+                    <th v-for="e in filteredEigenschaften">{[ e.name ]}</th>
                     <th>Aktionen</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="kontakt in activeVorlage.kontakte">
-                    <td v-for="e in activeVorlage.eigenschaften"><input type="text" :value="kontakt.daten[e.name] || ''"
-                            @blur="updateField(kontakt, e.name, $event.target.value)" class="inline-edit-input"></td>
-                    <td class="actions"><a :href="'/kontakte/editor?kontakt_id=' + kontakt.id" class="icon-btn edit"
-                            title="Im Formular bearbeiten">✏️</a></td>
+                <tr v-if="activeVorlage.kontakte.length > 0" v-for="kontakt in activeVorlage.kontakte">
+                    <td v-for="e in filteredEigenschaften">
+                    </td>
+                    <td class="actions">
+                    </td>
+                </tr>
+                <tr v-else>
+                    <td :colspan="filteredEigenschaften.length + 1" style="text-align: center; padding: 2rem;">
+                        Für diese Vorlage wurden noch keine Kontakte erstellt.
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
     <div v-if="!activeVorlage" class="card">
-        <p>Keine Vorlagen gefunden. <a href="{{ url_for('vorlagen_verwalten') }}">Erstelle zuerst eine Vorlage.</a></p>
+        <p>Keine Vorlagen gefunden.</p>
     </div>
 
-    <div v-if="isAddModalOpen" class="modal-overlay" @click.self="closeAddModal">
-    </div>
-
-    <div v-if="isImportModalOpen" class="modal-overlay" @click.self="closeImportModal">
-    </div>
 </div>
+
 <script type="application/json" id="vorlagen-for-json-data">{{ vorlagen_for_json|safe }}</script>
 {% endblock %}
 

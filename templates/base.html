@@ -21,14 +21,14 @@
             <img src="{{ url_for('static', filename='img/logo_rolf-janssen_2024.svg') }}" alt="Logo" id="header-logo">
         </div>
         <nav id="main-nav">
-            <div class="nav-item"><a href="{{ url_for('index') }}"
-                    class="{{ 'active' if request.endpoint == 'index' else '' }}">Start</a></div>
-            <div class="nav-item"><a href="{{ url_for('vorlagen_verwalten') }}"
-                    class="{{ 'active' if 'vorlage' in request.endpoint else '' }}">Vorlagen</a></div>
-            <div class="nav-item"><a href="{{ url_for('kontakte_auflisten') }}"
-                    class="{{ 'active' if 'kontakt' in request.endpoint else '' }}">Kontakte</a></div>
-            <div class="nav-item"><a href="{{ url_for('settings') }}"
-                    class="{{ 'active' if request.endpoint == 'settings' else '' }}">Einstellungen</a></div>
+            <div class="nav-item"><a href="{{ url_for('main.index') }}"
+                    class="{{ 'active' if 'main.index' in request.endpoint else '' }}">Start</a></div>
+            <div class="nav-item"><a href="{{ url_for('vorlagen.verwalten') }}"
+                    class="{{ 'active' if 'vorlagen' in request.endpoint else '' }}">Vorlagen</a></div>
+            <div class="nav-item"><a href="{{ url_for('kontakte.auflisten') }}"
+                    class="{{ 'active' if 'kontakte' in request.endpoint else '' }}">Kontakte</a></div>
+            <div class="nav-item"><a href="{{ url_for('main.settings') }}"
+                    class="{{ 'active' if 'main.settings' in request.endpoint else '' }}">Einstellungen</a></div>
             <div class="nav-slider"></div>
         </nav>
         <div class="header-right"></div>

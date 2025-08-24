@@ -11,114 +11,8 @@
     <div class="actions-header">
         <h1>{[ pageTitle ]}</h1>
         <div class="button-group">
-            <a href="{{ url_for('vorlagen_verwalten') }}" class="button secondary">Abbrechen</a>
+            <a href="{{ url_for('vorlagen.verwalten') }}" class="button secondary">Abbrechen</a>
             <button @click="saveVorlage" class="button">Vorlage Speichern</button>
-        </div>
-    </div>
-    <div class="card">
-        <fieldset>
-            <legend>Allgemein</legend>
-            <div class="form-group">
-                <label for="vorlage-name">Name der Vorlage</label>
-                <input type="text" id="vorlage-name" v-model="vorlage.name" placeholder="z.B. Kunde, Lieferant">
-            </div>
-        </fieldset>
-    </div>
-    <div class="view-switcher">
-        <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }">Listenansicht (Sortieren)</button>
-        <button @click="viewMode = 'tile'" :class="{ active: viewMode === 'tile' }">Kachelansicht</button>
-    </div>
-    <div class="card add-group-bar">
-        <select v-model="selectedSuggestionCategory" @change="addGroupFromSuggestion">
-            <option :value="null" disabled>Standard-Gruppe auswählen...</option>
-            <option v-for="category in suggestions.categories" :value="category" v-text="category.name"></option>
-        </select>
-        <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe erstellen</button>
-    </div>
-
-    <div v-if="viewMode === 'list'" class="list-view-container" id="group-list-container">
-        <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="group-list-item card"
-            :key="gruppe.name + gruppeIndex">
-            <div class="list-item-header" @click="toggleGroupCollapse(gruppeIndex)">
-                <svg class="toggle-icon" :class="{ collapsed: collapsedGroups[gruppeIndex] }"
-                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                <span @click.stop class="drag-handle">⠿</span>
-                <strong v-text="gruppe.name || 'Unbenannte Gruppe'"></strong>
-                <div @click.stop class="button-group">
-                    <button @click="openGroupEditModal(gruppeIndex)" class="button secondary edit">Bearbeiten</button>
-                    <button @click="openDeleteModal('gruppe', gruppeIndex)" class="button danger">Löschen</button>
-                </div>
-            </div>
-            <div v-show="!collapsedGroups[gruppeIndex]" class="property-list-container" :data-group-index="gruppeIndex">
-                <div v-for="(eigenschaft, eigenschaftIndex) in gruppe.eigenschaften" class="property-list-item"
-                    :key="eigenschaft.name + eigenschaftIndex">
-                    <span class="drag-handle">⠿</span>
-                    <span class="property-name">{[ eigenschaft.name ]}</span>
-                    <span class="property-type-badge">{[ eigenschaft.datentyp ]}</span>
-                </div>
-                <div v-if="gruppe.eigenschaften.length === 0" class="empty-properties-info">
-                    Diese Gruppe hat noch keine Eigenschaften. Klicke auf "Bearbeiten", um welche hinzuzufügen.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div v-if="viewMode === 'tile'" class="tile-view-container">
-        <div v-for="(gruppe, gruppeIndex) in vorlage.gruppen" class="group-tile">
-            <div class="tile-header"><strong v-text="gruppe.name || 'Unbenannte Gruppe'"></strong>
-                <div class="tile-actions">
-                    <button @click="openGroupEditModal(gruppeIndex)" class="icon-btn edit"
-                        title="Gruppe bearbeiten"><img src="{{ url_for('static', filename='img/icon_edit.svg') }}"
-                            alt="Edit"></button>
-                    <button @click="openDeleteModal('gruppe', gruppeIndex)" class="icon-btn delete"
-                        title="Gruppe löschen"><img src="{{ url_for('static', filename='img/icon_delete.svg') }}"
-                            alt="Delete"></button>
-                </div>
-            </div>
-            <div class="tile-content"><span v-for="eigenschaft in gruppe.eigenschaften" class="tile-property-badge"
-                    v-text="eigenschaft.name"></span></div>
-        </div>
-    </div>
-    <div v-if="activeModal === 'groupEdit'" class="modal-overlay" @click.self="closeModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Gruppe bearbeiten</h3><button @click="closeModal" class="modal-close-btn">&times;</button>
-            </div>
-            <div class="form-group"><label>Name der Gruppe</label><input type="text" v-model="editedGroup.name"></div>
-            <h4>Eigenschaften</h4>
-            <div v-for="(eigenschaft, eigenschaftIndex) in editedGroup.eigenschaften" class="modal-property-row">
-                <input type="text" v-model="eigenschaft.name" placeholder="Name der Eigenschaft">
-                <select v-model="eigenschaft.datentyp">
-                    <option>Text</option>
-                    <option>Zahl</option>
-                    <option>Datum</option>
-                    <option>Boolean</option>
-                    <option>Auswahl</option>
-                    <option>Verknüpfung</option>
-                </select>
-                <div>
-                    <select v-if="eigenschaft.datentyp === 'Auswahl'" v-model="eigenschaft.optionen">
-                        <option value="">Standard-Auswahl wählen...</option>
-                        <option v-for="opt in selectionOptions" :value="opt.values" v-text="opt.name"></option>
-                    </select>
-                    <select v-if="eigenschaft.datentyp === 'Verknüpfung'" v-model="eigenschaft.optionen">
-                        <option value="">Vorlage auswählen...</option>
-                        <option v-for="v in allVorlagen" :value="'vorlage_id:' + v.id">{[ v.name ]}</option>
-                    </select>
-                </div>
-                <button @click="removeEigenschaft(eigenschaftIndex)" class="icon-btn delete"
-                    title="Eigenschaft löschen"><img src="{{ url_for('static', filename='img/icon_delete.svg') }}"
-                        alt="Delete"></button>
-            </div>
-            <div class="modal-actions">
-                <button @click="addEigenschaft" class="button secondary" style="margin-right: auto;">+
-                    Eigenschaft</button>
-                <button @click="closeModal" class="button secondary">Abbrechen</button>
-                <button @click="saveGroup" class="button">Speichern</button>
-            </div>
         </div>
     </div>
 </div>
@@ -129,5 +23,6 @@
 
 {% block scripts %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="{{ url_for('static', filename='js/vorlage_editor.js') }}"></script>
 {% endblock %}

@@ -1,7 +1,7 @@
-# src/exporter.py
+# app/services/exporter_service.py
 
-# KORRIGIERTER IMPORT-PFAD
-from src.exporters import csv_exporter, xlsx_exporter, pdf_exporter
+# KORRIGIERTER IMPORT-PFAD: Nutzt relative Imports
+from .exporters import csv_exporter, xlsx_exporter, pdf_exporter
 
 def export_data(file_format, kontakte_data, vorlage_struktur):
     """

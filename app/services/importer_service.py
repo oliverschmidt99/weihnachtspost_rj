@@ -1,15 +1,14 @@
-# src/importer.py
+# app/services/importer_service.py
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app
 
-# KORRIGIERTER IMPORT-PFAD
-from src.importers import csv_importer, msg_importer, vcf_importer, xlsx_importer
+# KORRIGIERTER IMPORT-PFAD: Nutzt relative Imports innerhalb des 'app'-Pakets
+from .importers import csv_importer, msg_importer, vcf_importer, xlsx_importer
 
 def import_file(file_storage):
     """
     Erkennt den Dateityp und ruft den entsprechenden Parser auf.
-    Gibt die extrahierten Daten als Liste von Dictionaries zurück.
     """
     filename = secure_filename(file_storage.filename)
     file_ext = os.path.splitext(filename)[1].lower()

@@ -102,13 +102,143 @@
         </select>
     </div>
 
+    <div v-if="activeVorlage" class="filter-container">
+        <div class="filter-header" @click="isFilterVisible = !isFilterVisible">
+            <h3>Spaltenfilter</h3>
+            <div style="display: flex; align-items: center;">
+                <button v-if="isFilterVisible" @click.stop="toggleEditOrderMode"
+                    class="button secondary filter-edit-button" :class="{ 'active': editOrderMode }">
+                    <img src="{{ url_for('static', filename='img/icon_edit.svg') }}" alt="Bearbeiten">
+                    {[ editOrderMode ? 'Fertig' : 'Reihenfolge ändern' ]}
+                </button>
+                <svg class="toggle-icon" :class="{ collapsed: !isFilterVisible }" xmlns="http://www.w3.org/2000/svg"
+                    width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </div>
+        <div v-if="isFilterVisible" class="filter-body">
+            <div v-for="gruppe in activeVorlage.gruppen" class="filter-group" :key="gruppe.id">
+                <div class="filter-group-header" @click="!editOrderMode && toggleGroupFilter(gruppe)">
+                    <span v-if="editOrderMode" class="drag-handle">⠿</span>
+                    <img v-else :src="getToggleIcon(gruppe)" :class="getGroupToggleState(gruppe)" class="group-toggle"
+                        alt="Toggle Group">
+                    <span class="filter-group-title">{[ gruppe.name ]}</span>
+                </div>
+                <div class="filter-items-container" :id="'filter-group-' + gruppe.id">
+                    <div v-for="eigenschaft in gruppe.eigenschaften" class="filter-item"
+                        :class="{ active: filterState[eigenschaft.name] }"
+                        @click="!editOrderMode && (filterState[eigenschaft.name] = !filterState[eigenschaft.name])">
+                        <span v-if="editOrderMode" class="drag-handle">⠿</span>
+                        {[ eigenschaft.name ]}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="activeVorlage" class="card table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th v-for="e in filteredEigenschaften">{[ e.name ]}</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="activeVorlage.kontakte.length > 0" v-for="kontakt in activeVorlage.kontakte"
+                    :key="kontakt.id">
+                    <td v-for="e in filteredEigenschaften">
+                        <span v-if="e.datentyp === 'Boolean'">
+                            <input type="checkbox" :checked="kontakt.daten[e.name]"
+                                @change="updateField(kontakt, e.name, $event.target.checked)" class="inline-edit-input">
+                        </span>
+                        <select v-else-if="e.datentyp === 'Auswahl'" class="inline-select"
+                            @change="updateField(kontakt, e.name, $event.target.value)">
+                            <option v-for="option in e.optionen.split(',')" :value="option.trim()"
+                                :selected="option.trim() == kontakt.daten[e.name]">{[ option.trim() ]}</option>
+                        </select>
+                        <input v-else :type="e.datentyp.toLowerCase() === 'zahl' ? 'number' : 'text'"
+                            :value="kontakt.daten[e.name]" @change="updateField(kontakt, e.name, $event.target.value)"
+                            class="inline-edit-input">
+                    </td>
+                    <td class="actions">
+                        <a :href="'/kontakte/editor?kontakt_id=' + kontakt.id" class="icon-btn edit"
+                            title="Kontakt bearbeiten">
+                            <img src="{{ url_for('static', filename='img/icon_edit.svg') }}" alt="Bearbeiten">
+                        </a>
+                        <form :action="'/kontakte/loeschen/' + kontakt.id" method="post"
+                            onsubmit="return confirm('Bist du sicher, dass du diesen Kontakt löschen möchtest?');">
+                            <button type="submit" class="icon-btn delete" title="Kontakt löschen">
+                                <img src="{{ url_for('static', filename='img/icon_delete.svg') }}" alt="Löschen">
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr v-else>
+                    <td :colspan="filteredEigenschaften.length + 1" style="text-align: center; padding: 2rem;">
+                        Für diese Vorlage wurden noch keine Kontakte erstellt.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div v-if="!activeVorlage" class="card">
+        <p>Keine Vorlagen gefunden. Bitte erstelle zuerst eine unter "Vorlagen".</p>
+    </div>
+
+    <div v-if="isAddModalOpen" class="modal-overlay" @click.self="closeAddModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Neuen Kontakt erstellen</h2>
+                <button @click="closeAddModal" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="add-vorlage-select">Vorlage auswählen</label>
+                <select v-model="addModalVorlageId" id="add-vorlage-select" class="form-control">
+                    <option disabled value="">Bitte eine Vorlage wählen</option>
+                    <option v-for="vorlage in vorlagen" :value="vorlage.id">{[ vorlage.name ]}</option>
+                </select>
+            </div>
+            <div v-if="addModalVorlage">
+                <div v-for="gruppe in addModalVorlage.gruppen" class="group-box">
+                    <h4>{[ gruppe.name ]}</h4>
+                    <div v-for="eigenschaft in gruppe.eigenschaften" class="form-group">
+                        <label>{[ eigenschaft.name ]}</label>
+                        <input v-if="['Text', 'Zahl', 'Datum', 'Email', 'Tel'].includes(eigenschaft.datentyp)"
+                            :type="eigenschaft.datentyp.toLowerCase()" v-model="newContactData[eigenschaft.name]">
+                        <select v-else-if="eigenschaft.datentyp === 'Auswahl'"
+                            v-model="newContactData[eigenschaft.name]">
+                            <option disabled value="">Bitte wählen...</option>
+                            <option v-for="option in eigenschaft.optionen.split(',')" :value="option.trim()">{[
+                                option.trim() ]}</option>
+                        </select>
+                        <input v-else-if="eigenschaft.datentyp === 'Boolean'" type="checkbox"
+                            v-model="newContactData[eigenschaft.name]">
+                        <select v-else-if="eigenschaft.datentyp === 'Verknüpfung'"
+                            v-model="newContactData[eigenschaft.name]">
+                            <option disabled value="">Bitte wählen...</option>
+                            <option v-for="option in verknuepfungsOptionen[eigenschaft.id]" :value="option.id">
+                                {[ option.display_name ]}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button @click="closeAddModal" class="button secondary">Abbrechen</button>
+                <button @click="saveNewContact" class="button">Kontakt Speichern</button>
+            </div>
+        </div>
+    </div>
+
     <div v-if="isImportModalOpen" class="modal-overlay" @click.self="closeImportModal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
                 <h2>Kontakte importieren</h2>
                 <button @click="closeImportModal" class="modal-close-btn">&times;</button>
             </div>
-
             <div v-if="importStep === 1">
                 <div class="form-group">
                     <label for="import-vorlage-select">1. Ziel-Vorlage auswählen:</label>
@@ -123,7 +253,6 @@
                 </div>
                 <div v-if="importError" class="alert-danger">{[ importError ]}</div>
             </div>
-
             <div v-if="importStep === 2 && importData.headers">
                 <h4>3. Spalten zuordnen</h4>
                 <p>Ordne die Spalten aus deiner Datei den Feldern der Vorlage zu.</p>
@@ -158,7 +287,6 @@
                     </table>
                 </div>
             </div>
-
             <div class="modal-actions">
                 <button @click="closeImportModal" class="button secondary">Abbrechen</button>
                 <button v-if="importStep === 2" @click="finalizeImport" class="button">Import starten</button>

@@ -12,16 +12,17 @@ from flask_migrate import Migrate
 from sqlalchemy.orm import joinedload
 
 from src.models import db, Vorlage, Gruppe, Eigenschaft, Kontakt
-from src import importer, exporter # NEU
+from src import importer, exporter # Nur noch diese beiden werden benötigt
 
 # -- Konfiguration --
 BACKUP_FOLDER = "backups"
 UPLOAD_FOLDER = "upload_files"
-ALLOWED_EXTENSIONS = {"csv", "msg", "oft", "rtf", "txt", "vcf", "xlsx"}
+ALLOWED_EXTENSIONS = {"csv", "msg", "oft", "txt", "vcf", "xlsx"} # rtf entfernt, da nicht implementiert
 
 app = Flask(__name__, static_folder="static")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+# ... (Rest der Konfiguration bleibt gleich) ...
 instance_path = os.path.join(basedir, "instance")
 os.makedirs(instance_path, exist_ok=True)
 backup_path = os.path.join(basedir, BACKUP_FOLDER)
@@ -38,8 +39,7 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 from src import models
-
-# --- (Funktionen wie seed_standard_templates und create_database bleiben unverändert) ---
+# ... (seed_standard_templates und create_database bleiben gleich) ...
 def seed_standard_templates():
     with app.app_context():
         if not Vorlage.query.filter_by(name="Standard-Kunde").first():
@@ -95,12 +95,12 @@ def create_database():
         else:
             seed_standard_templates()
 
-# --- Haupt-Routen und API ---
+# --- Routen ---
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# --- (Bestehende API-Routen bleiben unverändert) ---
+# ... (API-Routen bleiben gleich) ...
 @app.route("/api/attribute-suggestions")
 def attribute_suggestions():
     return send_from_directory('data', 'attribute_suggestions.json')
@@ -147,7 +147,7 @@ def create_kontakt():
     response_data = {"id": neuer_kontakt.id, "daten": neuer_kontakt.get_data()}
     return jsonify({"success": True, "kontakt": response_data})
 
-# --- NEUE Import/Export-Routen ---
+# --- Import/Export-Routen (jetzt vereinfacht) ---
 
 @app.route("/import/upload", methods=["POST"])
 def upload_import_file():
@@ -175,6 +175,7 @@ def upload_import_file():
 
 @app.route("/import/finalize", methods=["POST"])
 def finalize_import():
+    # ... (Diese Route bleibt unverändert) ...
     data = request.get_json()
     vorlage_id = data.get('vorlage_id')
     mappings = data.get('mappings')
@@ -204,30 +205,23 @@ def finalize_import():
     flash(f"{count} Kontakte wurden erfolgreich importiert.", "success")
     return jsonify({"success": True, "redirect_url": url_for('kontakte_auflisten')})
 
-
 @app.route("/export/<int:vorlage_id>/<string:file_format>")
 def export_data(vorlage_id, file_format):
-    vorlage = Vorlage.query.options(joinedload(Vorlage.kontakte), joinedload(Vorlage.gruppen).joinedload(Gruppe.eigenschaften)).get_or_404(vorlage_id)
+    vorlage_model = Vorlage.query.options(joinedload(Vorlage.kontakte), joinedload(Vorlage.gruppen).joinedload(Gruppe.eigenschaften)).get_or_404(vorlage_id)
     
-    kontakte_data = [{"id": k.id, "daten": k.get_data()} for k in vorlage.kontakte]
-    eigenschaften = [{"id": e.id, "name": e.name} for g in vorlage.gruppen for e in g.eigenschaften]
+    kontakte_data = [{"id": k.id, "daten": k.get_data()} for k in vorlage_model.kontakte]
     
-    filename = f"{vorlage.name}_export_{datetime.now().strftime('%Y-%m-%d')}"
-
-    if file_format == 'csv':
-        content = exporter.generate_csv(kontakte_data, eigenschaften)
-        mimetype = 'text/csv'
-        filename += '.csv'
-    elif file_format == 'xlsx':
-        content = exporter.generate_xlsx(kontakte_data, eigenschaften)
-        mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        filename += '.xlsx'
-    elif file_format == 'pdf':
-        content = exporter.generate_pdf(kontakte_data, eigenschaften, vorlage.name)
-        mimetype = 'application/pdf'
-        filename += '.pdf'
-    else:
-        return "Ungültiges Format", 400
+    vorlage_struktur = {
+        "name": vorlage_model.name,
+        "gruppen": [{"name": g.name, "eigenschaften": [{"name": e.name} for e in g.eigenschaften]} for g in vorlage_model.gruppen]
+    }
+    
+    content, mimetype = exporter.export_data(file_format, kontakte_data, vorlage_struktur)
+    
+    if not content:
+        return "Ungültiges Export-Format", 400
+        
+    filename = f"{vorlage_model.name}_export_{datetime.now().strftime('%Y-%m-%d')}.{file_format}"
         
     return Response(
         content,
@@ -235,7 +229,7 @@ def export_data(vorlage_id, file_format):
         headers={"Content-Disposition": f"attachment;filename={filename}"}
     )
 
-# --- (Rest der app.py, Vorlagen- & Kontakt-Verwaltung, bleibt unverändert) ---
+# --- (Restliche Routen für Vorlagen- und Kontakt-Management bleiben gleich) ---
 @app.route("/vorlagen")
 def vorlagen_verwalten():
     return render_template("vorlagen_verwaltung.html", vorlagen=Vorlage.query.order_by(Vorlage.name).all())

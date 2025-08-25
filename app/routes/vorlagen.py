@@ -1,6 +1,16 @@
 # app/routes/vorlagen.py
 import json
-from flask import Blueprint, render_template, request, url_for, jsonify, redirect
+import os
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    url_for,
+    jsonify,
+    redirect,
+    current_app,
+)
+from werkzeug.utils import secure_filename
 from ..models import db, Vorlage, Gruppe, Eigenschaft
 
 bp = Blueprint("vorlagen", __name__, url_prefix="/vorlagen")
@@ -8,7 +18,10 @@ bp = Blueprint("vorlagen", __name__, url_prefix="/vorlagen")
 
 @bp.route("/")
 def verwalten():
-    vorlagen_liste = Vorlage.query.order_by(Vorlage.name).all()
+    # Standard-Vorlagen werden nun oben angezeigt
+    vorlagen_liste = Vorlage.query.order_by(
+        Vorlage.is_standard.desc(), Vorlage.name
+    ).all()
     return render_template("vorlagen_verwaltung.html", vorlagen=vorlagen_liste)
 
 
@@ -19,9 +32,9 @@ def editor():
     if vorlage_id:
         vorlage = db.session.get(Vorlage, vorlage_id)
         vorlage_data = {
-            "id": vorlage.id,  # ID wird mitgesendet
+            "id": vorlage.id,
             "name": vorlage.name,
-            "is_standard": vorlage.is_standard,  # is_standard Flag wird mitgesendet
+            "is_standard": vorlage.is_standard,
             "gruppen": [
                 {
                     "name": g.name,
@@ -52,18 +65,43 @@ def editor():
     )
 
 
-# ... (Rest der Datei bleibt gleich) ...
 @bp.route("/speichern", methods=["POST"])
 @bp.route("/speichern/<int:vorlage_id>", methods=["POST"])
 def speichern(vorlage_id=None):
     data = request.get_json()
+
+    # Prüfen, ob der Name bereits existiert
+    existing_vorlage = Vorlage.query.filter(Vorlage.name == data["name"]).first()
+    if existing_vorlage and (vorlage_id is None or existing_vorlage.id != vorlage_id):
+        return (
+            jsonify(
+                {
+                    "error": f"Eine Vorlage mit dem Namen '{data['name']}' existiert bereits."
+                }
+            ),
+            400,
+        )
+
     if vorlage_id:
         vorlage = db.session.get(Vorlage, vorlage_id)
+        # Standard-Vorlagen können nicht überschrieben werden
+        if vorlage.is_standard:
+            return (
+                jsonify(
+                    {
+                        "error": "Standard-Vorlagen können nicht direkt gespeichert werden. Bitte 'Speichern als' verwenden."
+                    }
+                ),
+                400,
+            )
+
         vorlage.name = data["name"]
         Gruppe.query.filter_by(vorlage_id=vorlage_id).delete()
     else:
-        vorlage = Vorlage(name=data["name"])
+        # Neue Vorlagen sind per Definition benutzerdefiniert
+        vorlage = Vorlage(name=data["name"], is_standard=False)
         db.session.add(vorlage)
+
     db.session.flush()
 
     for gruppe_data in data.get("gruppen", []):
@@ -78,6 +116,28 @@ def speichern(vorlage_id=None):
                 gruppe_id=gruppe.id,
             )
             db.session.add(eigenschaft)
+
+    # Nach dem Commit: JSON-Datei für benutzerdefinierte Vorlagen schreiben/aktualisieren
+    if not vorlage.is_standard:
+        try:
+            user_vorlagen_path = os.path.join(
+                current_app.root_path, "..", "data", "user_vorlagen"
+            )
+            os.makedirs(user_vorlagen_path, exist_ok=True)
+
+            filename = f"user_{secure_filename(vorlage.name).lower()}.json"
+            filepath = os.path.join(user_vorlagen_path, filename)
+
+            json_data = {"name": vorlage.name, "gruppen": data.get("gruppen", [])}
+
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=2)
+
+        except Exception as e:
+            current_app.logger.error(
+                f"Konnte JSON für Vorlage '{vorlage.name}' nicht speichern: {e}"
+            )
+
     db.session.commit()
     return jsonify({"redirect_url": url_for("vorlagen.verwalten")})
 
@@ -86,6 +146,25 @@ def speichern(vorlage_id=None):
 def loeschen(vorlage_id):
     vorlage = db.session.get(Vorlage, vorlage_id)
     if vorlage:
+        # Standardvorlagen können nicht gelöscht werden
+        if vorlage.is_standard:
+            return redirect(url_for("vorlagen.verwalten"))
+
+        # Lösche die zugehörige JSON-Datei, falls vorhanden
+        try:
+            user_vorlagen_path = os.path.join(
+                current_app.root_path, "..", "data", "user_vorlagen"
+            )
+            filename = f"user_{secure_filename(vorlage.name).lower()}.json"
+            filepath = os.path.join(user_vorlagen_path, filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+        except Exception as e:
+            current_app.logger.error(
+                f"Konnte JSON-Datei für Vorlage '{vorlage.name}' nicht löschen: {e}"
+            )
+
         db.session.delete(vorlage)
         db.session.commit()
+
     return redirect(url_for("vorlagen.verwalten"))

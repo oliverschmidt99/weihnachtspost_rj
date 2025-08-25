@@ -1,0 +1,15 @@
+{
+  "name": "Test",
+  "gruppen": [
+    {
+      "name": "Allgemein",
+      "eigenschaften": [
+        {
+          "name": "Test",
+          "datentyp": "Auswahl",
+          "optionen": ""
+        }
+      ]
+    }
+  ]
+}

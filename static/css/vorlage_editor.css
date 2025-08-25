@@ -33,11 +33,21 @@
 .list-item-header {
     display: flex; align-items: center; gap: 1rem; padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
-    cursor: pointer; user-select: none;
+    user-select: none;
 }
-.list-item-header .toggle-icon { transition: transform 0.3s ease; color: var(--text-secondary); }
-.list-item-header .toggle-icon.collapsed { transform: rotate(-90deg); }
-.list-item-header strong { flex-grow: 1; font-size: 1.2em; }
+.list-item-header .toggle-icon {
+    transition: transform 0.3s ease;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.list-item-header .toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+.list-item-header strong {
+    flex-grow: 1;
+    font-size: 1.2em;
+    cursor: pointer;
+}
 .drag-handle { cursor: grab; color: var(--text-secondary); font-size: 1.5em; user-select: none; }
 .property-list-container { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; margin-left: 2.5rem; padding-top: 0.5rem;}
 .property-list-item {

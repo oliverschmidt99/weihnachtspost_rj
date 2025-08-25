@@ -8,7 +8,10 @@
         <h1>Vorlagen verwalten</h1>
         <p>Vorlagen definieren die Struktur und die Felder deiner Kontakte.</p>
     </div>
-    <a href="{{ url_for('vorlagen.editor') }}" class="button add">➕ Neue Vorlage erstellen</a>
+    <a href="{{ url_for('vorlagen.editor') }}" class="button add">
+        <img src="{{ url_for('static', filename='img/icon_plus.svg') }}" alt="Hinzufügen">
+        Neue Vorlage erstellen
+    </a>
 </div>
 
 <div class="card">
@@ -28,10 +31,14 @@
                     <td>{{ vorlage.kontakte|length }}</td>
                     <td class="actions" style="justify-content: flex-end;">
                         <a href="{{ url_for('vorlagen.editor', vorlage_id=vorlage.id) }}" class="icon-btn edit"
-                            title="Vorlage bearbeiten">✏️</a>
+                            title="Vorlage bearbeiten">
+                            <img src="{{ url_for('static', filename='img/icon_edit.svg') }}" alt="Bearbeiten">
+                        </a>
                         <form action="{{ url_for('vorlagen.loeschen', vorlage_id=vorlage.id) }}" method="post"
                             onsubmit="return confirm('Bist du sicher, dass du diese Vorlage und alle zugehörigen Kontakte löschen möchtest?');">
-                            <button type="submit" class="icon-btn delete" title="Vorlage löschen">❌</button>
+                            <button type="submit" class="icon-btn delete" title="Vorlage löschen">
+                                <img src="{{ url_for('static', filename='img/icon_delete.svg') }}" alt="Löschen">
+                            </button>
                         </form>
                     </td>
                 </tr>

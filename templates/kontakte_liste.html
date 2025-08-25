@@ -46,12 +46,12 @@
 
     <div v-if="activeVorlage" class="filter-container">
         <div class="filter-header" @click="isFilterVisible = !isFilterVisible">
+            <span :class="['toggle-icon', { collapsed: !isFilterVisible }]">▼</span>
             <h3>Filter &amp; Spaltenreihenfolge</h3>
             <button @click.stop="toggleEditOrderMode" class="button secondary filter-edit-button">
-                <img :src="editOrderMode ? '/static/img/icon_check.svg' : '/static/img/icon_edit.svg'" alt="Edit">
+                <img :src="'/static/img/icon_edit.svg'" alt="Edit">
                 {[ editOrderMode ? 'Reihenfolge speichern' : 'Reihenfolge bearbeiten' ]}
             </button>
-            <span :class="['toggle-icon', { collapsed: !isFilterVisible }]">▼</span>
         </div>
         <div v-show="isFilterVisible" class="filter-body">
             <div v-for="gruppe in activeVorlage.gruppen" :key="gruppe.id" class="filter-group">

@@ -122,6 +122,18 @@ document.addEventListener("DOMContentLoaded", () => {
         collapsedGroups.value[index] = !collapsedGroups.value[index];
       };
 
+      const expandAll = () => {
+        vorlage.value.gruppen.forEach((_, index) => {
+          collapsedGroups.value[index] = false;
+        });
+      };
+
+      const collapseAll = () => {
+        vorlage.value.gruppen.forEach((_, index) => {
+          collapsedGroups.value[index] = true;
+        });
+      };
+
       const initSortables = () => {
         destroySortables();
         const groupContainer = document.getElementById("group-list-container");
@@ -219,6 +231,15 @@ document.addEventListener("DOMContentLoaded", () => {
         activeModal.value = "groupEdit";
       };
 
+      const removeGruppe = (index) => {
+        const groupName = vorlage.value.gruppen[index].name;
+        if (
+          confirm(`Möchtest du die Gruppe "${groupName}" wirklich löschen?`)
+        ) {
+          vorlage.value.gruppen.splice(index, 1);
+        }
+      };
+
       const saveGroup = () => {
         if (editedGroupIndex.value !== null) {
           vorlage.value.gruppen[editedGroupIndex.value] = editedGroup.value;
@@ -280,6 +301,9 @@ document.addEventListener("DOMContentLoaded", () => {
         allVorlagen,
         collapsedGroups,
         toggleGroupCollapse,
+        removeGruppe,
+        expandAll,
+        collapseAll,
       };
     },
   });

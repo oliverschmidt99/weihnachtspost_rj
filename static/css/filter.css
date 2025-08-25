@@ -7,12 +7,14 @@
 }
 .filter-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     cursor: pointer;
     user-select: none;
+    gap: 1rem;
 }
-.filter-header h3 { margin: 0; }
+.filter-header h3 { 
+    margin: 0; 
+}
 .filter-header .toggle-icon {
     transition: transform 0.3s ease;
     color: var(--text-secondary);

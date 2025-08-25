@@ -2,7 +2,7 @@
   "options": [
     {
       "name": "Anrede",
-      "values": "Herr, Frau, Divers, Familie, Firma, Team"
+      "values": "Herr, Frau, Familie, Firma, Team"
     },
     {
       "name": "Titel (akademisch)",
@@ -15,6 +15,14 @@
     {
       "name": "Post-Art",
       "values": "Digital 💻, Post 📬, Kalender 📅, Persönlich 🤝"
+    },
+    {
+      "name": "Pastellfarben",
+      "values": "Pastellrosa 🌸, Pastellblau 💧, Pastellgrün 🌿, Pastellgelb 🍋, Pastelllila 💜, Pastellorange 🍑"
+    },
+    {
+      "name": "Farben (Hex)",
+      "values": "#FF0000, #00FF00, #0000FF, #FFFF00, #FF00FF, #00FFFF, #C0C0C0, #808080, #800000, #808000, #008000, #800080, #008080, #000080"
     }
   ]
 }

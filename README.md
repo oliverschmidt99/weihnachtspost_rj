@@ -130,7 +130,7 @@ Starte mit zusätzlichem Host-Parameter:
 python app.py --host=0.0.0.0
 ```
 
-→ Das Terminal zeigt die IP-Adresse an, z.B. `http://192.168.1.10:5000`.
+→ Das Terminal zeigt die IP-Adresse an, z.B. `http://192.168.1.10:6060`.
 
 ---
 

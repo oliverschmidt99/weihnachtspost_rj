@@ -12,13 +12,24 @@
         <h1>{[ pageTitle ]}</h1>
         <div class="button-group">
             <a href="{{ url_for('vorlagen.verwalten') }}" class="button secondary">Abbrechen</a>
-            <button @click="saveVorlage" class="button">Vorlage Speichern</button>
+            <button @click="handleSave" class="button">Vorlage Speichern</button>
         </div>
     </div>
 
     <div class="form-group">
         <label for="vorlage-name">Name der Vorlage:</label>
-        <input type="text" id="vorlage-name" v-model="vorlage.name" class="input-field">
+        <input type="text" id="vorlage-name" v-model="vorlage.name" class="input-field" :disabled="vorlage.is_standard">
+        <small v-if="vorlage.is_standard" style="color: var(--text-secondary);">Standardvorlagen können nicht direkt
+            geändert werden. Änderungen werden als neue Vorlage gespeichert.</small>
+    </div>
+
+    <div class="add-group-bar">
+        <select v-model="selectedSuggestionCategory" class="input-field">
+            <option :value="null">Gruppe aus Vorschlag wählen...</option>
+            <option v-for="cat in suggestions.categories" :key="cat.name" :value="cat">{[ cat.name ]}</option>
+        </select>
+        <button @click="addGroupFromSuggestion" class="button">Hinzufügen</button>
+        <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe</button>
     </div>
 
     <div class="view-switcher">
@@ -37,25 +48,18 @@
                 <span :class="['toggle-icon', { collapsed: collapsedGroups[index] }]">▼</span>
             </div>
             <div v-show="!collapsedGroups[index]" class="property-list-container" :data-group-index="index">
-                <div v-for="(eigenschaft, pIndex) in gruppe.eigenschaften" :key="pIndex" class="property-list-item">
-                    <span class="drag-handle">☰</span>
-                    <span class="property-name">{[ eigenschaft.name ]}</span>
-                    <span class="property-type-badge">{[ eigenschaft.datentyp ]}</span>
+                <div v-if="gruppe.eigenschaften.length > 0">
+                    <div v-for="(eigenschaft, pIndex) in gruppe.eigenschaften" :key="pIndex" class="property-list-item">
+                        <span class="drag-handle">☰</span>
+                        <span class="property-name">{[ eigenschaft.name ]}</span>
+                        <span class="property-type-badge">{[ eigenschaft.datentyp ]}</span>
+                    </div>
+                </div>
+                <div v-else class="empty-properties-info">
+                    Diese Gruppe hat noch keine Eigenschaften.
                 </div>
             </div>
         </div>
-    </div>
-
-    <div v-if="viewMode === 'tile'" class="tile-view-container">
-    </div>
-
-    <div class="add-group-bar">
-        <select v-model="selectedSuggestionCategory" class="input-field">
-            <option :value="null">Gruppe aus Vorlage wählen...</option>
-            <option v-for="cat in suggestions.categories" :key="cat.name" :value="cat">{[ cat.name ]}</option>
-        </select>
-        <button @click="addGroupFromSuggestion" class="button">Hinzufügen</button>
-        <button @click="addEmptyGruppe" class="button secondary">Leere Gruppe</button>
     </div>
 
     <div v-if="activeModal === 'groupEdit'" class="modal-overlay">
@@ -92,6 +96,28 @@
             </div>
         </div>
     </div>
+
+    <div v-if="isSaveAsModalOpen" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Als neue Vorlage speichern</h2>
+                <button @click="isSaveAsModalOpen = false" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Du bearbeitest eine Standardvorlage. Deine Änderungen müssen als neue, benutzerdefinierte Vorlage
+                    gespeichert werden.</p>
+                <div class="form-group">
+                    <label for="new-vorlage-name">Name der neuen Vorlage:</label>
+                    <input type="text" id="new-vorlage-name" v-model="newVorlageName" class="input-field">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button @click="isSaveAsModalOpen = false" class="button secondary">Abbrechen</button>
+                <button @click="saveAsNewVorlage" class="button">Speichern</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script type="application/json" id="vorlage-data">{{ vorlage_data|safe }}</script>
@@ -101,5 +127,6 @@
 
 {% block scripts %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="{{ url_for('static', filename='js/vorlage_editor.js') }}"></script>
 {% endblock %}

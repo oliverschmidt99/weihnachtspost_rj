@@ -3,7 +3,7 @@
 {% block title %}Kontaktübersicht{% endblock %}
 
 {% block head_styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/kontakte.css', v='1.5') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/kontakte.css', v='1.6') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/filter.css', v='1.5') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/import_export.css') }}">
 {% endblock %}
@@ -72,43 +72,42 @@
         </div>
     </div>
 
-    <div v-if="activeVorlage">
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="checkbox-col">
-                            <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
-                        </th>
-                        <th v-for="eigenschaft in filteredEigenschaften" :key="eigenschaft.id"
-                            @click="sortBy(eigenschaft.name)" class="sortable">
-                            {[ eigenschaft.name ]}
-                            <span v-if="sortColumn === eigenschaft.name">{[ sortDirection === 'asc' ? '▲' : '▼'
-                                ]}</span>
-                        </th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="kontakt in sortedKontakte" :key="kontakt.id"
-                        :class="{ selected: selectedKontakte.has(kontakt.id) }">
-                        <td class="checkbox-col">
-                            <input type="checkbox" :checked="selectedKontakte.has(kontakt.id)"
-                                @change="toggleSelection(kontakt.id)">
-                        </td>
-                        <td v-for="eigenschaft in filteredEigenschaften" :key="eigenschaft.id">
-                            <input v-if="eigenschaft.datentyp === 'Text'" type="text" class="inline-edit-input"
-                                :value="kontakt.daten[eigenschaft.name]"
-                                @change="updateField(kontakt, eigenschaft.name, $event.target.value)">
-                            <select v-else-if="eigenschaft.datentyp === 'Auswahl'" class="inline-select"
-                                :value="kontakt.daten[eigenschaft.name]"
-                                @change="updateField(kontakt, eigenschaft.name, $event.target.value)">
-                                <option v-for="option in eigenschaft.optionen.split(',')" :key="option"
-                                    :value="option.trim()">{[ option.trim() ]}</option>
-                            </select>
-                            <span v-else>{[ kontakt.daten[eigenschaft.name] ]}</span>
-                        </td>
-                        <td class="actions">
+    <div v-if="activeVorlage" class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="checkbox-col sticky-col">
+                        <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
+                    </th>
+                    <th v-for="eigenschaft in filteredEigenschaften" :key="eigenschaft.id"
+                        @click="sortBy(eigenschaft.name)" class="sortable">
+                        {[ eigenschaft.name ]}
+                        <span v-if="sortColumn === eigenschaft.name">{[ sortDirection === 'asc' ? '▲' : '▼' ]}</span>
+                    </th>
+                    <th class="actions-col sticky-col">Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="kontakt in sortedKontakte" :key="kontakt.id"
+                    :class="{ selected: selectedKontakte.has(kontakt.id) }">
+                    <td class="checkbox-col sticky-col">
+                        <input type="checkbox" :checked="selectedKontakte.has(kontakt.id)"
+                            @change="toggleSelection(kontakt.id)">
+                    </td>
+                    <td v-for="eigenschaft in filteredEigenschaften" :key="eigenschaft.id">
+                        <input v-if="eigenschaft.datentyp === 'Text'" type="text" class="inline-edit-input"
+                            :value="kontakt.daten[eigenschaft.name]"
+                            @change="updateField(kontakt, eigenschaft.name, $event.target.value)">
+                        <select v-else-if="eigenschaft.datentyp === 'Auswahl'" class="inline-select"
+                            :value="kontakt.daten[eigenschaft.name]"
+                            @change="updateField(kontakt, eigenschaft.name, $event.target.value)">
+                            <option v-for="option in eigenschaft.optionen.split(',')" :key="option"
+                                :value="option.trim()">{[ option.trim() ]}</option>
+                        </select>
+                        <span v-else>{[ kontakt.daten[eigenschaft.name] ]}</span>
+                    </td>
+                    <td class="actions-col sticky-col">
+                        <div class="actions">
                             <a :href="'/kontakte/editor?kontakt_id=' + kontakt.id" class="icon-btn edit"
                                 title="Bearbeiten">
                                 <img src="{{ url_for('static', filename='img/icon_edit.svg') }}" alt="Bearbeiten">
@@ -119,11 +118,11 @@
                                     <img src="{{ url_for('static', filename='img/icon_delete.svg') }}" alt="Löschen">
                                 </button>
                             </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div v-else>
         <p>Keine Vorlage ausgewählt oder vorhanden.</p>
@@ -179,7 +178,6 @@
                     </div>
                     <div v-if="importError" class="alert-danger">{[ importError ]}</div>
                 </div>
-
                 <div v-if="importStep === 2 && importTargetVorlage">
                     <p>Bitte ordne die Spalten aus deiner Datei den Feldern der Vorlage <strong>"{[
                             importTargetVorlage.name ]}"</strong> zu.</p>

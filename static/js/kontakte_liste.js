@@ -63,18 +63,27 @@ document.addEventListener("DOMContentLoaded", () => {
           const valB = b.daten[sortColumn.value] || "";
 
           let comparison = 0;
-          // Einfache numerische Prüfung
-          const isNumeric =
-            !isNaN(parseFloat(valA)) &&
-            isFinite(valA) &&
-            !isNaN(parseFloat(valB)) &&
-            isFinite(valB);
 
-          if (isNumeric) {
-            comparison = parseFloat(valA) - parseFloat(valB);
+          // Versuch, als Datum zu parsen (Format YYYY-MM-DD oder DD.MM.YYYY)
+          const dateA = new Date(
+            valA.replace(/(\d{2})\.(\d{2})\.(\d{4})/, "$3-$2-$1")
+          );
+          const dateB = new Date(
+            valB.replace(/(\d{2})\.(\d{2})\.(\d{4})/, "$3-$2-$1")
+          );
+
+          if (!isNaN(dateA) && !isNaN(dateB) && valA && valB) {
+            comparison = dateA - dateB;
           } else {
-            // String-Vergleich
-            comparison = valA.toString().localeCompare(valB.toString());
+            // Versuch, als Zahl zu parsen
+            const numA = parseFloat(valA);
+            const numB = parseFloat(valB);
+            if (!isNaN(numA) && !isNaN(numB)) {
+              comparison = numA - numB;
+            } else {
+              // Standard-String-Vergleich
+              comparison = valA.toString().localeCompare(valB.toString());
+            }
           }
 
           return sortDirection.value === "asc" ? comparison : -comparison;
@@ -308,7 +317,12 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!response.ok) throw new Error("Update fehlgeschlagen");
           const result = await response.json();
           if (result.success) {
-            kontakt.daten[fieldName] = newValue;
+            const originalKontakt = activeVorlage.value.kontakte.find(
+              (k) => k.id === kontakt.id
+            );
+            if (originalKontakt) {
+              originalKontakt.daten[fieldName] = newValue;
+            }
           }
         } catch (error) {
           console.error("Fehler:", error);

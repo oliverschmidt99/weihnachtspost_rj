@@ -16,15 +16,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const app = createApp({
     setup() {
-      const vorlage = ref(
-        JSON.parse(document.getElementById("vorlage-data").textContent)
+      // Daten aus dem HTML auslesen
+      const initialVorlageData = JSON.parse(
+        document.getElementById("vorlage-data").textContent
       );
-      const allVorlagen = ref(
-        JSON.parse(document.getElementById("all-vorlagen-data").textContent)
+      const actionUrl = ref(
+        document.getElementById("action-url-data").textContent.slice(1, -1)
       );
-      const actionUrl = document
-        .getElementById("action-url-data")
-        .textContent.slice(1, -1);
+
+      // Reaktive Zustände
+      const vorlage = ref(JSON.parse(JSON.stringify(initialVorlageData))); // Tiefe Kopie als Arbeitskopie
+      const isSaveAsModalOpen = ref(false);
+      const newVorlageName = ref("");
       const suggestions = ref({ categories: [] });
       const selectionOptions = ref([]);
       const selectedSuggestionCategory = ref(null);
@@ -32,11 +35,88 @@ document.addEventListener("DOMContentLoaded", () => {
       const activeModal = ref(null);
       const editedGroup = ref(null);
       const editedGroupIndex = ref(null);
-      const deleteTarget = ref(null);
-      const deleteMessage = ref("");
       const groupSortable = ref(null);
       const propertySortables = ref({});
       const collapsedGroups = ref({});
+      const allVorlagen = ref(
+        JSON.parse(document.getElementById("all-vorlagen-data").textContent)
+      );
+
+      // --- Computed Properties ---
+
+      const pageTitle = computed(() => {
+        if (initialVorlageData.is_standard) {
+          return `Standard-Vorlage: ${initialVorlageData.name}`;
+        }
+        return initialVorlageData.id
+          ? `Vorlage bearbeiten: ${initialVorlageData.name}`
+          : "Neue Vorlage erstellen";
+      });
+
+      const hasChanges = computed(() => {
+        return (
+          JSON.stringify(vorlage.value) !== JSON.stringify(initialVorlageData)
+        );
+      });
+
+      // --- Methoden ---
+
+      const handleSave = () => {
+        if (initialVorlageData.is_standard && hasChanges.value) {
+          newVorlageName.value = initialVorlageData.name + " (Kopie)";
+          isSaveAsModalOpen.value = true;
+          return;
+        }
+
+        if (!initialVorlageData.is_standard) {
+          saveVorlage();
+          return;
+        }
+
+        alert("Keine Änderungen zum Speichern vorhanden.");
+      };
+
+      const saveVorlage = async () => {
+        try {
+          const r = await fetch(actionUrl.value, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vorlage.value),
+          });
+          if (!r.ok) throw new Error("Speichern fehlgeschlagen");
+          const res = await r.json();
+          if (res.redirect_url) window.location.href = res.redirect_url;
+        } catch (e) {
+          alert("Speichern fehlgeschlagen.");
+        }
+      };
+
+      const saveAsNewVorlage = async () => {
+        const payload = JSON.parse(JSON.stringify(vorlage.value));
+        delete payload.id;
+        payload.name = newVorlageName.value;
+        payload.is_standard = false;
+
+        try {
+          const r = await fetch("/vorlagen/speichern", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!r.ok) {
+            const errorData = await r.json();
+            throw new Error(
+              errorData.error || "Speichern als neue Vorlage fehlgeschlagen"
+            );
+          }
+          const res = await r.json();
+          if (res.redirect_url) {
+            window.location.href = res.redirect_url;
+          }
+        } catch (e) {
+          alert(e.message);
+        }
+      };
 
       const toggleGroupCollapse = (index) => {
         collapsedGroups.value[index] = !collapsedGroups.value[index];
@@ -125,12 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       onBeforeUnmount(destroySortables);
 
-      const pageTitle = computed(() =>
-        vorlage.value.name
-          ? `Vorlage: ${vorlage.value.name}`
-          : "Neue Vorlage erstellen"
-      );
-
       const closeModal = () => {
         activeModal.value = null;
         editedGroup.value = null;
@@ -183,21 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
         vorlage.value.gruppen.push({ name: "Neue Gruppe", eigenschaften: [] });
       };
 
-      const saveVorlage = async () => {
-        try {
-          const r = await fetch(actionUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(vorlage.value),
-          });
-          if (!r.ok) throw new Error("Speichern fehlgeschlagen");
-          const res = await r.json();
-          if (res.redirect_url) window.location.href = res.redirect_url;
-        } catch (e) {
-          alert("Speichern fehlgeschlagen.");
-        }
-      };
-
       return {
         vorlage,
         suggestions,
@@ -207,6 +266,8 @@ document.addEventListener("DOMContentLoaded", () => {
         viewMode,
         activeModal,
         editedGroup,
+        isSaveAsModalOpen,
+        newVorlageName,
         addGroupFromSuggestion,
         addEmptyGruppe,
         openGroupEditModal,
@@ -214,7 +275,8 @@ document.addEventListener("DOMContentLoaded", () => {
         addEigenschaft,
         removeEigenschaft,
         closeModal,
-        saveVorlage,
+        handleSave,
+        saveAsNewVorlage,
         allVorlagen,
         collapsedGroups,
         toggleGroupCollapse,

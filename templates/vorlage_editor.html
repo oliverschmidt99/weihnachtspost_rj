@@ -93,10 +93,23 @@
                         <option>Text</option>
                         <option>Auswahl</option>
                         <option>Datum</option>
+                        <option>Farbe</option>
                         <option>Verknüpfung</option>
                     </select>
-                    <input type="text" v-model="prop.optionen" placeholder="Optionen (kommagetrennt)"
-                        class="input-field">
+
+                    <select v-if="prop.datentyp === 'Auswahl'" v-model="prop.optionen" class="input-field">
+                        <option disabled value="">Bitte Liste wählen...</option>
+                        <option v-for="opt in selectionOptions" :key="opt.name" :value="opt.name">{[ opt.name ]}
+                        </option>
+                    </select>
+
+                    <select v-if="prop.datentyp === 'Verknüpfung'" v-model="prop.optionen" class="input-field">
+                        <option disabled value="">Bitte Vorlage wählen...</option>
+                        <option v-for="v in allVorlagen" :key="v.id" :value="'vorlage_id:' + v.id">{[ v.name ]}</option>
+                    </select>
+
+                    <div v-if="!['Auswahl', 'Verknüpfung'].includes(prop.datentyp)"></div>
+
                     <button @click="removeEigenschaft(pIndex)" class="icon-btn delete" title="Eigenschaft entfernen">
                         <img src="{{ url_for('static', filename='img/icon_delete.svg') }}" alt="Löschen">
                     </button>

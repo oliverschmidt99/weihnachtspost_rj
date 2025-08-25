@@ -1,0 +1,90 @@
+{
+  "name": "Mitarbeiter",
+  "gruppen": [
+    {
+      "name": "Personendaten",
+      "eigenschaften": [
+        {
+          "name": "Anrede",
+          "datentyp": "Auswahl",
+          "optionen": "Anrede"
+        },
+        {
+          "name": "Vorname",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Nachname",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Geburtsdatum",
+          "datentyp": "Datum",
+          "optionen": ""
+        },
+        {
+          "name": "Titel",
+          "datentyp": "Auswahl",
+          "optionen": "Titel (akademisch)"
+        }
+      ]
+    },
+    {
+      "name": "Position im Unternehmen",
+      "eigenschaften": [
+        {
+          "name": "Personalnummer",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Position",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Abteilung",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Eintrittsdatum",
+          "datentyp": "Datum",
+          "optionen": ""
+        }
+      ]
+    },
+    {
+      "name": "Kontaktinformationen",
+      "eigenschaften": [
+        {
+          "name": "E-Mail (geschäftlich)",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Telefon (Durchwahl)",
+          "datentyp": "Text",
+          "optionen": ""
+        },
+        {
+          "name": "Mobilnummer (dienstlich)",
+          "datentyp": "Text",
+          "optionen": ""
+        }
+      ]
+    },
+    {
+      "name": "Verknüpfungen",
+      "eigenschaften": [
+        {
+          "name": "Betreuer",
+          "datentyp": "Verknüpfung",
+          "optionen": "vorlage_id:2"
+        }
+      ]
+    }
+  ]
+}

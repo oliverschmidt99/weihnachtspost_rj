@@ -36,25 +36,75 @@
     border: 1px solid transparent; 
     border-radius: .25rem; 
 }
-.mapping-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 1rem; 
-    margin-top: 1rem; 
-    /* Die feste max-height wird entfernt, damit der Bereich wachsen kann */
-    padding-right: 1rem;
+
+/* NEU: Stile für das Zwei-Spalten-Mapping-Layout */
+.import-mapping-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Linke Spalte schmaler als die rechte */
+    gap: 2rem;
+    height: 100%;
 }
-.mapping-header { 
-    font-weight: bold; 
-    border-bottom: 1px solid var(--border-color); 
-    padding-bottom: 0.5rem; 
+
+.import-column, .template-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--bg-main);
+    border-radius: 8px;
+    overflow-y: auto;
+}
+
+.import-column h4, .template-column h4 {
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
-    top: 0;
-    background-color: var(--bg-container);
+    top: -1rem; /* Klebt am oberen Rand des Scroll-Containers */
+    background-color: var(--bg-main);
+    z-index: 10;
 }
-.data-preview { 
-    margin-top: 1.5rem; 
+
+.import-header-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
-.data-preview table { 
-    font-size: 0.8em; 
+
+.import-header-item {
+    background-color: var(--card-bg);
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+}
+
+.template-group-box {
+    margin-bottom: 1.5rem;
+}
+.template-group-box:last-child {
+    margin-bottom: 0;
+}
+
+.template-group-box h5 {
+    margin: 0 0 1rem 0;
+    font-size: 1em;
+}
+
+.template-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.template-field-row label {
+    font-weight: 500;
+    text-align: right;
+}
+
+.empty-state {
+    color: var(--text-secondary);
+    font-style: italic;
 }

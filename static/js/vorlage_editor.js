@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const actionUrl = ref(
         document.getElementById("action-url-data").textContent.slice(1, -1)
       );
+      const allVorlagen = ref(
+        JSON.parse(document.getElementById("all-vorlagen-data").textContent)
+      );
 
       // Reaktive Zustände
       const vorlage = ref(JSON.parse(JSON.stringify(initialVorlageData))); // Tiefe Kopie als Arbeitskopie
@@ -38,9 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const groupSortable = ref(null);
       const propertySortables = ref({});
       const collapsedGroups = ref({});
-      const allVorlagen = ref(
-        JSON.parse(document.getElementById("all-vorlagen-data").textContent)
-      );
 
       // --- Computed Properties ---
 
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
           suggestions.value = await suggResponse.json();
           selectionOptions.value = (await selOptResponse.json()).options;
         } catch (error) {
-          console.error("Fehler:", error);
+          console.error("Fehler beim Laden der Initialdaten:", error);
         }
 
         if (viewMode.value === "list") {
@@ -248,11 +248,13 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       const addEigenschaft = () => {
-        editedGroup.value.eigenschaften.push({
-          name: "",
-          datentyp: "Text",
-          optionen: "",
-        });
+        if (editedGroup.value) {
+          editedGroup.value.eigenschaften.push({
+            name: "",
+            datentyp: "Text",
+            optionen: "",
+          });
+        }
       };
 
       const removeEigenschaft = (index) => {
@@ -306,7 +308,9 @@ document.addEventListener("DOMContentLoaded", () => {
         collapseAll,
       };
     },
+    compilerOptions: {
+      delimiters: ["{[", "]}"],
+    },
   });
-  app.config.compilerOptions.delimiters = ["{[", "]}"];
   app.mount(editorRoot);
 });

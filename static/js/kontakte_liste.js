@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const { createApp, ref, computed, watch, nextTick } = Vue;
+  const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
 
   const app = createApp({
     setup() {
@@ -29,17 +29,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedKontakte = ref(new Set());
 
       const isAddModalOpen = ref(false);
-      const isImportModalOpen = ref(false);
-
       const newContactData = ref({});
       const addModalVorlageId = ref(activeVorlageId.value);
-      const verknuepfungsOptionen = ref({});
 
+      const selectionOptions = ref([]);
+      const verknuepfungsOptionen = ref({});
+      const verknuepfungSearchText = ref({});
+
+      // --- Import-spezifische States ---
+      const isImportModalOpen = ref(false);
       const importStep = ref(1);
       const importTargetVorlageId = ref(null);
-      const importFile = ref(null);
       const importData = ref({});
       const importMappings = ref({});
+      const importDefaultValues = ref({});
       const importError = ref("");
 
       // --- Computed Properties ---
@@ -61,10 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         kontakteCopy.sort((a, b) => {
           const valA = a.daten[sortColumn.value] || "";
           const valB = b.daten[sortColumn.value] || "";
-
           let comparison = 0;
-
-          // Versuch, als Datum zu parsen (Format YYYY-MM-DD oder DD.MM.YYYY)
           const dateA = new Date(
             valA.replace(/(\d{2})\.(\d{2})\.(\d{4})/, "$3-$2-$1")
           );
@@ -75,17 +75,14 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!isNaN(dateA) && !isNaN(dateB) && valA && valB) {
             comparison = dateA - dateB;
           } else {
-            // Versuch, als Zahl zu parsen
             const numA = parseFloat(valA);
             const numB = parseFloat(valB);
             if (!isNaN(numA) && !isNaN(numB)) {
               comparison = numA - numB;
             } else {
-              // Standard-String-Vergleich
               comparison = valA.toString().localeCompare(valB.toString());
             }
           }
-
           return sortDirection.value === "asc" ? comparison : -comparison;
         });
 
@@ -114,13 +111,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!importTargetVorlageId.value) return null;
         return vorlagen.value.find((v) => v.id === importTargetVorlageId.value);
       });
-      const usedTemplateProperties = computed(() => {
-        return new Set(Object.values(importMappings.value).filter(Boolean));
-      });
 
       // --- Watchers ---
       watch(activeVorlageId, () => {
-        selectedKontakte.value.clear(); // Auswahl zurücksetzen bei Vorlagenwechsel
+        selectedKontakte.value.clear();
       });
 
       watch(
@@ -139,33 +133,68 @@ document.addEventListener("DOMContentLoaded", () => {
         { immediate: true }
       );
 
-      watch(addModalVorlage, async (newVorlage) => {
-        newContactData.value = {};
-        if (!newVorlage) return;
-        verknuepfungsOptionen.value = {};
-        for (const gruppe of newVorlage.gruppen) {
-          for (const eigenschaft of gruppe.eigenschaften) {
-            if (
-              eigenschaft.datentyp === "Verknüpfung" &&
-              eigenschaft.optionen.startsWith("vorlage_id:")
-            ) {
-              const linkedVorlageId = eigenschaft.optionen.split(":")[1];
-              try {
-                const response = await fetch(
-                  `/api/kontakte-by-vorlage/${linkedVorlageId}`
-                );
-                if (response.ok) {
-                  verknuepfungsOptionen.value[eigenschaft.id] =
-                    await response.json();
-                } else {
+      watch(
+        addModalVorlage,
+        async (newVorlage) => {
+          newContactData.value = {};
+          verknuepfungsOptionen.value = {};
+          verknuepfungSearchText.value = {};
+          if (!newVorlage) return;
+
+          for (const gruppe of newVorlage.gruppen) {
+            for (const eigenschaft of gruppe.eigenschaften) {
+              if (
+                eigenschaft.datentyp === "Verknüpfung" &&
+                eigenschaft.optionen.startsWith("vorlage_id:")
+              ) {
+                const linkedVorlageId = eigenschaft.optionen.split(":")[1];
+                try {
+                  const response = await fetch(
+                    `/api/kontakte-by-vorlage/${linkedVorlageId}`
+                  );
+                  if (response.ok) {
+                    verknuepfungsOptionen.value[eigenschaft.id] =
+                      await response.json();
+                  } else {
+                    verknuepfungsOptionen.value[eigenschaft.id] = [];
+                  }
+                } catch (error) {
+                  console.error(
+                    "Fehler beim Laden der Verknüpfungs-Optionen:",
+                    error
+                  );
                   verknuepfungsOptionen.value[eigenschaft.id] = [];
                 }
-              } catch (error) {
-                console.error(
-                  "Fehler beim Laden der Verknüpfungs-Optionen:",
-                  error
-                );
-                verknuepfungsOptionen.value[eigenschaft.id] = [];
+              }
+            }
+          }
+        },
+        { immediate: true }
+      );
+
+      watch(importTargetVorlage, async (newVorlage) => {
+        if (newVorlage) {
+          for (const gruppe of newVorlage.gruppen) {
+            for (const eigenschaft of gruppe.eigenschaften) {
+              if (
+                eigenschaft.datentyp === "Verknüpfung" &&
+                eigenschaft.optionen.startsWith("vorlage_id:")
+              ) {
+                const linkedVorlageId = eigenschaft.optionen.split(":")[1];
+                try {
+                  const response = await fetch(
+                    `/api/kontakte-by-vorlage/${linkedVorlageId}`
+                  );
+                  if (response.ok) {
+                    verknuepfungsOptionen.value[eigenschaft.id] =
+                      await response.json();
+                  }
+                } catch (error) {
+                  console.error(
+                    "Fehler beim Laden der Verknüpfungs-Optionen für Import:",
+                    error
+                  );
+                }
               }
             }
           }
@@ -173,6 +202,28 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // --- Methoden ---
+      const getSelectionList = (listName) => {
+        const list = selectionOptions.value.find(
+          (opt) => opt.name === listName
+        );
+        return list ? list.values.split(",").map((v) => v.trim()) : [];
+      };
+
+      const filteredVerknuepfungsOptionen = (eigenschaftId) => {
+        const options = verknuepfungsOptionen.value[eigenschaftId] || [];
+        const searchTerm = (
+          verknuepfungSearchText.value[eigenschaftId] || ""
+        ).toLowerCase();
+
+        if (!searchTerm) {
+          return options;
+        }
+
+        return options.filter((opt) =>
+          opt.display_name.toLowerCase().includes(searchTerm)
+        );
+      };
+
       const sortBy = (columnName) => {
         if (sortColumn.value === columnName) {
           sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
@@ -303,7 +354,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return "/static/img/icon_checkbox_unchecked.svg";
       };
 
-      const openAddModal = () => (isAddModalOpen.value = true);
+      const openAddModal = () => {
+        addModalVorlageId.value = activeVorlageId.value;
+        isAddModalOpen.value = true;
+      };
       const closeAddModal = () => (isAddModalOpen.value = false);
 
       const updateField = async (kontakt, fieldName, newValue) => {
@@ -366,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
         importStep.value = 1;
         importData.value = {};
         importMappings.value = {};
-        importFile.value = null;
+        importDefaultValues.value = {};
         importError.value = "";
         importTargetVorlageId.value = activeVorlageId.value;
         isImportModalOpen.value = true;
@@ -397,16 +451,24 @@ document.addEventListener("DOMContentLoaded", () => {
             throw new Error(result.error || "Unbekannter Fehler");
           }
           importData.value = result;
-          result.headers.forEach((h) => {
-            const matchingProp = importTargetVorlage.value.eigenschaften.find(
-              (p) => p.name.toLowerCase() === h.toLowerCase()
-            );
-            if (matchingProp) {
-              importMappings.value[h] = matchingProp.name;
-            } else {
-              importMappings.value[h] = "";
-            }
-          });
+
+          importMappings.value = {};
+          importDefaultValues.value = {};
+
+          importTargetVorlage.value.gruppen
+            .flatMap((g) => g.eigenschaften)
+            .forEach((prop) => {
+              const matchingHeader = result.headers.find(
+                (h) => h.toLowerCase() === prop.name.toLowerCase()
+              );
+              if (matchingHeader) {
+                importMappings.value[prop.name] = matchingHeader;
+              } else {
+                importMappings.value[prop.name] = "";
+              }
+              importDefaultValues.value[prop.name] = null;
+            });
+
           importStep.value = 2;
         } catch (error) {
           importError.value = `Fehler: ${error.message}`;
@@ -421,6 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({
               vorlage_id: importTargetVorlageId.value,
               mappings: importMappings.value,
+              default_values: importDefaultValues.value,
               original_data: importData.value.original_data,
             }),
           });
@@ -440,6 +503,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return `/export/${activeVorlageId.value}/${format}`;
       };
 
+      onMounted(async () => {
+        try {
+          const response = await fetch("/api/selection-options");
+          if (!response.ok) throw new Error("Netzwerkfehler");
+          selectionOptions.value = (await response.json()).options;
+        } catch (error) {
+          console.error("Fehler beim Laden der Auswahllisten:", error);
+        }
+      });
+
       return {
         vorlagen,
         activeVorlageId,
@@ -452,6 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addModalVorlageId,
         addModalVorlage,
         verknuepfungsOptionen,
+        verknuepfungSearchText,
         filteredEigenschaften,
         isImportModalOpen,
         importStep,
@@ -459,8 +533,8 @@ document.addEventListener("DOMContentLoaded", () => {
         importTargetVorlage,
         importData,
         importMappings,
+        importDefaultValues,
         importError,
-        usedTemplateProperties,
         sortColumn,
         sortDirection,
         sortedKontakte,
@@ -472,7 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bulkDelete,
         openAddModal,
         closeAddModal,
-        toggleEditOrderMode,
+        toggleEditOrderMode, // KORREKTUR: Fehlende Funktion hinzugefügt
         toggleGroupFilter,
         getGroupToggleState,
         getToggleIcon,
@@ -483,10 +557,14 @@ document.addEventListener("DOMContentLoaded", () => {
         handleFileUpload,
         finalizeImport,
         getExportUrl,
+        getSelectionList,
+        filteredVerknuepfungsOptionen,
       };
+    },
+    compilerOptions: {
+      delimiters: ["{[", "]}"],
     },
   });
 
-  app.config.compilerOptions.delimiters = ["{[", "]}"];
   app.mount(appRoot);
 });

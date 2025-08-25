@@ -18,7 +18,6 @@ bp = Blueprint("vorlagen", __name__, url_prefix="/vorlagen")
 
 @bp.route("/")
 def verwalten():
-    # Standard-Vorlagen werden nun oben angezeigt
     vorlagen_liste = Vorlage.query.order_by(
         Vorlage.is_standard.desc(), Vorlage.name
     ).all()
@@ -70,7 +69,6 @@ def editor():
 def speichern(vorlage_id=None):
     data = request.get_json()
 
-    # Prüfen, ob der Name bereits existiert
     existing_vorlage = Vorlage.query.filter(Vorlage.name == data["name"]).first()
     if existing_vorlage and (vorlage_id is None or existing_vorlage.id != vorlage_id):
         return (
@@ -84,7 +82,6 @@ def speichern(vorlage_id=None):
 
     if vorlage_id:
         vorlage = db.session.get(Vorlage, vorlage_id)
-        # Standard-Vorlagen können nicht überschrieben werden
         if vorlage.is_standard:
             return (
                 jsonify(
@@ -96,14 +93,21 @@ def speichern(vorlage_id=None):
             )
 
         vorlage.name = data["name"]
-        Gruppe.query.filter_by(vorlage_id=vorlage_id).delete()
+
+        # KORREKTUR: Alte Gruppen werden hier zuverlässig gelöscht.
+        # Wir iterieren über eine Kopie der Liste, um alle Gruppen-Objekte
+        # sicher aus der Session zu entfernen. Die Kaskadierung in den Models
+        # sorgt dafür, dass auch alle zugehörigen Eigenschaften gelöscht werden.
+        for gruppe in list(vorlage.gruppen):
+            db.session.delete(gruppe)
+
     else:
-        # Neue Vorlagen sind per Definition benutzerdefiniert
         vorlage = Vorlage(name=data["name"], is_standard=False)
         db.session.add(vorlage)
 
     db.session.flush()
 
+    # Neue Gruppen und Eigenschaften werden hinzugefügt
     for gruppe_data in data.get("gruppen", []):
         gruppe = Gruppe(name=gruppe_data["name"], vorlage_id=vorlage.id)
         db.session.add(gruppe)
@@ -117,7 +121,6 @@ def speichern(vorlage_id=None):
             )
             db.session.add(eigenschaft)
 
-    # Nach dem Commit: JSON-Datei für benutzerdefinierte Vorlagen schreiben/aktualisieren
     if not vorlage.is_standard:
         try:
             user_vorlagen_path = os.path.join(
@@ -146,11 +149,9 @@ def speichern(vorlage_id=None):
 def loeschen(vorlage_id):
     vorlage = db.session.get(Vorlage, vorlage_id)
     if vorlage:
-        # Standardvorlagen können nicht gelöscht werden
         if vorlage.is_standard:
             return redirect(url_for("vorlagen.verwalten"))
 
-        # Lösche die zugehörige JSON-Datei, falls vorhanden
         try:
             user_vorlagen_path = os.path.join(
                 current_app.root_path, "..", "data", "user_vorlagen"

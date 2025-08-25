@@ -20,22 +20,43 @@
     </div>
 </div>
 
-<div class="card">
-    <h2>Datenbank-Management</h2>
-    <p>
-        Automatische Backups der Datenbank (<code>kundenverwaltung.db</code>) werden bei jeder wichtigen Änderung im
-        Ordner
-        <code>backups</code> angelegt.
-    </p>
-    <div class="info-box"
-        style="margin-top: 1rem; padding: 1rem; background-color: var(--card-active-bg); border-radius: 6px;">
-        <strong>Info:</strong> Die manuelle Wiederherstellung einer Datenbank muss derzeit direkt über das Dateisystem
-        erfolgen, indem eine Backup-Datei in den <code>instance</code>-Ordner kopiert und in
-        <code>kundenverwaltung.db</code> umbenannt wird.
+<div id="selection-options-editor">
+    <div class="card">
+        <div class="actions-header" style="padding: 0; margin-bottom: 1.5rem;">
+            <h2>Auswahllisten verwalten</h2>
+            <div class="button-group">
+                <button @click="saveOptions" class="button">
+                    <img src="{{ url_for('static', filename='img/icon_check.svg') }}" alt="Speichern">
+                    Speichern
+                </button>
+            </div>
+        </div>
+
+        <div class="selection-options-grid">
+            <div v-for="(optionList, listIndex) in selectionOptions.options" :key="listIndex"
+                class="selection-list-card">
+                <div class="form-group">
+                    <label>Name der Liste:</label>
+                    <input type="text" v-model="optionList.name" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>Werte (kommagetrennt):</label>
+                    <textarea v-model="optionList.values" class="input-field" rows="4"></textarea>
+                </div>
+                <button @click="removeList(listIndex)" class="button danger" style="width: 100%;">Liste
+                    entfernen</button>
+            </div>
+        </div>
+        <button @click="addList" class="button secondary" style="margin-top: 1.5rem;">
+            <img src="{{ url_for('static', filename='img/icon_plus.svg') }}" alt="Hinzufügen">
+            Neue Liste hinzufügen
+        </button>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 {% endblock %}

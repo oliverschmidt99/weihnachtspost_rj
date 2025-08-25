@@ -7,7 +7,7 @@
         {
           "name": "Anrede",
           "datentyp": "Auswahl",
-          "optionen": "Herr, Frau, Divers"
+          "optionen": "Anrede"
         },
         { "name": "Vorname", "datentyp": "Text", "optionen": "" },
         { "name": "Nachname", "datentyp": "Text", "optionen": "" },

@@ -7,9 +7,13 @@
         {
           "name": "Anrede",
           "datentyp": "Auswahl",
-          "optionen": "Herr, Frau, Divers"
+          "optionen": "Anrede"
         },
-        { "name": "Titel", "datentyp": "Text", "optionen": "" },
+        {
+          "name": "Titel",
+          "datentyp": "Auswahl",
+          "optionen": "Titel (akademisch)"
+        },
         { "name": "Vorname", "datentyp": "Text", "optionen": "" },
         { "name": "Nachname", "datentyp": "Text", "optionen": "" }
       ]
@@ -52,7 +56,7 @@
         {
           "name": "Status",
           "datentyp": "Auswahl",
-          "optionen": "Interessent, Aktiv, Inaktiv"
+          "optionen": "Status"
         },
         { "name": "Notizen", "datentyp": "Text", "optionen": "" }
       ]
